@@ -152,6 +152,106 @@
       </div>
     </div>
 
-    <?!= include('javascript'); ?>
+    <script>
+      function orderForm() {
+        return {
+          loading: true,
+          submitting: false,
+          success: false,
+          error: "",
+          items: [],
+          formData: {
+            email: "",
+            username: "",
+            items: {},
+          },
+          totalAmount: 0,
+
+          // 在庫がある商品のみ取得
+          get availableItems() {
+            return this.items.filter((item) => item.在庫数 > 0);
+          },
+
+          // 初期化
+          init() {
+            this.loadItems();
+          },
+
+          // 商品データを読み込む
+          loadItems() {
+            this.loading = true;
+            this.error = "";
+
+            google.script.run
+              .withSuccessHandler((items) => {
+                this.items = items;
+                // 商品IDごとに初期値0を設定
+                items.forEach((item) => {
+                  this.formData.items[item.商品ID] = 0;
+                });
+                this.loading = false;
+              })
+              .withFailureHandler((error) => {
+                this.error = "データの読み込みに失敗しました: " + error.message;
+                this.loading = false;
+              })
+              .getAllRecords("商品");
+          },
+
+          // 合計金額を計算
+          calculateTotal() {
+            this.totalAmount = this.items.reduce((sum, item) => {
+              const quantity = this.formData.items[item.商品ID] || 0;
+              return sum + quantity * item.単価;
+            }, 0);
+          },
+
+          // フォーム送信
+          submitOrder() {
+            if (this.totalAmount === 0) {
+              this.error = "商品を選択してください。";
+              return;
+            }
+
+            this.submitting = true;
+            this.error = "";
+            this.success = false;
+
+            const orderData = {
+              email: this.formData.email,
+              username: this.formData.username,
+              items: this.formData.items,
+              totalAmount: this.totalAmount,
+            };
+
+            google.script.run
+              .withSuccessHandler((result) => {
+                this.submitting = false;
+                this.success = true;
+                setTimeout(() => {
+                  this.resetForm();
+                  this.success = false;
+                }, 3000);
+              })
+              .withFailureHandler((error) => {
+                this.error = "送信に失敗しました: " + error.message;
+                this.submitting = false;
+              })
+              .submitOrder(orderData);
+          },
+
+          // フォームをリセット
+          resetForm() {
+            this.formData.email = "";
+            this.formData.username = "";
+            Object.keys(this.formData.items).forEach((key) => {
+              this.formData.items[key] = 0;
+            });
+            this.totalAmount = 0;
+            this.error = "";
+          },
+        };
+      }
+    </script>
   </body>
 </html>

@@ -4,7 +4,7 @@
   "description": "Google Apps Script order form with TypeScript",
   "scripts": {
     "build": "tsc && npm run copy-files",
-    "copy-files": "cp src/*.html dist/ && cp appsscript.json dist/",
+    "copy-files": "cp src/index.html dist/ && cp appsscript.json dist/",
     "watch": "tsc --watch",
     "push": "npm run build && clasp push",
     "deploy": "npm run build && clasp push && clasp deploy"

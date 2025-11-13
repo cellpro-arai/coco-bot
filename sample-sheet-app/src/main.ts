@@ -56,20 +56,10 @@ interface OrderResult {
  * Apps Scriptエディタから手動で実行してください
  */
 function setSpreadsheetId(): void {
-  const spreadsheetId = 'YOUR_SPREADSHEET_ID_HERE'; // ここに実際のスプレッドシートIDを入力
+  const spreadsheetId = "YOUR_SPREADSHEET_ID_HERE"; // ここに実際のスプレッドシートIDを入力
   const scriptProperties = PropertiesService.getScriptProperties();
-  scriptProperties.setProperty('SPREADSHEET_ID', spreadsheetId);
-  Logger.log('スプレッドシートIDを設定しました: ' + spreadsheetId);
-}
-
-/**
- * 別のHTMLファイルをインクルードする関数
- * index.htmlから<?!= include('filename'); ?>で呼び出される
- * @param filename - インクルードするファイル名（拡張子なし）
- * @return HTMLファイルの内容
- */
-function include(filename: string): string {
-  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+  scriptProperties.setProperty("SPREADSHEET_ID", spreadsheetId);
+  Logger.log("スプレッドシートIDを設定しました: " + spreadsheetId);
 }
 
 /**
@@ -77,9 +67,7 @@ function include(filename: string): string {
  * index.htmlをテンプレートとして返す
  */
 function doGet(): GoogleAppsScript.HTML.HtmlOutput {
-  return HtmlService.createTemplateFromFile('index')
-    .evaluate()
-    .setTitle('発注フォーム');
+  return HtmlService.createHtmlOutputFromFile("index").setTitle("発注フォーム");
 }
 
 /**
@@ -91,10 +79,12 @@ function getAllRecords(sheetName: string): ProductRecord[] {
   try {
     // Get spreadsheet ID from script properties
     const scriptProperties = PropertiesService.getScriptProperties();
-    const spreadsheetId = scriptProperties.getProperty('SPREADSHEET_ID');
+    const spreadsheetId = scriptProperties.getProperty("SPREADSHEET_ID");
 
     if (!spreadsheetId) {
-      throw new Error('スプレッドシートIDが設定されていません。setSpreadsheetId()を実行してください。');
+      throw new Error(
+        "スプレッドシートIDが設定されていません。setSpreadsheetId()を実行してください。"
+      );
     }
 
     const ss = SpreadsheetApp.openById(spreadsheetId);
@@ -118,7 +108,7 @@ function getAllRecords(sheetName: string): ProductRecord[] {
 
     return records;
   } catch (error) {
-    console.error('getAllRecords error:', error);
+    console.error("getAllRecords error:", error);
     throw new Error(`データ取得エラー: ${(error as Error).message}`);
   }
 }
@@ -131,27 +121,37 @@ function getAllRecords(sheetName: string): ProductRecord[] {
 function submitOrder(orderData: OrderData): OrderResult {
   try {
     const scriptProperties = PropertiesService.getScriptProperties();
-    const spreadsheetId = scriptProperties.getProperty('SPREADSHEET_ID');
+    const spreadsheetId = scriptProperties.getProperty("SPREADSHEET_ID");
 
     if (!spreadsheetId) {
-      throw new Error('スプレッドシートIDが設定されていません。');
+      throw new Error("スプレッドシートIDが設定されていません。");
     }
 
     const ss = SpreadsheetApp.openById(spreadsheetId);
 
     // 発注履歴シートを取得または作成
-    let orderSheet = ss.getSheetByName('発注履歴');
+    let orderSheet = ss.getSheetByName("発注履歴");
     if (!orderSheet) {
-      orderSheet = ss.insertSheet('発注履歴');
+      orderSheet = ss.insertSheet("発注履歴");
       // ヘッダー行を追加
-      orderSheet.appendRow(['発注日時', 'Email', 'お名前', '商品ID', '商品名', '個数', '単価', '小計', '合計金額']);
+      orderSheet.appendRow([
+        "発注日時",
+        "Email",
+        "お名前",
+        "商品ID",
+        "商品名",
+        "個数",
+        "単価",
+        "小計",
+        "合計金額",
+      ]);
     }
 
     // 商品情報を取得
-    const items = getAllRecords('商品');
+    const items = getAllRecords("商品");
     const itemMap: { [key: string]: ProductRecord } = {};
-    items.forEach(item => {
-      itemMap[item['商品ID']] = item;
+    items.forEach((item) => {
+      itemMap[item["商品ID"]] = item;
     });
 
     // 発注日時
@@ -163,17 +163,17 @@ function submitOrder(orderData: OrderData): OrderResult {
       if (quantity > 0) {
         const item = itemMap[itemId];
         if (item) {
-          const subtotal = quantity * item['単価'];
+          const subtotal = quantity * item["単価"];
           orderSheet.appendRow([
             orderDate,
             orderData.email,
             orderData.username,
             itemId,
-            item['商品名'],
+            item["商品名"],
             quantity,
-            item['単価'],
+            item["単価"],
             subtotal,
-            firstRow ? orderData.totalAmount : '' // 合計は最初の行のみ
+            firstRow ? orderData.totalAmount : "", // 合計は最初の行のみ
           ]);
           firstRow = false;
         }
@@ -185,12 +185,11 @@ function submitOrder(orderData: OrderData): OrderResult {
 
     return {
       success: true,
-      message: '発注が完了しました',
-      orderDate: orderDate.toISOString()
+      message: "発注が完了しました",
+      orderDate: orderDate.toISOString(),
     };
-
   } catch (error) {
-    console.error('submitOrder error:', error);
+    console.error("submitOrder error:", error);
     throw new Error(`発注処理エラー: ${(error as Error).message}`);
   }
 }
@@ -199,29 +198,31 @@ function submitOrder(orderData: OrderData): OrderResult {
  * 在庫を更新する（オプション機能）
  * @param items - 商品IDと個数のオブジェクト
  */
-function updateInventory(items: { [key: string]: number }): { success: boolean } {
+function updateInventory(items: { [key: string]: number }): {
+  success: boolean;
+} {
   try {
     const scriptProperties = PropertiesService.getScriptProperties();
-    const spreadsheetId = scriptProperties.getProperty('SPREADSHEET_ID');
+    const spreadsheetId = scriptProperties.getProperty("SPREADSHEET_ID");
 
     if (!spreadsheetId) {
-      throw new Error('スプレッドシートIDが設定されていません。');
+      throw new Error("スプレッドシートIDが設定されていません。");
     }
 
     const ss = SpreadsheetApp.openById(spreadsheetId);
-    const sheet = ss.getSheetByName('商品');
+    const sheet = ss.getSheetByName("商品");
 
     if (!sheet) {
-      throw new Error('商品シートが見つかりません');
+      throw new Error("商品シートが見つかりません");
     }
 
     const values = sheet.getDataRange().getValues();
     const headers = values[0] as string[];
-    const idIndex = headers.indexOf('商品ID');
-    const stockIndex = headers.indexOf('在庫数');
+    const idIndex = headers.indexOf("商品ID");
+    const stockIndex = headers.indexOf("在庫数");
 
     if (idIndex === -1 || stockIndex === -1) {
-      throw new Error('商品IDまたは在庫数の列が見つかりません');
+      throw new Error("商品IDまたは在庫数の列が見つかりません");
     }
 
     // 商品IDごとに在庫を減らす
@@ -233,7 +234,9 @@ function updateInventory(items: { [key: string]: number }): { success: boolean }
       if (items[itemId] && items[itemId] > 0) {
         const newStock = currentStock - items[itemId];
         if (newStock < 0) {
-          throw new Error(`${row[headers.indexOf('商品名')]}の在庫が不足しています`);
+          throw new Error(
+            `${row[headers.indexOf("商品名")]}の在庫が不足しています`
+          );
         }
         sheet.getRange(i + 1, stockIndex + 1).setValue(newStock);
       }
@@ -241,7 +244,7 @@ function updateInventory(items: { [key: string]: number }): { success: boolean }
 
     return { success: true };
   } catch (error) {
-    console.error('updateInventory error:', error);
+    console.error("updateInventory error:", error);
     throw error;
   }
 }
