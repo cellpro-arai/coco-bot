@@ -78,6 +78,9 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
 
     const ss = SpreadsheetApp.openById(spreadsheetId);
 
+    // ログイン中のユーザーのメールアドレスを取得
+    const userEmail = Session.getEffectiveUser().getEmail();
+
     // インシデント管理シートを取得または作成
     let incidentSheet = ss.getSheetByName("インシデント管理");
     if (!incidentSheet) {
@@ -85,6 +88,7 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
       // ヘッダー行を追加
       incidentSheet.appendRow([
         "登録日時",
+        "登録ユーザー",
         "案件名",
         "担当者",
         "トラブル概要",
@@ -99,6 +103,7 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
     // インシデント情報を追加
     incidentSheet.appendRow([
       incidentDate,
+      userEmail,
       incidentData.caseName,
       incidentData.assignee,
       incidentData.summary,
