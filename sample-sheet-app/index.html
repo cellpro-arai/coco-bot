@@ -1,16 +1,157 @@
 <!DOCTYPE html>
+<!--
+  発注フォーム - Alpine.js版
+
+  【Alpine.jsの主な機能】
+  - x-data: コンポーネントの状態管理
+  - x-init: 初期化処理
+  - x-show: 条件付き表示
+  - x-model: 双方向データバインディング
+  - @submit.prevent: イベントハンドラ
+  - x-text: テキスト表示
+  - x-for: リスト表示
+
+  【今後の拡張例】
+  - 新規登録/更新モード切り替え: x-data="{ mode: 'create' }"
+  - ファイルアップロード: <input type="file" @change="handleFile">
+  - モーダル表示: x-show="showModal"
+  - バリデーション: カスタムルールを追加
+-->
 <html>
   <head>
-    <base target="_top">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <base target="_top" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
   </head>
   <body>
-    <div class="container" style="max-width: 600px;">
+    <div class="container" style="max-width: 600px">
       <h2 class="text-center m-4">発注フォーム</h2>
-      <form class="mb-5" method="POST" action="<?= deployURL ?>">
-        <? output._ = formHTML ?>
-        <button type="submit" class="btn btn-outline-primary" name="confirm" value="true">確認画面へ</button>
-      </form>
+
+      <div x-data="orderForm()" x-init="init()">
+        <!-- ローディング表示 -->
+        <div x-show="loading" class="text-center my-5">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">読み込み中...</span>
+          </div>
+        </div>
+
+        <!-- エラー表示 -->
+        <div
+          x-show="error"
+          class="alert alert-danger"
+          role="alert"
+          x-text="error"
+        ></div>
+
+        <!-- フォーム -->
+        <form @submit.prevent="submitOrder" x-show="!loading" class="mb-5">
+          <!-- Email入力 -->
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input
+              type="email"
+              class="form-control"
+              id="email"
+              x-model="formData.email"
+              required
+            />
+          </div>
+
+          <!-- お名前入力 -->
+          <div class="mb-3">
+            <label for="username" class="form-label">お名前</label>
+            <input
+              type="text"
+              class="form-control"
+              id="username"
+              x-model="formData.username"
+              required
+            />
+          </div>
+
+          <!-- 商品選択 -->
+          <p class="mb-3">商品の個数を入力してください。</p>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">商品</th>
+                <th scope="col">単価</th>
+                <th scope="col">個数</th>
+                <th scope="col">小計</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="item in availableItems" :key="item.商品ID">
+                <tr>
+                  <td x-text="item.商品名"></td>
+                  <td x-text="'¥' + item.単価.toLocaleString()"></td>
+                  <td>
+                    <select
+                      class="form-select"
+                      x-model.number="formData.items[item.商品ID]"
+                      @change="calculateTotal()"
+                    >
+                      <template
+                        x-for="i in Array.from({length: item.在庫数 + 1}, (_, idx) => idx)"
+                      >
+                        <option :value="i" x-text="i"></option>
+                      </template>
+                    </select>
+                  </td>
+                  <td
+                    x-text="'¥' + ((formData.items[item.商品ID] || 0) * item.単価).toLocaleString()"
+                  ></td>
+                </tr>
+              </template>
+            </tbody>
+            <tfoot>
+              <tr class="table-active">
+                <td colspan="3" class="text-end"><strong>合計</strong></td>
+                <td>
+                  <strong x-text="'¥' + totalAmount.toLocaleString()"></strong>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <!-- 送信ボタン -->
+          <div class="d-flex gap-2">
+            <button
+              type="submit"
+              class="btn btn-primary"
+              :disabled="submitting || totalAmount === 0"
+            >
+              <span x-show="!submitting">発注する</span>
+              <span x-show="submitting">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                送信中...
+              </span>
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              @click="resetForm()"
+              :disabled="submitting"
+            >
+              リセット
+            </button>
+          </div>
+        </form>
+
+        <!-- 送信成功メッセージ -->
+        <div x-show="success" class="alert alert-success" role="alert">
+          発注が完了しました！
+        </div>
+      </div>
     </div>
+
+    <?!= include('javascript'); ?>
   </body>
 </html>
