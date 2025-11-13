@@ -1,6 +1,6 @@
 /**
  * ========================================
- * 発注フォーム - Alpine.js版
+ * インシデント管理フォーム - Alpine.js版
  * ========================================
  *
  * 【セットアップ手順】
@@ -10,45 +10,35 @@
  * 4. Webアプリとしてデプロイ（アクセス: 全員）
  *
  * 【必要なスプレッドシート構成】
- * - 「商品」シート: 商品ID | 商品名 | 単価 | 在庫数
- * - 「発注履歴」シート: 自動作成されます
+ * - 「インシデント管理」シート: 自動作成されます
  *
  * 【主な機能】
- * - リアルタイム合計金額計算
+ * - インシデント情報の記録
  * - ローディング・エラー表示
  * - フォームリセット機能
- * - 在庫数に応じた個数選択
+ * - 詳細情報入力の促進
  *
  * ========================================
  */
 
 /**
- * 商品データの型定義
+ * インシデントデータの型定義
  */
-interface ProductRecord {
-  商品ID: string;
-  商品名: string;
-  単価: number;
-  在庫数: number;
+interface IncidentData {
+  caseName: string;
+  assignee: string;
+  summary: string;
+  stakeholders: string;
+  details: string;
 }
 
 /**
- * 発注データの型定義
+ * インシデント登録結果の型定義
  */
-interface OrderData {
-  email: string;
-  username: string;
-  items: { [key: string]: number };
-  totalAmount: number;
-}
-
-/**
- * 発注結果の型定義
- */
-interface OrderResult {
+interface IncidentResult {
   success: boolean;
   message: string;
-  orderDate: string;
+  incidentDate: string;
 }
 
 /**
@@ -67,58 +57,17 @@ function setSpreadsheetId(): void {
  * index.htmlをテンプレートとして返す
  */
 function doGet(): GoogleAppsScript.HTML.HtmlOutput {
-  return HtmlService.createHtmlOutputFromFile("index").setTitle("発注フォーム");
+  return HtmlService.createHtmlOutputFromFile("index").setTitle(
+    "インシデント管理"
+  );
 }
 
 /**
- * スプレッドシートから全レコードを取得
- * @param sheetName - シート名
- * @return レコードの配列
- */
-function getAllRecords(sheetName: string): ProductRecord[] {
-  try {
-    // Get spreadsheet ID from script properties
-    const scriptProperties = PropertiesService.getScriptProperties();
-    const spreadsheetId = scriptProperties.getProperty("SPREADSHEET_ID");
-
-    if (!spreadsheetId) {
-      throw new Error(
-        "スプレッドシートIDが設定されていません。setSpreadsheetId()を実行してください。"
-      );
-    }
-
-    const ss = SpreadsheetApp.openById(spreadsheetId);
-    const sheet = ss.getSheetByName(sheetName);
-
-    if (!sheet) {
-      throw new Error(`シート「${sheetName}」が見つかりません。`);
-    }
-
-    const values = sheet.getDataRange().getValues();
-    const labels = values.shift() as string[];
-
-    const records: ProductRecord[] = [];
-    for (const value of values) {
-      const record: any = {};
-      labels.forEach((label, index) => {
-        record[label] = value[index];
-      });
-      records.push(record as ProductRecord);
-    }
-
-    return records;
-  } catch (error) {
-    console.error("getAllRecords error:", error);
-    throw new Error(`データ取得エラー: ${(error as Error).message}`);
-  }
-}
-
-/**
- * 発注データをスプレッドシートに保存
- * @param orderData - 発注データ
+ * インシデント情報をスプレッドシートに保存
+ * @param incidentData - インシデントデータ
  * @return 処理結果
  */
-function submitOrder(orderData: OrderData): OrderResult {
+function submitIncident(incidentData: IncidentData): IncidentResult {
   try {
     const scriptProperties = PropertiesService.getScriptProperties();
     const spreadsheetId = scriptProperties.getProperty("SPREADSHEET_ID");
@@ -129,122 +78,41 @@ function submitOrder(orderData: OrderData): OrderResult {
 
     const ss = SpreadsheetApp.openById(spreadsheetId);
 
-    // 発注履歴シートを取得または作成
-    let orderSheet = ss.getSheetByName("発注履歴");
-    if (!orderSheet) {
-      orderSheet = ss.insertSheet("発注履歴");
+    // インシデント管理シートを取得または作成
+    let incidentSheet = ss.getSheetByName("インシデント管理");
+    if (!incidentSheet) {
+      incidentSheet = ss.insertSheet("インシデント管理");
       // ヘッダー行を追加
-      orderSheet.appendRow([
-        "発注日時",
-        "Email",
-        "お名前",
-        "商品ID",
-        "商品名",
-        "個数",
-        "単価",
-        "小計",
-        "合計金額",
+      incidentSheet.appendRow([
+        "登録日時",
+        "案件名",
+        "担当者",
+        "トラブル概要",
+        "ステークホルダー",
+        "トラブル詳細",
       ]);
     }
 
-    // 商品情報を取得
-    const items = getAllRecords("商品");
-    const itemMap: { [key: string]: ProductRecord } = {};
-    items.forEach((item) => {
-      itemMap[item["商品ID"]] = item;
-    });
+    // 登録日時
+    const incidentDate = new Date();
 
-    // 発注日時
-    const orderDate = new Date();
-
-    // 発注された商品ごとに行を追加
-    let firstRow = true;
-    for (const [itemId, quantity] of Object.entries(orderData.items)) {
-      if (quantity > 0) {
-        const item = itemMap[itemId];
-        if (item) {
-          const subtotal = quantity * item["単価"];
-          orderSheet.appendRow([
-            orderDate,
-            orderData.email,
-            orderData.username,
-            itemId,
-            item["商品名"],
-            quantity,
-            item["単価"],
-            subtotal,
-            firstRow ? orderData.totalAmount : "", // 合計は最初の行のみ
-          ]);
-          firstRow = false;
-        }
-      }
-    }
-
-    // 在庫を更新（オプション: 必要に応じて実装）
-    // updateInventory(orderData.items);
+    // インシデント情報を追加
+    incidentSheet.appendRow([
+      incidentDate,
+      incidentData.caseName,
+      incidentData.assignee,
+      incidentData.summary,
+      incidentData.stakeholders,
+      incidentData.details,
+    ]);
 
     return {
       success: true,
-      message: "発注が完了しました",
-      orderDate: orderDate.toISOString(),
+      message: "インシデント情報を登録しました",
+      incidentDate: incidentDate.toISOString(),
     };
   } catch (error) {
-    console.error("submitOrder error:", error);
-    throw new Error(`発注処理エラー: ${(error as Error).message}`);
-  }
-}
-
-/**
- * 在庫を更新する（オプション機能）
- * @param items - 商品IDと個数のオブジェクト
- */
-function updateInventory(items: { [key: string]: number }): {
-  success: boolean;
-} {
-  try {
-    const scriptProperties = PropertiesService.getScriptProperties();
-    const spreadsheetId = scriptProperties.getProperty("SPREADSHEET_ID");
-
-    if (!spreadsheetId) {
-      throw new Error("スプレッドシートIDが設定されていません。");
-    }
-
-    const ss = SpreadsheetApp.openById(spreadsheetId);
-    const sheet = ss.getSheetByName("商品");
-
-    if (!sheet) {
-      throw new Error("商品シートが見つかりません");
-    }
-
-    const values = sheet.getDataRange().getValues();
-    const headers = values[0] as string[];
-    const idIndex = headers.indexOf("商品ID");
-    const stockIndex = headers.indexOf("在庫数");
-
-    if (idIndex === -1 || stockIndex === -1) {
-      throw new Error("商品IDまたは在庫数の列が見つかりません");
-    }
-
-    // 商品IDごとに在庫を減らす
-    for (let i = 1; i < values.length; i++) {
-      const row = values[i];
-      const itemId = row[idIndex] as string;
-      const currentStock = row[stockIndex] as number;
-
-      if (items[itemId] && items[itemId] > 0) {
-        const newStock = currentStock - items[itemId];
-        if (newStock < 0) {
-          throw new Error(
-            `${row[headers.indexOf("商品名")]}の在庫が不足しています`
-          );
-        }
-        sheet.getRange(i + 1, stockIndex + 1).setValue(newStock);
-      }
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error("updateInventory error:", error);
-    throw error;
+    console.error("submitIncident error:", error);
+    throw new Error(`登録処理エラー: ${(error as Error).message}`);
   }
 }
