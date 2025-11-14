@@ -41,7 +41,7 @@ interface IncidentData {
   summary: string;
   stakeholders: string;
   details: string;
-  fileData: FileData | null;
+  fileDataList: FileData[];
 }
 
 /**
@@ -142,16 +142,22 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
       ]);
     }
 
-    // ファイルアップロード処理
-    let fileUrl = "";
-    if (incidentData.fileData) {
-      fileUrl = uploadFileToDrive(incidentData.fileData);
+    // ファイルアップロード処理（複数ファイル対応）
+    const fileUrls: string[] = [];
+    const fileNames: string[] = [];
+    if (incidentData.fileDataList && incidentData.fileDataList.length > 0) {
+      for (const fileData of incidentData.fileDataList) {
+        const url = uploadFileToDrive(fileData);
+        fileUrls.push(url);
+        fileNames.push(fileData.name);
+      }
     }
 
     // 登録日時
     const incidentDate = new Date();
 
     // インシデント情報を追加
+    const newRow = incidentSheet.getLastRow() + 1;
     incidentSheet.appendRow([
       incidentDate,
       userEmail,
@@ -160,8 +166,33 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
       incidentData.summary,
       incidentData.stakeholders,
       incidentData.details,
-      fileUrl,
+      "", // ファイル列は後で設定
     ]);
+
+    // ファイルがある場合、Rich Text Formattingでリンクを設定
+    if (fileUrls.length > 0) {
+      const fileCell = incidentSheet.getRange(newRow, 8); // 8列目（添付ファイル列）
+      
+      // まずテキスト全体を組み立てる
+      let text = "";
+      const linkRanges: Array<{start: number, end: number, url: string}> = [];
+      
+      for (let i = 0; i < fileNames.length; i++) {
+        if (i > 0) text += "\n";
+        const startOffset = text.length;
+        text += fileNames[i];
+        const endOffset = text.length;
+        linkRanges.push({start: startOffset, end: endOffset, url: fileUrls[i]});
+      }
+      
+      // Rich Textを構築
+      const richTextBuilder = SpreadsheetApp.newRichTextValue().setText(text);
+      for (const range of linkRanges) {
+        richTextBuilder.setLinkUrl(range.start, range.end, range.url);
+      }
+      
+      fileCell.setRichTextValue(richTextBuilder.build());
+    }
 
     return {
       success: true,

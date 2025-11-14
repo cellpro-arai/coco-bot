@@ -16,197 +16,137 @@
   - 詳細バリデーション: カスタムルールを追加
 -->
 <html>
-  <head>
-    <base target="_top" />
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
-    />
-    <script
-      defer
-      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
-    ></script>
-    <style>
-      body {
-        background-color: #f8f9fa;
-      }
 
-      .required-label::after {
-        content: " *";
-        color: #dc3545;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container py-2">
-      <div class="alert alert-info text-center">
-        Hello World
+<head>
+  <base target="_top" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+
+    .required-label::after {
+      content: " *";
+      color: #dc3545;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container py-4" style="max-width: 900px">
+    <!-- ヘッダー -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-body text-center py-4">
+        <div class="mb-3">
+          <i class="bi bi-exclamation-triangle-fill text-primary" style="font-size: 3rem"></i>
+        </div>
+        <h1 class="h2 mb-2">インシデント管理システム</h1>
+        <p class="text-muted mb-0">
+          トラブル情報を詳細に記録し、適切な対応を行うための管理システムです
+        </p>
       </div>
     </div>
-    <div class="container py-4" style="max-width: 900px">
-      <!-- ヘッダー -->
-      <div class="card shadow-sm mb-4">
-        <div class="card-body text-center py-4">
-          <div class="mb-3">
-            <i
-              class="bi bi-exclamation-triangle-fill text-primary"
-              style="font-size: 3rem"
-            ></i>
+
+    <!-- フォームカード -->
+    <div class="card shadow-sm" x-data="incidentForm()" x-init="init()">
+      <div class="card-body p-4">
+        <!-- エラー表示 -->
+        <template x-if="error">
+          <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+            <i class="bi bi-exclamation-circle-fill me-2"></i>
+            <span x-text="error"></span>
           </div>
-          <h1 class="h2 mb-2">インシデント管理システム</h1>
-          <p class="text-muted mb-0">
-            トラブル情報を詳細に記録し、適切な対応を行うための管理システムです
-          </p>
+        </template>
+
+        <!-- 重要な注意事項 -->
+        <div class="alert alert-warning mb-4" role="alert">
+          <h6 class="alert-heading d-flex align-items-center mb-3">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            重要な注意事項
+          </h6>
+          <ul class="mb-0">
+            <li>すべての情報をできるだけ詳細に記入してください</li>
+            <li>些細な情報でも省略せず、すべて記載してください</li>
+            <li>情報の加工や省略は行わないでください</li>
+            <li>わかる範囲ですべての関係者を記載してください</li>
+          </ul>
         </div>
-      </div>
 
-      <!-- フォームカード -->
-      <div class="card shadow-sm" x-data="incidentForm()" x-init="init()">
-        <div class="card-body p-4">
-          <!-- エラー表示 -->
-          <template x-if="error">
-            <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
-              <i class="bi bi-exclamation-circle-fill me-2"></i>
-              <span x-text="error"></span>
+        <!-- フォーム -->
+        <form @submit.prevent="submitIncident">
+          <!-- 案件名 -->
+          <div class="mb-4">
+            <label for="caseName" class="form-label fw-semibold required-label">
+              <i class="bi bi-folder-fill text-primary me-1"></i>
+              案件名
+            </label>
+            <input type="text" class="form-control" id="caseName" x-model="formData.caseName" required
+              placeholder="例: 〇〇システム障害" />
+            <div class="form-text">
+              案件を識別できる名前を記入してください
             </div>
-          </template>
-
-          <!-- 重要な注意事項 -->
-          <div class="alert alert-warning mb-4" role="alert">
-            <h6 class="alert-heading d-flex align-items-center mb-3">
-              <i class="bi bi-info-circle-fill me-2"></i>
-              重要な注意事項
-            </h6>
-            <ul class="mb-0">
-              <li>すべての情報をできるだけ詳細に記入してください</li>
-              <li>些細な情報でも省略せず、すべて記載してください</li>
-              <li>情報の加工や省略は行わないでください</li>
-              <li>わかる範囲ですべての関係者を記載してください</li>
-            </ul>
           </div>
 
-          <!-- フォーム -->
-          <form @submit.prevent="submitIncident">
-            <!-- 案件名 -->
-            <div class="mb-4">
-              <label
-                for="caseName"
-                class="form-label fw-semibold required-label"
-              >
-                <i class="bi bi-folder-fill text-primary me-1"></i>
-                案件名
-              </label>
-              <input
-                type="text"
-                class="form-control"
-                id="caseName"
-                x-model="formData.caseName"
-                required
-                placeholder="例: 〇〇システム障害"
-              />
-              <div class="form-text">
-                案件を識別できる名前を記入してください
-              </div>
+          <!-- 担当者 -->
+          <div class="mb-4">
+            <label for="assignee" class="form-label fw-semibold required-label">
+              <i class="bi bi-person-fill text-primary me-1"></i>
+              担当者
+            </label>
+            <input type="text" class="form-control" id="assignee" x-model="formData.assignee" required
+              placeholder="例: 山田太郎" />
+            <div class="form-text">
+              このインシデントを担当する方の名前を1名記入してください
             </div>
+          </div>
 
-            <!-- 担当者 -->
-            <div class="mb-4">
-              <label
-                for="assignee"
-                class="form-label fw-semibold required-label"
-              >
-                <i class="bi bi-person-fill text-primary me-1"></i>
-                担当者
-              </label>
-              <input
-                type="text"
-                class="form-control"
-                id="assignee"
-                x-model="formData.assignee"
-                required
-                placeholder="例: 山田太郎"
-              />
-              <div class="form-text">
-                このインシデントを担当する方の名前を1名記入してください
-              </div>
+          <!-- トラブル概要 -->
+          <div class="mb-4">
+            <label for="summary" class="form-label fw-semibold required-label">
+              <i class="bi bi-card-text text-primary me-1"></i>
+              トラブル概要
+            </label>
+            <textarea class="form-control" id="summary" x-model="formData.summary" rows="3" required
+              placeholder="例: サーバーがダウンし、サービスにアクセスできない状態が発生しました"></textarea>
+            <div class="form-text">
+              トラブルの概要を簡潔に記入してください
             </div>
+          </div>
 
-            <!-- トラブル概要 -->
-            <div class="mb-4">
-              <label
-                for="summary"
-                class="form-label fw-semibold required-label"
-              >
-                <i class="bi bi-card-text text-primary me-1"></i>
-                トラブル概要
-              </label>
-              <textarea
-                class="form-control"
-                id="summary"
-                x-model="formData.summary"
-                rows="3"
-                required
-                placeholder="例: サーバーがダウンし、サービスにアクセスできない状態が発生しました"
-              ></textarea>
-              <div class="form-text">
-                トラブルの概要を簡潔に記入してください
-              </div>
-            </div>
-
-            <!-- ステークホルダー -->
-            <div class="mb-4">
-              <label
-                for="stakeholders"
-                class="form-label fw-semibold required-label"
-              >
-                <i class="bi bi-people-fill text-primary me-1"></i>
-                ステークホルダー
-              </label>
-              <textarea
-                class="form-control"
-                id="stakeholders"
-                x-model="formData.stakeholders"
-                rows="5"
-                required
-                placeholder="例:
+          <!-- ステークホルダー -->
+          <div class="mb-4">
+            <label for="stakeholders" class="form-label fw-semibold required-label">
+              <i class="bi bi-people-fill text-primary me-1"></i>
+              ステークホルダー
+            </label>
+            <textarea class="form-control" id="stakeholders" x-model="formData.stakeholders" rows="5" required
+              placeholder="例:
 - 顧客: 株式会社ABC 田中様
 - 社内: 開発部 鈴木課長、営業部 佐藤係長
-- ベンダー: XYZ社 高橋様"
-              ></textarea>
-              <div class="form-text">
-                <strong>関係するすべての人物を記載してください：</strong>
-                <ul class="small mb-0 mt-1">
-                  <li>顧客・クライアント</li>
-                  <li>社内関係者（上司、同僚、他部署など）</li>
-                  <li>外部ベンダー・協力会社</li>
-                  <li>その他関係者</li>
-                </ul>
-                些細な関わりでも、名前がわかる人は全員記載してください
-              </div>
+- ベンダー: XYZ社 高橋様"></textarea>
+            <div class="form-text">
+              <strong>関係するすべての人物を記載してください：</strong>
+              <ul class="small mb-0 mt-1">
+                <li>顧客・クライアント</li>
+                <li>社内関係者（上司、同僚、他部署など）</li>
+                <li>外部ベンダー・協力会社</li>
+                <li>その他関係者</li>
+              </ul>
+              些細な関わりでも、名前がわかる人は全員記載してください
             </div>
+          </div>
 
-            <!-- トラブル詳細 -->
-            <div class="mb-4">
-              <label
-                for="details"
-                class="form-label fw-semibold required-label"
-              >
-                <i class="bi bi-file-text-fill text-primary me-1"></i>
-                トラブル詳細
-              </label>
-              <textarea
-                class="form-control"
-                id="details"
-                x-model="formData.details"
-                rows="10"
-                required
-                placeholder="例:
+          <!-- トラブル詳細 -->
+          <div class="mb-4">
+            <label for="details" class="form-label fw-semibold required-label">
+              <i class="bi bi-file-text-fill text-primary me-1"></i>
+              トラブル詳細
+            </label>
+            <textarea class="form-control" id="details" x-model="formData.details" rows="10" required placeholder="例:
 【発生日時】2025年1月15日 14:30頃
 【発覚の経緯】顧客からの問い合わせ
 【現象】
@@ -219,155 +159,176 @@
 15:10 - ログを確認、メモリ不足が原因と判明
 【その他】
 - 前日にデータベースの大量更新を実施していた
-- 同様の事象は過去にも一度発生（2024年12月）"
-              ></textarea>
-              <div class="form-text">
-                <strong>以下の情報をできるだけ詳しく記載してください：</strong>
-                <ul class="small mb-0 mt-1">
-                  <li>発生日時・発覚の経緯</li>
-                  <li>具体的な現象・症状</li>
-                  <li>影響範囲（ユーザー数、システム範囲など）</li>
-                  <li>対応状況・時系列</li>
-                  <li>原因と思われる事項</li>
-                  <li>過去の類似事例</li>
-                  <li>その他気づいた点すべて</li>
+- 同様の事象は過去にも一度発生（2024年12月）"></textarea>
+            <div class="form-text">
+              <strong>以下の情報をできるだけ詳しく記載してください：</strong>
+              <ul class="small mb-0 mt-1">
+                <li>発生日時・発覚の経緯</li>
+                <li>具体的な現象・症状</li>
+                <li>影響範囲（ユーザー数、システム範囲など）</li>
+                <li>対応状況・時系列</li>
+                <li>原因と思われる事項</li>
+                <li>過去の類似事例</li>
+                <li>その他気づいた点すべて</li>
+              </ul>
+            </div>
+          </div>
+
+          <hr class="my-4" />
+
+          <!-- 関連ファイル -->
+          <div class="mb-4">
+            <label for="fileUpload" class="form-label fw-semibold">
+              <i class="bi bi-cloud-upload me-1"></i>
+              関連ファイルのアップロード
+            </label>
+            <input type="file" class="form-control" id="fileUpload" @change="handleFiles" multiple />
+            <div class="form-text">
+              メールのやり取り、契約書類、スクリーンショット、動画などをアップロードできます（複数選択可能）
+            </div>
+            <!-- 選択されたファイルリスト -->
+            <template x-if="formData.fileDataList && formData.fileDataList.length > 0">
+              <div class="mt-2">
+                <div class="small text-muted mb-1">選択されたファイル:</div>
+                <ul class="list-group">
+                  <template x-for="(file, index) in formData.fileDataList" :key="index">
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                      <span class="small" x-text="file.name"></span>
+                      <button type="button" class="btn btn-sm btn-outline-danger" @click="removeFile(index)">
+                        <i class="bi bi-x"></i>
+                      </button>
+                    </li>
+                  </template>
                 </ul>
               </div>
-            </div>
+            </template>
+          </div>
 
-            <hr class="my-4" />
+          <hr class="my-4" />
 
-            <!-- 関連ファイル -->
-            <div class="mb-4">
-              <label for="fileUpload" class="form-label fw-semibold">
-                <i class="bi bi-cloud-upload me-1"></i>
-                関連ファイルのアップロード
-              </label>
-              <input
-                type="file"
-                class="form-control"
-                id="fileUpload"
-                @change="handleFile"
-              />
-              <div class="form-text">
-                メールのやり取り、契約書類、スクリーンショット、動画などをアップロードできます
-              </div>
-            </div>
+          <!-- 送信ボタン -->
+          <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+            <button type="submit" class="btn btn-primary btn-lg px-4" :disabled="submitting">
+              <span x-show="!submitting">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                登録する
+              </span>
+              <span x-show="submitting">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                送信中...
+              </span>
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-lg px-4" @click="resetForm()"
+              :disabled="submitting">
+              <i class="bi bi-arrow-clockwise me-2"></i>
+              リセット
+            </button>
+          </div>
+        </form>
 
-            <hr class="my-4" />
-
-            <!-- 送信ボタン -->
-            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-              <button
-                type="submit"
-                class="btn btn-primary btn-lg px-4"
-                :disabled="submitting"
-              >
-                <span x-show="!submitting">
-                  <i class="bi bi-check-circle-fill me-2"></i>
-                  登録する
-                </span>
-                <span x-show="submitting">
-                  <span class="spinner-border spinner-border-sm me-2"></span>
-                  送信中...
-                </span>
-              </button>
-              <button
-                type="button"
-                class="btn btn-outline-secondary btn-lg px-4"
-                @click="resetForm()"
-                :disabled="submitting"
-              >
-                <i class="bi bi-arrow-clockwise me-2"></i>
-                リセット
-              </button>
-            </div>
-          </form>
-
-          <!-- 送信成功メッセージ -->
-          <template x-if="success">
-            <div class="alert alert-success d-flex align-items-center mt-4" role="alert">
-              <i class="bi bi-check-circle-fill me-2"></i>
-              <strong>インシデント情報の登録が完了しました！</strong>
-            </div>
-          </template>
-        </div>
+        <!-- 送信成功メッセージ -->
+        <template x-if="success">
+          <div class="alert alert-success d-flex align-items-center mt-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <strong>インシデント情報の登録が完了しました！</strong>
+          </div>
+        </template>
       </div>
     </div>
+  </div>
 
-    <script>
-      function incidentForm() {
-        return {
-          submitting: false,
-          success: false,
-          error: "",
-          formData: {
-            caseName: "",
-            assignee: "",
-            summary: "",
-            stakeholders: "",
-            details: "",
-            fileData: null,
-          },
+  <script>
+    function incidentForm() {
+      return {
+        submitting: false,
+        success: false,
+        error: "",
+        formData: {
+          caseName: "",
+          assignee: "",
+          summary: "",
+          stakeholders: "",
+          details: "",
+          fileDataList: [],
+        },
 
-          // ファイル選択時の処理
-          handleFile(event) {
-            const file = event.target.files[0];
-            if (!file) {
-              this.formData.fileData = null;
-              return;
-            }
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              this.formData.fileData = {
-                name: file.name,
-                mimeType: file.type,
-                data: e.target.result.split(",")[1], // Base64 part
+        // ファイル選択時の処理（複数ファイル対応）
+        handleFiles(event) {
+          const files = Array.from(event.target.files);
+          if (files.length === 0) {
+            return;
+          }
+
+          // 各ファイルをBase64に変換
+          const promises = files.map((file) => {
+            return new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                resolve({
+                  name: file.name,
+                  mimeType: file.type,
+                  data: e.target.result.split(",")[1], // Base64 part
+                });
               };
-            };
-            reader.readAsDataURL(file);
-          },
+              reader.readAsDataURL(file);
+            });
+          });
 
-          // 初期化
-          init() {
-            // 特に初期処理は不要
-          },
+          Promise.all(promises).then((fileDataArray) => {
+            this.formData.fileDataList = fileDataArray;
+          });
+        },
 
-          // フォーム送信
-          submitIncident() {
-            this.submitting = true;
-            this.error = "";
-            this.success = false;
+        // ファイルを削除
+        removeFile(index) {
+          this.formData.fileDataList.splice(index, 1);
+          // リストが空になったらinputもリセット
+          if (this.formData.fileDataList.length === 0) {
+            document.getElementById("fileUpload").value = "";
+          }
+        },
 
-            google.script.run
-              .withSuccessHandler((result) => {
-                this.submitting = false;
-                this.success = true;
-                setTimeout(() => {
-                  this.resetForm();
-                  this.success = false;
-                }, 3000);
-              })
-              .withFailureHandler((error) => {
-                this.error = "送信に失敗しました: " + error.message;
-                this.submitting = false;
-              })
-              .submitIncident(this.formData);
-          },
+        // 初期化
+        init() {
+          // 特に初期処理は不要
+        },
 
-          // フォームをリセット
-          resetForm() {
-            this.formData.caseName = "";
-            this.formData.assignee = "";
-            this.formData.summary = "";
-            this.formData.stakeholders = "";
-            this.formData.details = "";
-            this.formData.fileData = null;
-            document.getElementById("fileUpload").value = ""; // ファイルインプットをリセット
-            this.error = "";
-          },
-        };
-      }
-    </script>
-  </body>
+        // フォーム送信
+        submitIncident() {
+          this.submitting = true;
+          this.error = "";
+          this.success = false;
+
+          google.script.run
+            .withSuccessHandler((result) => {
+              this.submitting = false;
+              this.success = true;
+              setTimeout(() => {
+                this.resetForm();
+                this.success = false;
+              }, 3000);
+            })
+            .withFailureHandler((error) => {
+              this.error = "送信に失敗しました: " + error.message;
+              this.submitting = false;
+            })
+            .submitIncident(this.formData);
+        },
+
+        // フォームをリセット
+        resetForm() {
+          this.formData.caseName = "";
+          this.formData.assignee = "";
+          this.formData.summary = "";
+          this.formData.stakeholders = "";
+          this.formData.details = "";
+          this.formData.fileDataList = [];
+          document.getElementById("fileUpload").value = ""; // ファイルインプットをリセット
+          this.error = "";
+        },
+      };
+    }
+  </script>
+</body>
+
 </html>
