@@ -44,6 +44,11 @@
     </style>
   </head>
   <body>
+    <div class="container py-2">
+      <div class="alert alert-info text-center">
+        Hello World
+      </div>
+    </div>
     <div class="container py-4" style="max-width: 900px">
       <!-- ヘッダー -->
       <div class="card shadow-sm mb-4">
@@ -232,20 +237,21 @@
 
             <hr class="my-4" />
 
-            <!-- 関連ファイル（将来の実装予定） -->
-            <div class="mb-4 text-center text-muted">
-              <label class="form-label fw-semibold">
+            <!-- 関連ファイル -->
+            <div class="mb-4">
+              <label for="fileUpload" class="form-label fw-semibold">
                 <i class="bi bi-cloud-upload me-1"></i>
                 関連ファイルのアップロード
               </label>
-              <div class="alert alert-secondary" role="alert">
-                <i class="bi bi-clock-history me-2"></i>
-                <small>この機能は今後実装予定です</small>
+              <input
+                type="file"
+                class="form-control"
+                id="fileUpload"
+                @change="handleFile"
+              />
+              <div class="form-text">
+                メールのやり取り、契約書類、スクリーンショット、動画などをアップロードできます
               </div>
-              <small class="d-block">
-                将来的に以下のファイルをアップロードできるようになります：<br />
-                メールのやり取り、契約書類、スクリーンショット、動画など
-              </small>
             </div>
 
             <hr class="my-4" />
@@ -301,11 +307,30 @@
             summary: "",
             stakeholders: "",
             details: "",
+            fileData: null,
+          },
+
+          // ファイル選択時の処理
+          handleFile(event) {
+            const file = event.target.files[0];
+            if (!file) {
+              this.formData.fileData = null;
+              return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              this.formData.fileData = {
+                name: file.name,
+                mimeType: file.type,
+                data: e.target.result.split(",")[1], // Base64 part
+              };
+            };
+            reader.readAsDataURL(file);
           },
 
           // 初期化
           init() {
-            // 特に初期処理は不要（商品リストの読み込みなどがないため）
+            // 特に初期処理は不要
           },
 
           // フォーム送信
@@ -337,6 +362,8 @@
             this.formData.summary = "";
             this.formData.stakeholders = "";
             this.formData.details = "";
+            this.formData.fileData = null;
+            document.getElementById("fileUpload").value = ""; // ファイルインプットをリセット
             this.error = "";
           },
         };
