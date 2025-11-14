@@ -51,6 +51,21 @@ interface IncidentResult {
   success: boolean;
   message: string;
   incidentDate: string;
+  record: IncidentRecord; // 登録されたインシデントレコード
+}
+
+/**
+ * インシデント一覧取得用の型定義
+ */
+interface IncidentRecord {
+  registeredDate: string;
+  registeredUser: string;
+  caseName: string;
+  assignee: string;
+  summary: string;
+  stakeholders: string;
+  details: string;
+  attachments: string;
 }
 
 /**
@@ -104,6 +119,69 @@ function uploadFileToDrive(fileData: FileData): string {
   const file = folder.createFile(blob);
 
   return file.getUrl();
+}
+
+/**
+ * インシデント一覧を取得
+ * @return インシデント一覧
+ */
+function getIncidentList(): IncidentRecord[] {
+  try {
+    const scriptProperties = PropertiesService.getScriptProperties();
+    const spreadsheetId = scriptProperties.getProperty("SPREADSHEET_ID");
+
+    if (!spreadsheetId) {
+      throw new Error("スプレッドシートIDが設定されていません。");
+    }
+
+    const ss = SpreadsheetApp.openById(spreadsheetId);
+    const incidentSheet = ss.getSheetByName("インシデント管理");
+    
+    if (!incidentSheet) {
+      return [];
+    }
+
+    const lastRow = incidentSheet.getLastRow();
+    if (lastRow <= 1) {
+      return [];
+    }
+
+    // ヘッダー行を除いたデータを取得（逆順で最新を上に）
+    const dataRange = incidentSheet.getRange(2, 1, lastRow - 1, 8);
+    const values = dataRange.getValues();
+    const richTextValues = dataRange.getRichTextValues();
+    
+    const records: IncidentRecord[] = [];
+    
+    // 逆順でループして最新が先頭になるように
+    for (let i = values.length - 1; i >= 0; i--) {
+      const row = values[i];
+      const richTextRow = richTextValues[i];
+      
+      // 添付ファイル列（8列目、インデックス7）のRich Textを処理
+      let attachments = "";
+      const attachmentCell = richTextRow[7];
+      if (attachmentCell && attachmentCell.getText()) {
+        attachments = attachmentCell.getText();
+      }
+      
+      records.push({
+        registeredDate: row[0] ? new Date(row[0]).toLocaleString("ja-JP") : "",
+        registeredUser: row[1] || "",
+        caseName: row[2] || "",
+        assignee: row[3] || "",
+        summary: row[4] || "",
+        stakeholders: row[5] || "",
+        details: row[6] || "",
+        attachments: attachments,
+      });
+    }
+    
+    return records;
+  } catch (error) {
+    console.error("getIncidentList error:", error);
+    throw new Error(`一覧取得エラー: ${(error as Error).message}`);
+  }
 }
 
 /**
@@ -170,13 +248,14 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
     ]);
 
     // ファイルがある場合、Rich Text Formattingでリンクを設定
+    let attachments = "";
     if (fileUrls.length > 0) {
       const fileCell = incidentSheet.getRange(newRow, 8); // 8列目（添付ファイル列）
-      
+
       // まずテキスト全体を組み立てる
       let text = "";
       const linkRanges: Array<{start: number, end: number, url: string}> = [];
-      
+
       for (let i = 0; i < fileNames.length; i++) {
         if (i > 0) text += "\n";
         const startOffset = text.length;
@@ -184,20 +263,34 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
         const endOffset = text.length;
         linkRanges.push({start: startOffset, end: endOffset, url: fileUrls[i]});
       }
-      
+
       // Rich Textを構築
       const richTextBuilder = SpreadsheetApp.newRichTextValue().setText(text);
       for (const range of linkRanges) {
         richTextBuilder.setLinkUrl(range.start, range.end, range.url);
       }
-      
+
       fileCell.setRichTextValue(richTextBuilder.build());
+      attachments = text;
     }
+
+    // 登録されたインシデントレコードを作成
+    const record: IncidentRecord = {
+      registeredDate: incidentDate.toLocaleString("ja-JP"),
+      registeredUser: userEmail,
+      caseName: incidentData.caseName,
+      assignee: incidentData.assignee,
+      summary: incidentData.summary,
+      stakeholders: incidentData.stakeholders,
+      details: incidentData.details,
+      attachments: attachments,
+    };
 
     return {
       success: true,
       message: "インシデント情報を登録しました",
       incidentDate: incidentDate.toISOString(),
+      record: record,
     };
   } catch (error) {
     console.error("submitIncident error:", error);
