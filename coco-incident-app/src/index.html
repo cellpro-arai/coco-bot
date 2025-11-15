@@ -354,11 +354,34 @@
             </div>
           </form>
 
-          <!-- 送信成功メッセージ -->
+          <!-- 送信成功メッセージとAI改善案 -->
           <template x-if="success">
-            <div class="alert alert-success d-flex align-items-center mt-4" role="alert">
-              <i class="bi bi-check-circle-fill me-2"></i>
-              <strong>インシデント情報の登録が完了しました！</strong>
+            <div class="mt-4">
+              <div class="alert alert-success d-flex align-items-center" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <strong>インシデント情報の登録が完了しました！</strong>
+              </div>
+
+              <!-- AI改善案 -->
+              <template x-if="improvementSuggestions">
+                <div class="card border-primary mt-3">
+                  <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                      <i class="bi bi-lightbulb-fill me-2"></i>
+                      AI改善案
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    <div class="text-pre-wrap" x-text="improvementSuggestions" style="white-space: pre-wrap;"></div>
+                  </div>
+                  <div class="card-footer">
+                    <button class="btn btn-primary" @click="backToList()">
+                      <i class="bi bi-arrow-left me-2"></i>
+                      一覧へ戻る
+                    </button>
+                  </div>
+                </div>
+              </template>
             </div>
           </template>
         </div>
@@ -387,7 +410,9 @@
         // フォーム管理
         submitting: false,
         success: false,
+        improvementSuggestions: "",
         formData: {
+          registeredDate: "", // 編集モードの場合に設定される（識別子として使用）
           caseName: "",
           assignee: "",
           summary: "",
@@ -427,6 +452,7 @@
 
         // インシデント編集（カードクリック時）
         editIncident(incident) {
+          this.formData.registeredDate = incident.registeredDate; // 編集対象を識別
           this.formData.caseName = incident.caseName;
           this.formData.assignee = incident.assignee;
           this.formData.summary = incident.summary;
@@ -497,13 +523,22 @@
             .withSuccessHandler((result) => {
               this.submitting = false;
               this.success = true;
-              // 登録されたインシデントを配列の先頭に追加
-              this.incidents.unshift(result.record);
-              // 送信成功後は一覧に戻る
-              setTimeout(() => {
-                this.currentView = "list";
-                this.scrollToTop();
-              }, 2000);
+              // AI改善案を保存
+              this.improvementSuggestions = result.improvementSuggestions || "";
+
+              // 編集モードの場合は既存レコードを更新、新規の場合は先頭に追加
+              if (this.formData.registeredDate) {
+                // 編集モード: 既存レコードを検索して更新
+                const index = this.incidents.findIndex(
+                  (inc) => inc.registeredDate === this.formData.registeredDate
+                );
+                if (index !== -1) {
+                  this.incidents[index] = result.record;
+                }
+              } else {
+                // 新規作成: 配列の先頭に追加
+                this.incidents.unshift(result.record);
+              }
             })
             .withFailureHandler((error) => {
               this.error = "送信に失敗しました: " + error.message;
@@ -514,6 +549,7 @@
 
         // フォームをリセット
         resetForm() {
+          this.formData.registeredDate = "";
           this.formData.caseName = "";
           this.formData.assignee = "";
           this.formData.summary = "";
@@ -526,6 +562,7 @@
           }
           this.error = "";
           this.success = false;
+          this.improvementSuggestions = "";
         },
       };
     }
