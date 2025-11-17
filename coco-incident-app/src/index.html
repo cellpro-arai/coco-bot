@@ -143,11 +143,22 @@
                         <i class="bi bi-person-fill me-1"></i>
                         <span x-text="incident.assignee"></span>
                       </span>
-                      <span class="badge bg-info text-dark">
-                        <i class="bi bi-envelope-fill me-1"></i>
-                        <span x-text="incident.registeredUser"></span>
+                      <span class="badge me-2" :class="{
+                          'bg-warning text-dark': incident.status === '対応中',
+                          'bg-secondary': incident.status === '保留',
+                          'bg-success': incident.status === '解決済み',
+                          'bg-dark': incident.status === 'クローズ'
+                        }">
+                        <i class="bi bi-flag-fill me-1"></i>
+                        <span x-text="incident.status"></span>
                       </span>
                     </div>
+                    <template x-if="incident.updateDate">
+                      <div class="small text-muted mb-2">
+                        <i class="bi bi-clock-fill me-1"></i>
+                        更新日時: <span x-text="incident.updateDate"></span>
+                      </div>
+                    </template>
                     <p class="card-text text-truncate-2 mb-2" x-text="incident.summary"></p>
                     <div class="small text-muted">
                       <div class="text-truncate-3" x-text="incident.details"></div>
@@ -204,6 +215,21 @@
             </ul>
           </div>
 
+          <!-- 前回のAI改善案表示（編集モード時のみ） -->
+          <template x-if="formData.registeredDate && formData.previousAiSuggestions">
+            <div class="card border-info mb-4">
+              <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                  <i class="bi bi-lightbulb-fill me-2"></i>
+                  前回のAI改善案
+                </h6>
+              </div>
+              <div class="card-body">
+                <div class="text-pre-wrap" x-text="formData.previousAiSuggestions" style="white-space: pre-wrap;"></div>
+              </div>
+            </div>
+          </template>
+
           <!-- フォーム -->
           <form @submit.prevent="submitIncident">
             <!-- 案件名 -->
@@ -229,6 +255,23 @@
                 placeholder="例: 山田太郎" />
               <div class="form-text">
                 このインシデントを担当する方の名前を1名記入してください
+              </div>
+            </div>
+
+            <!-- ステータス -->
+            <div class="mb-4">
+              <label for="status" class="form-label fw-semibold required-label">
+                <i class="bi bi-flag-fill text-primary me-1"></i>
+                ステータス
+              </label>
+              <select class="form-select" id="status" x-model="formData.status" required>
+                <option value="対応中">対応中</option>
+                <option value="保留">保留</option>
+                <option value="解決済み">解決済み</option>
+                <option value="クローズ">クローズ</option>
+              </select>
+              <div class="form-text">
+                現在の対応状況を選択してください
               </div>
             </div>
 
@@ -339,17 +382,12 @@
               <button type="submit" class="btn btn-primary btn-lg px-4" :disabled="submitting">
                 <span x-show="!submitting">
                   <i class="bi bi-check-circle-fill me-2"></i>
-                  登録する
+                  <span x-text="formData.registeredDate ? '更新する' : '登録する'"></span>
                 </span>
                 <span x-show="submitting">
                   <span class="spinner-border spinner-border-sm me-2"></span>
-                  送信中...
+                  <span x-text="formData.registeredDate ? '更新中...' : '送信中...'"></span>
                 </span>
-              </button>
-              <button type="button" class="btn btn-outline-secondary btn-lg px-4" @click="resetForm()"
-                :disabled="submitting">
-                <i class="bi bi-arrow-clockwise me-2"></i>
-                リセット
               </button>
             </div>
           </form>
@@ -418,7 +456,9 @@
           summary: "",
           stakeholders: "",
           details: "",
+          status: "対応中",
           fileDataList: [],
+          previousAiSuggestions: "", // 編集時の前回AI改善案
         },
 
         // 初期化
@@ -458,7 +498,9 @@
           this.formData.summary = incident.summary;
           this.formData.stakeholders = incident.stakeholders;
           this.formData.details = incident.details;
+          this.formData.status = incident.status || "対応中";
           this.formData.fileDataList = [];
+          this.formData.previousAiSuggestions = incident.aiSuggestions || ""; // 前回のAI改善案
           this.currentView = "form";
           this.scrollToTop();
         },
@@ -555,7 +597,9 @@
           this.formData.summary = "";
           this.formData.stakeholders = "";
           this.formData.details = "";
+          this.formData.status = "対応中";
           this.formData.fileDataList = [];
+          this.formData.previousAiSuggestions = "";
           const fileInput = document.getElementById("fileUpload");
           if (fileInput) {
             fileInput.value = "";

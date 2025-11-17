@@ -33,6 +33,7 @@ interface IncidentData {
   summary: string;
   stakeholders: string;
   details: string;
+  status: string;
   fileDataList: FileData[];
 }
 
@@ -59,6 +60,9 @@ interface IncidentRecord {
   stakeholders: string;
   details: string;
   attachments: string;
+  status: string;
+  updateDate: string;
+  aiSuggestions: string;
 }
 
 /**
@@ -203,6 +207,9 @@ function getOrCreateIncidentSheet(
       "ステークホルダー",
       "トラブル詳細",
       "添付ファイル",
+      "ステータス",
+      "更新日時",
+      "AI改善案",
     ]);
   }
 
@@ -230,7 +237,7 @@ function getIncidentList(): IncidentRecord[] {
       return [];
     }
 
-    const dataRange = incidentSheet.getRange(2, 1, lastRow - 1, 8);
+    const dataRange = incidentSheet.getRange(2, 1, lastRow - 1, 11);
     const values = dataRange.getValues();
     const richTextValues = dataRange.getRichTextValues();
 
@@ -255,6 +262,9 @@ function getIncidentList(): IncidentRecord[] {
         stakeholders: row[5] || "",
         details: row[6] || "",
         attachments: attachments,
+        status: row[8] || "",
+        updateDate: row[9] ? new Date(row[9]).toLocaleString("ja-JP") : "",
+        aiSuggestions: row[10] || "",
       });
     }
 
@@ -342,10 +352,13 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
       }
     }
 
+    // 更新日時（編集時のみ設定）
+    const updateDate = isEditMode ? new Date() : incidentDate;
+
     // レコードを保存（新規作成または更新）
     if (isEditMode) {
       // 既存行を更新（日付とユーザーは保持、他のデータを更新）
-      incidentSheet.getRange(targetRow, 1, 1, 7).setValues([[
+      incidentSheet.getRange(targetRow, 1, 1, 10).setValues([[
         incidentDate,
         originalUserEmail,
         incidentData.caseName,
@@ -353,6 +366,9 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
         incidentData.summary,
         incidentData.stakeholders,
         incidentData.details,
+        "", // 添付ファイル（後で設定）
+        incidentData.status,
+        updateDate,
       ]]);
     } else {
       // 新規行を追加
@@ -364,7 +380,10 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
         incidentData.summary,
         incidentData.stakeholders,
         incidentData.details,
-        "",
+        "", // 添付ファイル（後で設定）
+        incidentData.status,
+        updateDate,
+        "", // AI改善案（後で設定）
       ]);
     }
 
@@ -395,19 +414,8 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
       attachments = text;
     }
 
-    const record: IncidentRecord = {
-      registeredDate: incidentDate.toLocaleString("ja-JP"),
-      registeredUser: originalUserEmail,
-      caseName: incidentData.caseName,
-      assignee: incidentData.assignee,
-      summary: incidentData.summary,
-      stakeholders: incidentData.stakeholders,
-      details: incidentData.details,
-      attachments: attachments,
-    };
-
     // OpenAI APIキーが設定されている場合のみ改善案を取得
-    let improvementSuggestions: string | undefined;
+    let improvementSuggestions: string = "";
     const scriptProperties = PropertiesService.getScriptProperties();
     const apiKey = scriptProperties.getProperty("OPENAI_API_KEY");
 
@@ -425,6 +433,25 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
         "OpenAI APIキーが設定されていないため、AI改善案の取得をスキップします"
       );
     }
+
+    // AI改善案をスプレッドシートに保存
+    if (improvementSuggestions) {
+      incidentSheet.getRange(targetRow, 11).setValue(improvementSuggestions);
+    }
+
+    const record: IncidentRecord = {
+      registeredDate: incidentDate.toLocaleString("ja-JP"),
+      registeredUser: originalUserEmail,
+      caseName: incidentData.caseName,
+      assignee: incidentData.assignee,
+      summary: incidentData.summary,
+      stakeholders: incidentData.stakeholders,
+      details: incidentData.details,
+      attachments: attachments,
+      status: incidentData.status,
+      updateDate: updateDate.toLocaleString("ja-JP"),
+      aiSuggestions: improvementSuggestions,
+    };
 
     return {
       success: true,
