@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  【セルプロ】インシデント管理システム - React版 SPA
+  【セルプロ】経費精算フォーム - React版 SPA
 -->
 <html>
 
@@ -105,37 +105,303 @@
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useRef } = React;
 
     function App() {
+      const [formData, setFormData] = useState({
+        name: '',
+        workScheduleFile: null,
+        expenseFile: null,
+        workStartTime: '09:00',
+        workEndTime: '18:00',
+        hasCommuterPass: 'no',
+        nearestStation: '',
+        workStation: '',
+        monthlyFee: '',
+        remarks: ''
+      });
+
+      const [submitted, setSubmitted] = useState(false);
+      const formRef = useRef(null);
+
+      const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+          ...prev,
+          [name]: value
+        }));
+      };
+
+      const handleFileChange = (e) => {
+        const { name, files } = e.target;
+        setFormData(prev => ({
+          ...prev,
+          [name]: files[0] || null
+        }));
+      };
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSubmitted(true);
+
+        try {
+          // ファイルをBase64エンコード
+          const workScheduleFileData = await encodeFileToBase64(formData.workScheduleFile);
+          const expenseFileData = await encodeFileToBase64(formData.expenseFile);
+
+          // バックエンドに送信するデータを準備
+          const expenseData = {
+            name: formData.name,
+            workScheduleFile: workScheduleFileData,
+            expenseFile: expenseFileData,
+            workStartTime: formData.workStartTime,
+            workEndTime: formData.workEndTime,
+            hasCommuterPass: formData.hasCommuterPass,
+            nearestStation: formData.nearestStation,
+            workStation: formData.workStation,
+            monthlyFee: formData.monthlyFee,
+            remarks: formData.remarks
+          };
+
+          // Google Apps Scriptのバックエンド関数を呼び出し
+          google.script.run
+            .withSuccessHandler((result) => {
+              alert(result.message);
+              // フォームをリセット
+              if (formRef.current) {
+                formRef.current.reset();
+              }
+              setFormData({
+                name: '',
+                workScheduleFile: null,
+                expenseFile: null,
+                workStartTime: '09:00',
+                workEndTime: '18:00',
+                hasCommuterPass: 'no',
+                nearestStation: '',
+                workStation: '',
+                monthlyFee: '',
+                remarks: ''
+              });
+              setSubmitted(false);
+            })
+            .withFailureHandler((error) => {
+              alert('エラーが発生しました: ' + error.message);
+              setSubmitted(false);
+            })
+            .submitExpense(expenseData);
+        } catch (error) {
+          alert('エラーが発生しました: ' + error.message);
+          setSubmitted(false);
+        }
+      };
+
+      const encodeFileToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+          if (!file) {
+            resolve(null);
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = () => {
+            const base64 = reader.result.split(',')[1];
+            resolve({
+              name: file.name,
+              mimeType: file.type,
+              data: base64
+            });
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      };
+
       return (
         <>
           <main className="container">
             {/* ヘッダー */}
             <article className="text-center py-3">
               <div className="d-flex align-items-center justify-content-center mb-2">
-                <i className="bi bi-exclamation-triangle-fill me-2" style={{ fontSize: '2rem', color: 'var(--pico-primary)' }}></i>
-                <h1 className="mb-0">【セルプロ】インシデント管理システム</h1>
+                <i className="bi bi-receipt me-2" style={{ fontSize: '2rem', color: 'var(--pico-primary)' }}></i>
+                <h1 className="mb-0">【セルプロ】経費精算フォーム</h1>
               </div>
               <p className="mb-0">
-                トラブル情報を詳細に記録し、適切な対応を行うための管理システムです
+                経費精算に必要な情報を入力してください
               </p>
             </article>
 
-            {/* メインコンテンツ */}
-            <article className="text-center py-5">
-              <h2 className="mb-3">React版に移行しました</h2>
-              <p>
-                <i className="bi bi-check-circle-fill me-2" style={{ color: 'var(--pico-ins-color)' }}></i>
-                Reactコンポーネントが正常に動作しています
-              </p>
+            {/* フォーム */}
+            <article>
+              <form ref={formRef} onSubmit={handleSubmit}>
+                {/* 氏名 */}
+                <label htmlFor="name" className="required-label">
+                  氏名
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="山田 太郎"
+                  />
+                </label>
+
+                {/* 提出物 */}
+                <fieldset>
+                  <legend className="required-label">提出物</legend>
+
+                  <label htmlFor="workScheduleFile">
+                    勤務表
+                    <input
+                      type="file"
+                      id="workScheduleFile"
+                      name="workScheduleFile"
+                      onChange={handleFileChange}
+                      accept=".pdf,.xlsx,.xls,.jpg,.jpeg,.png"
+                    />
+                  </label>
+
+                  <label htmlFor="expenseFile">
+                    交通費・経費
+                    <input
+                      type="file"
+                      id="expenseFile"
+                      name="expenseFile"
+                      onChange={handleFileChange}
+                      accept=".pdf,.xlsx,.xls,.jpg,.jpeg,.png"
+                    />
+                  </label>
+                </fieldset>
+
+                {/* 現場の定時 */}
+                <fieldset>
+                  <legend className="required-label">現場の定時</legend>
+                  <div className="grid">
+                    <label htmlFor="workStartTime">
+                      開始
+                      <input
+                        type="time"
+                        id="workStartTime"
+                        name="workStartTime"
+                        value={formData.workStartTime}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </label>
+
+                    <label htmlFor="workEndTime">
+                      終了
+                      <input
+                        type="time"
+                        id="workEndTime"
+                        name="workEndTime"
+                        value={formData.workEndTime}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </label>
+                  </div>
+                </fieldset>
+
+                {/* 定期券購入 */}
+                <fieldset>
+                  <legend className="required-label">定期券購入</legend>
+                  <label>
+                    <input
+                      type="radio"
+                      name="hasCommuterPass"
+                      value="yes"
+                      checked={formData.hasCommuterPass === 'yes'}
+                      onChange={handleInputChange}
+                    />
+                    有り
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="hasCommuterPass"
+                      value="no"
+                      checked={formData.hasCommuterPass === 'no'}
+                      onChange={handleInputChange}
+                    />
+                    無し
+                  </label>
+                </fieldset>
+
+                {/* 定期券詳細（条件付き表示） */}
+                {formData.hasCommuterPass === 'yes' && (
+                  <fieldset>
+                    <legend className="required-label">定期券詳細</legend>
+
+                    <label htmlFor="nearestStation">
+                      最寄り駅
+                      <input
+                        type="text"
+                        id="nearestStation"
+                        name="nearestStation"
+                        value={formData.nearestStation}
+                        onChange={handleInputChange}
+                        required={formData.hasCommuterPass === 'yes'}
+                        placeholder="例: 渋谷駅"
+                      />
+                    </label>
+
+                    <label htmlFor="workStation">
+                      勤務先の駅
+                      <input
+                        type="text"
+                        id="workStation"
+                        name="workStation"
+                        value={formData.workStation}
+                        onChange={handleInputChange}
+                        required={formData.hasCommuterPass === 'yes'}
+                        placeholder="例: 新宿駅"
+                      />
+                    </label>
+
+                    <label htmlFor="monthlyFee">
+                      月額（円）
+                      <input
+                        type="number"
+                        id="monthlyFee"
+                        name="monthlyFee"
+                        value={formData.monthlyFee}
+                        onChange={handleInputChange}
+                        required={formData.hasCommuterPass === 'yes'}
+                        min="0"
+                        placeholder="例: 15000"
+                      />
+                    </label>
+                  </fieldset>
+                )}
+
+                {/* 備考 */}
+                <label htmlFor="remarks">
+                  備考
+                  <textarea
+                    id="remarks"
+                    name="remarks"
+                    value={formData.remarks}
+                    onChange={handleInputChange}
+                    rows="4"
+                    placeholder="その他連絡事項があればご記入ください"
+                  ></textarea>
+                </label>
+
+                {/* 送信ボタン */}
+                <button type="submit" disabled={submitted}>
+                  {submitted ? '送信中...' : '提出する'}
+                </button>
+              </form>
             </article>
           </main>
 
           {/* フッター */}
           <footer className="container text-center">
             <p className="mb-0">
-              <small>&copy; 2025 Cell Promote Inc. (Coco Incident). All rights reserved.</small>
+              <small>&copy; 2025 Cell Promote Inc. All rights reserved.</small>
             </p>
           </footer>
         </>
