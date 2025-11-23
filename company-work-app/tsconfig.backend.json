@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src/backend",
+    "module": "commonjs",
+    "target": "ES2019"
+  },
+  "include": ["src/backend/**/*"]
+}
