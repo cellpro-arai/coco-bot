@@ -34,15 +34,19 @@ interface CommuteEntry {
 }
 
 interface ExpenseEntry {
+  category: string;
   description: string;
   amount: string;
   receiptFile: FileData;
+  certificateFile?: FileData | null;
 }
 
 interface ExpenseEntryRecord {
+  category: string;
   description: string;
   amount: string;
   receiptUrl: string;
+  certificateUrl?: string;
 }
 
 interface ExpenseData {
@@ -182,11 +186,24 @@ function uploadExpenseReceipts(entries: ExpenseEntry[]): ExpenseEntryRecord[] {
     return [];
   }
 
-  return entries.map((entry) => ({
-    description: entry.description,
-    amount: entry.amount,
-    receiptUrl: uploadFileToDrive(entry.receiptFile),
-  }));
+  return entries.map((entry) => {
+    const category = entry.category || "other";
+    const receiptUrl = entry.receiptFile
+      ? uploadFileToDrive(entry.receiptFile)
+      : "";
+    const certificateUrl =
+      category === "exam" && entry.certificateFile
+        ? uploadFileToDrive(entry.certificateFile)
+        : "";
+
+    return {
+      category,
+      description: entry.description,
+      amount: entry.amount,
+      receiptUrl,
+      certificateUrl,
+    };
+  });
 }
 
 function formatExpenseEntries(entries: ExpenseEntryRecord[]): string {
@@ -196,8 +213,20 @@ function formatExpenseEntries(entries: ExpenseEntryRecord[]): string {
 
   return entries
     .map((entry, index) => {
-      const base = `${index + 1}. ${entry.description}（${entry.amount}円）`;
-      return entry.receiptUrl ? `${base}\n領収書: ${entry.receiptUrl}` : base;
+      const categoryLabel =
+        entry.category === "exam" ? "試験申請" : "その他";
+      const base = `${index + 1}. [${categoryLabel}] ${entry.description}（${entry.amount}円）`;
+      const attachments = [];
+
+      if (entry.receiptUrl) {
+        attachments.push(`領収書: ${entry.receiptUrl}`);
+      }
+
+      if (entry.certificateUrl) {
+        attachments.push(`合格通知書: ${entry.certificateUrl}`);
+      }
+
+      return attachments.length ? `${base}\n${attachments.join("\n")}` : base;
     })
     .join("\n\n");
 }
