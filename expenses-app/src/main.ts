@@ -117,30 +117,49 @@ const EXPENSE_SHEET_HEADERS = [
   "勤務先の駅",
   "月額",
   "備考",
+  "交通費合計",
+  "経費合計",
+  "合計金額",
 ];
 const USER_EXPENSE_SHEET_NAME = "提出履歴";
 const USER_SPREADSHEET_PROPERTY_PREFIX = "USER_SPREADSHEET_";
 const USER_SPREADSHEET_NAME_PREFIX = "経費精算_";
 
-function ensureExpenseSheetHeader(
-  sheet: GoogleAppsScript.Spreadsheet.Sheet
+/**
+ * スプレッドシートに指定ヘッダーをセットし、無い場合は追加する
+ */
+function ensureSheetHeader(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+  headers: string[]
 ): void {
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(EXPENSE_SHEET_HEADERS);
+    sheet.appendRow(headers);
     return;
   }
 
-  const headerRange = sheet.getRange(1, 1, 1, EXPENSE_SHEET_HEADERS.length);
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
   const currentHeaders = headerRange.getValues()[0];
-  const needsUpdate = EXPENSE_SHEET_HEADERS.some(
-    (header, index) => currentHeaders[index] !== header
-  );
+  const needsUpdate =
+    headers.length !== currentHeaders.length ||
+    headers.some((header, index) => currentHeaders[index] !== header);
 
   if (needsUpdate) {
-    headerRange.setValues([EXPENSE_SHEET_HEADERS]);
+    headerRange.setValues([headers]);
   }
 }
 
+/**
+ * 経費精算シート専用のヘッダーを整備する
+ */
+function ensureExpenseSheetHeader(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet
+): void {
+  ensureSheetHeader(sheet, EXPENSE_SHEET_HEADERS);
+}
+
+/**
+ * ファイル名を表示しつつURLのリンクをセルに設定する
+ */
 function setFileHyperlink(
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
   row: number,
@@ -158,6 +177,9 @@ function setFileHyperlink(
   sheet.getRange(row, column).setRichTextValue(richTextBuilder.build());
 }
 
+/**
+ * 交通費詳細の配列を表示用テキストに整形する
+ */
 function formatCommuteEntries(entries: CommuteEntry[]): string {
   if (!entries || entries.length === 0) {
     return "";
@@ -181,6 +203,50 @@ function formatCommuteEntries(entries: CommuteEntry[]): string {
     .join("\n");
 }
 
+/**
+ * 文字列の金額から数値のみ抽出して数値化する
+ */
+function toNumberAmount(value?: string): number {
+  if (!value) {
+    return 0;
+  }
+
+  const normalized = value.replace(/[^\d.-]/g, "");
+  const parsed = Number(normalized);
+  return isNaN(parsed) ? 0 : parsed;
+}
+
+/**
+ * 交通費明細の金額合計を求める
+ */
+function sumCommuteAmounts(entries: CommuteEntry[]): number {
+  if (!entries || entries.length === 0) {
+    return 0;
+  }
+
+  return entries.reduce(
+    (total, entry) => total + toNumberAmount(entry.amount),
+    0
+  );
+}
+
+/**
+ * 経費明細の金額合計を求める
+ */
+function sumExpenseAmounts(entries: ExpenseEntryRecord[]): number {
+  if (!entries || entries.length === 0) {
+    return 0;
+  }
+
+  return entries.reduce(
+    (total, entry) => total + toNumberAmount(entry.amount),
+    0
+  );
+}
+
+/**
+ * 経費の添付ファイルをアップロードしダウンロードURLを付与する
+ */
 function uploadExpenseReceipts(entries: ExpenseEntry[]): ExpenseEntryRecord[] {
   if (!entries || entries.length === 0) {
     return [];
@@ -206,6 +272,9 @@ function uploadExpenseReceipts(entries: ExpenseEntry[]): ExpenseEntryRecord[] {
   });
 }
 
+/**
+ * 経費詳細レコードを一覧表示向けテキストにまとめる
+ */
 function formatExpenseEntries(entries: ExpenseEntryRecord[]): string {
   if (!entries || entries.length === 0) {
     return "";
@@ -247,10 +316,16 @@ function getOrCreateExpenseSheet(
   return sheet;
 }
 
+/**
+ * ユーザーごとのスプレッドシートIDを保存するプロパティキーを生成する
+ */
 function getUserSpreadsheetPropertyKey(userEmail: string): string {
   return `${USER_SPREADSHEET_PROPERTY_PREFIX}${userEmail}`;
 }
 
+/**
+ * ユーザー専用スプレッドシートを取得し無い場合は新規作成する
+ */
 function getOrCreateUserSpreadsheet(
   userEmail: string,
   userName: string
@@ -283,6 +358,9 @@ function getOrCreateUserSpreadsheet(
   return userSpreadsheet;
 }
 
+/**
+ * ユーザー専用スプレッドシート内に提出履歴シートを確保する
+ */
 function getOrCreateUserExpenseSheet(
   spreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet
 ): GoogleAppsScript.Spreadsheet.Sheet {
@@ -323,7 +401,9 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
     const commuteDetailsText = formatCommuteEntries(commuteEntries);
     const expenseEntryRecords = uploadExpenseReceipts(expenseEntries);
     const expenseDetailsText = formatExpenseEntries(expenseEntryRecords);
-
+    const totalCommuteAmount = sumCommuteAmounts(commuteEntries);
+    const totalExpenseAmount = sumExpenseAmounts(expenseEntryRecords);
+    const totalAmount = totalCommuteAmount + totalExpenseAmount;
     const rowData = [
       submittedDate,
       userEmail,
@@ -338,6 +418,9 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
       expenseData.workStation,
       expenseData.monthlyFee,
       expenseData.remarks,
+      totalCommuteAmount,
+      totalExpenseAmount,
+      totalAmount,
     ];
 
     // 新規行を追加
