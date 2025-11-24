@@ -13,8 +13,11 @@
  * ========================================
  */
 
+type TripType = "oneWay" | "roundTrip";
+type ExpenseCategory = "exam" | "other";
+
 /**
- * ファイルデータの型定義
+ * React側から送信されるファイルデータ
  */
 interface FileData {
   name: string;
@@ -23,48 +26,57 @@ interface FileData {
 }
 
 /**
- * 経費精算データの型定義
+ * 交通費明細の1行分
  */
 interface CommuteEntry {
   date: string;
   origin: string;
   destination: string;
   amount: string;
-  tripType?: string;
+  tripType?: TripType;
 }
 
+/**
+ * 経費明細の入力内容
+ */
 interface ExpenseEntry {
-  category: string;
+  category: ExpenseCategory;
   description: string;
   amount: string;
-  receiptFile: FileData;
+  receiptFile: FileData | null;
   certificateFile?: FileData | null;
 }
 
+/**
+ * ファイルアップロード後の経費明細（URL付き）
+ */
 interface ExpenseEntryRecord {
-  category: string;
+  category: ExpenseCategory;
   description: string;
   amount: string;
   receiptUrl: string;
   certificateUrl?: string;
 }
 
+/**
+ * フォーム全体の送信データ
+ */
 interface ExpenseData {
   name: string;
   workScheduleFile: FileData | null;
+  commuteEntries: CommuteEntry[];
+  expenseEntries: ExpenseEntry[];
   workStartTime: string;
   workEndTime: string;
-  hasCommuterPass: string;
+  hasCommuterPass: 'yes' | 'no';
   nearestStation: string;
   workStation: string;
   monthlyFee: string;
   remarks: string;
-  commuteEntries: CommuteEntry[];
-  expenseEntries: ExpenseEntry[];
 }
 
 /**
- * 経費精算登録結果の型定義
+ * 経費精算登録結果のレスポンス
  */
 interface ExpenseResult {
   success: boolean;
@@ -109,17 +121,16 @@ const EXPENSE_SHEET_HEADERS = [
   "氏名",
   "勤務表",
   "交通費明細",
+  "交通費合計",
   "経費明細",
+  "経費合計",
+  "合計金額",
   "開始時間",
   "終了時間",
   "定期券購入",
-  "最寄り駅",
-  "勤務先の駅",
-  "月額",
+  "定期区間",
+  "定期券金額",
   "備考",
-  "交通費合計",
-  "経費合計",
-  "合計金額",
 ];
 const USER_EXPENSE_SHEET_NAME = "提出履歴";
 const USER_SPREADSHEET_PROPERTY_PREFIX = "USER_SPREADSHEET_";
@@ -301,6 +312,16 @@ function formatExpenseEntries(entries: ExpenseEntryRecord[]): string {
 }
 
 /**
+ * 定期区間の入力値を「最寄り駅-勤務先の駅」の形式に整形する
+ */
+function formatCommuterRoute(
+  origin: string,
+  destination: string
+): string {
+  return [origin, destination].filter(Boolean).join("-");
+}
+
+/**
  * 経費精算シートを取得または作成
  */
 function getOrCreateExpenseSheet(
@@ -404,23 +425,26 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
     const totalCommuteAmount = sumCommuteAmounts(commuteEntries);
     const totalExpenseAmount = sumExpenseAmounts(expenseEntryRecords);
     const totalAmount = totalCommuteAmount + totalExpenseAmount;
+    const commuterRoute = formatCommuterRoute(
+      expenseData.nearestStation,
+      expenseData.workStation
+    );
     const rowData = [
       submittedDate,
       userEmail,
       expenseData.name,
       workScheduleUrl,
       commuteDetailsText,
+      totalCommuteAmount,
       expenseDetailsText,
+      totalExpenseAmount,
+      totalAmount,
       expenseData.workStartTime,
       expenseData.workEndTime,
       expenseData.hasCommuterPass === "yes" ? "有り" : "無し",
-      expenseData.nearestStation,
-      expenseData.workStation,
+      commuterRoute,
       expenseData.monthlyFee,
       expenseData.remarks,
-      totalCommuteAmount,
-      totalExpenseAmount,
-      totalAmount,
     ];
 
     // 新規行を追加
