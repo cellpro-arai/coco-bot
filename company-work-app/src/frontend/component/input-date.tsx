@@ -11,7 +11,7 @@ interface Props extends React.HTMLAttributes<HTMLInputElement> {
   format: DateFormat;
 }
 
-export const DateComponent: React.FC<Props> = ({ value, format, title }: Props) => {
+export const InputDate: React.FC<Props> = ({ value, format, title }: Props) => {
   const [v, setV] = useState<Date | undefined>(value);
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newDate = e.target.value ? new Date(e.target.value) : undefined;

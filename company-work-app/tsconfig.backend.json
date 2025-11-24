@@ -4,7 +4,7 @@
     "outDir": "./dist",
     "rootDir": "./src/backend",
     "module": "commonjs",
-    "target": "ES2019"
+    "target": "ESNext"
   },
   "include": ["src/backend/**/*"]
 }

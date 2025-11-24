@@ -3,7 +3,7 @@
     "jsx": "react",
     "target": "ES2019",
     "module": "ES2020",
-    "lib": ["ES2019", "DOM"],
+    "lib": ["ESNext", "DOM"],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

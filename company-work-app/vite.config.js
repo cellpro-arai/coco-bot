@@ -21,5 +21,7 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
+    outDir: path.resolve(__dirname, 'dist'),
+    emptyOutDir: true,
   },
 });
