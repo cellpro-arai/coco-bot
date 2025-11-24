@@ -288,6 +288,25 @@
       line-height: 1;
       min-height: 1.35rem;
     }
+
+    .work-schedule-input {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .work-schedule-input button {
+      padding: 0.2rem 0.6rem;
+      font-size: 0.85rem;
+      line-height: 1;
+      min-height: 1.6rem;
+    }
+
+    .work-schedule-input .file-name {
+      font-size: 0.85rem;
+      color: var(--pico-muted-color);
+    }
   </style>
 </head>
 
@@ -330,6 +349,7 @@
 
       const [submitted, setSubmitted] = useState(false);
       const formRef = useRef(null);
+      const workScheduleInputRef = useRef(null);
 
       const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -345,6 +365,12 @@
           ...prev,
           [name]: files[0] || null
         }));
+      };
+
+      const handleWorkScheduleButtonClick = () => {
+        if (workScheduleInputRef.current) {
+          workScheduleInputRef.current.click();
+        }
       };
 
       const adjustAmountForTripType = (amount, prevType, nextType) => {
@@ -642,16 +668,24 @@
 
                 {/* 勤務表 */}
                 <fieldset>
-                  <label htmlFor="workScheduleFile">
-                    勤務表
+                  <label htmlFor="workScheduleFile">勤務表</label>
+                  <div className="work-schedule-input">
                     <input
+                      ref={workScheduleInputRef}
                       type="file"
                       id="workScheduleFile"
                       name="workScheduleFile"
                       onChange={handleFileChange}
                       accept=".pdf,.xlsx,.xls,.jpg,.jpeg,.png"
+                      style={{ display: 'none' }}
                     />
-                  </label>
+                    <button type="button" className="secondary" onClick={handleWorkScheduleButtonClick}>
+                      勤務表を選択
+                    </button>
+                    {formData.workScheduleFile && (
+                      <span className="file-name">{formData.workScheduleFile.name}</span>
+                    )}
+                  </div>
                 </fieldset>
 
                 {/* 交通費 */}
@@ -686,6 +720,7 @@
                                   value={entry.date}
                                   aria-labelledby="commute-date-header"
                                   onChange={(e) => handleCommuteEntryChange(index, 'date', e.target.value)}
+                                  required
                                 />
                               </td>
                               <td>
@@ -696,6 +731,7 @@
                                   aria-labelledby="commute-origin-header"
                                   onChange={(e) => handleCommuteEntryChange(index, 'origin', e.target.value)}
                                   placeholder="例: 渋谷"
+                                  required
                                 />
                               </td>
                               <td>
@@ -706,6 +742,7 @@
                                   aria-labelledby="commute-destination-header"
                                   onChange={(e) => handleCommuteEntryChange(index, 'destination', e.target.value)}
                                   placeholder="例: 新宿"
+                                  required
                                 />
                               </td>
                               <td>
@@ -728,6 +765,7 @@
                                   aria-labelledby="commute-amount-header"
                                   onChange={(e) => handleCommuteEntryChange(index, 'amount', e.target.value)}
                                   placeholder="例: 420"
+                                  required
                                 />
                               </td>
                               <td>
@@ -798,6 +836,7 @@
                                     aria-labelledby="expense-description-header"
                                     onChange={(e) => handleExpenseEntryChange(index, 'description', e.target.value)}
                                     placeholder="例: 備品購入"
+                                    required
                                   />
                                 </td>
                                 <td>
@@ -809,6 +848,7 @@
                                     aria-labelledby="expense-amount-header"
                                     onChange={(e) => handleExpenseEntryChange(index, 'amount', e.target.value)}
                                     placeholder="例: 1200"
+                                    required
                                   />
                                 </td>
                                 <td>
@@ -818,7 +858,7 @@
                                     accept=".pdf,.xlsx,.xls,.jpg,.jpeg,.png,.heic"
                                     aria-labelledby="expense-receipt-header"
                                     onChange={(e) => handleExpenseReceiptChange(index, e.target.files[0] || null)}
-                                    required={hasInput}
+                                    required
                                   />
                                 </td>
                                 <td>
@@ -829,7 +869,7 @@
                                       accept=".pdf,.xlsx,.xls,.jpg,.jpeg,.png,.heic"
                                       aria-labelledby="expense-certificate-header"
                                       onChange={(e) => handleExpenseCertificateChange(index, e.target.files[0] || null)}
-                                      required={hasInput}
+                                      required
                                     />
                                   ) : (
                                     <small className="text-muted">不要</small>
