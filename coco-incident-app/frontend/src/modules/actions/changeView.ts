@@ -16,18 +16,20 @@ export function showForm(this: ComponentContext) {
 export function editIncident(this: ComponentContext, incident: Incident) {
   this.resetForm(); // まずフォームをリセット
 
+  // 選択されたインシデントを保存
+  this.selectedIncident = incident;
+
   // 一覧から取得した基本情報を設定
   this.formData.registeredDate = incident.registeredDate;
   this.formData.caseName = incident.caseName;
   this.formData.assignee = incident.assignee;
   this.formData.status = incident.status;
 
-  // TODO: 詳細情報は、別途APIを呼び出して取得する必要がある。
-  // 今回のリファクタリングではスコープ外とし、空欄で表示する。
-  this.formData.summary = '';
-  this.formData.stakeholders = '';
-  this.formData.details = '';
-  this.formData.previousAiSuggestions = '';
+  // 詳細情報を設定（バックエンドで取得済み）
+  this.formData.summary = incident.summary || '';
+  this.formData.stakeholders = incident.stakeholders || '';
+  this.formData.details = incident.details || '';
+  this.formData.previousAiSuggestions = incident.improvementSuggestions || '';
   this.formData.fileDataList = [];
 
   this.currentView = 'form';
@@ -38,5 +40,6 @@ export function editIncident(this: ComponentContext, incident: Incident) {
  */
 export function backToList(this: ComponentContext) {
   this.currentView = 'list';
+  this.selectedIncident = null;
   this.resetForm();
 }

@@ -33,6 +33,7 @@ export const appState = {
   success: false,
   improvementSuggestions: '',
   formData: { ...initialFormData },
+  selectedIncident: null as Incident | null,
 };
 
 export type AppState = typeof appState;

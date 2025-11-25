@@ -1,5 +1,5 @@
 import * as api from '../api';
-import { initialFormData, appState } from '../state';
+import { initialFormData } from '../state';
 import { FileData, Incident } from '../types';
 import { ComponentContext } from '../context';
 
@@ -23,22 +23,36 @@ export async function submitForm(this: ComponentContext) {
     this.success = true;
     this.improvementSuggestions = result.improvementSuggestions || '';
 
-    // Create a new incident object from form data and add to appState.incidents
-    const newIncident: Incident = {
-      registeredDate:
-        this.formData.registeredDate || new Date().toISOString().split('T')[0],
-      registeredUser: '現在のユーザー', // Placeholder
-      caseName: this.formData.caseName,
-      assignee: this.formData.assignee,
-      status: this.formData.status,
-      updateDate: new Date().toISOString(), // Current date as update date
-      driveFolderUrl: '', // Placeholder as this comes from backend
-      incidentDetailUrl: '', // Placeholder as this comes from backend
-      improvementSuggestions: result.improvementSuggestions || '',
-    };
-    appState.incidents.unshift(newIncident); // Add to the beginning of the list
+    const isUpdate = !!(
+      this.formData.registeredDate && this.formData.registeredDate.trim()
+    );
 
-    this.resetForm();
+    if (isUpdate) {
+      // 更新: 既存のインシデントを探して更新
+      const index = this.incidents.findIndex(
+        inc => inc.registeredDate === this.formData.registeredDate
+      );
+      if (index !== -1) {
+        // バックエンドから返されたrecordで更新
+        this.incidents[index] = {
+          ...result.record,
+          summary: this.formData.summary,
+          stakeholders: this.formData.stakeholders,
+          details: this.formData.details,
+          improvementSuggestions: result.improvementSuggestions || '',
+        };
+      }
+    } else {
+      // 新規登録: バックエンドから返されたrecordをリストの先頭に追加
+      const newIncident: Incident = {
+        ...result.record,
+        summary: this.formData.summary,
+        stakeholders: this.formData.stakeholders,
+        details: this.formData.details,
+        improvementSuggestions: result.improvementSuggestions || '',
+      };
+      this.incidents.unshift(newIncident);
+    }
   } catch (error: any) {
     this.error = error.message;
   } finally {
@@ -83,6 +97,7 @@ export function handleFileUpload(this: ComponentContext, event: Event) {
  */
 export function resetForm(this: ComponentContext) {
   this.formData = { ...initialFormData };
+  this.selectedIncident = null;
   const fileInput = document.getElementById('fileUpload') as HTMLInputElement;
   if (fileInput) {
     fileInput.value = '';

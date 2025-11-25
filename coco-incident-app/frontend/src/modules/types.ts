@@ -39,6 +39,22 @@ export interface Incident {
   updateDate: string;
   driveFolderUrl: string;
   incidentDetailUrl: string;
+  summary?: string;
+  stakeholders?: string;
+  details?: string;
+  attachments?: string;
   // フロントエンドで独自に使うプロパティ
   improvementSuggestions?: string; // 編集画面で使うことがある
+}
+
+/**
+ * インシデント送信結果の型
+ * バックエンドのIncidentResultに対応
+ */
+export interface IncidentResult {
+  success: boolean;
+  message: string;
+  incidentDate: string;
+  record: Incident;
+  improvementSuggestions?: string;
 }
