@@ -152,7 +152,7 @@ export function incidentApp() {
     },
 
     // フォーム送信
-    submitIncident() {
+    submitForm() {
       if (
         !this.formData.caseName ||
         !this.formData.assignee ||
