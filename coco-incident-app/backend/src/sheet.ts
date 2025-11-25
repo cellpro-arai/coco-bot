@@ -1,4 +1,4 @@
-const INCIDENT_SHEET_NAME = "インシデント管理";
+const INCIDENT_SHEET_NAME = 'インシデント管理';
 
 /**
  * インシデント管理シートを取得または作成
@@ -11,14 +11,14 @@ function getOrCreateIncidentSheet(
   if (!sheet) {
     sheet = spreadsheet.insertSheet(INCIDENT_SHEET_NAME);
     sheet.appendRow([
-      "登録日時",
-      "登録ユーザー",
-      "案件名",
-      "担当者",
-      "ステータス",
-      "更新日時",
-      "Drive格納先フォルダ",
-      "インシデント詳細",
+      '登録日時',
+      '登録ユーザー',
+      '案件名',
+      '担当者',
+      'ステータス',
+      '更新日時',
+      'Drive格納先フォルダ',
+      'インシデント詳細',
     ]);
   }
 
@@ -42,7 +42,7 @@ function findIncidentRowByDate(
 
   for (let i = 0; i < dateValues.length; i++) {
     if (dateValues[i][0]) {
-      const cellDate = new Date(dateValues[i][0]).toLocaleString("ja-JP");
+      const cellDate = new Date(dateValues[i][0]).toLocaleString('ja-JP');
       if (cellDate === registeredDate) {
         return i + 2;
       }

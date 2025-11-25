@@ -1,5 +1,5 @@
-import { Incident } from "../types";
-import { ComponentContext } from "../context";
+import { Incident } from '../types';
+import { ComponentContext } from '../context';
 
 /**
  * 新規起票画面を表示します。

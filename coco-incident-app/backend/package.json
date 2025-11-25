@@ -4,10 +4,12 @@
   "description": "Google Apps Script backend",
   "scripts": {
     "build": "tsc && npm run copy-files",
-    "copy-files": "cp ../appsscript.json ../dist/"
+    "copy-files": "cp ../appsscript.json ../dist/",
+    "format": "prettier --write ."
   },
   "devDependencies": {
     "@types/google-apps-script": "^1.0.83",
+    "prettier": "^3.6.2",
     "typescript": "^5.3.3"
   }
 }

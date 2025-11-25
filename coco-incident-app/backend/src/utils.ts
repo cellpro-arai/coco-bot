@@ -20,7 +20,7 @@ function extractSheetIdFromUrl(url: string): string {
   if (match && match[1]) {
     return match[1];
   }
-  throw new Error("URLからスプレッドシートIDを抽出できませんでした。");
+  throw new Error('URLからスプレッドシートIDを抽出できませんでした。');
 }
 
 /**
@@ -31,5 +31,5 @@ function extractFolderIdFromUrl(url: string): string {
   if (match && match[1]) {
     return match[1];
   }
-  throw new Error("URLからフォルダIDを抽出できませんでした。");
+  throw new Error('URLからフォルダIDを抽出できませんでした。');
 }

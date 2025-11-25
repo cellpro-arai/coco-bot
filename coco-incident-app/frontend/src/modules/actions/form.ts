@@ -1,13 +1,17 @@
 import * as api from '../api';
-import { initialFormData } from "../state";
-import { FileData } from "../types";
-import { ComponentContext } from "../context";
+import { initialFormData } from '../state';
+import { FileData } from '../types';
+import { ComponentContext } from '../context';
 
 /**
  * フォームを送信します。
  */
 export async function submitForm(this: ComponentContext) {
-  if (!this.formData.caseName || !this.formData.assignee || !this.formData.summary) {
+  if (
+    !this.formData.caseName ||
+    !this.formData.assignee ||
+    !this.formData.summary
+  ) {
     this.error = '必須項目を入力してください';
     return;
   }

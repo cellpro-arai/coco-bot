@@ -1,4 +1,4 @@
-import { ComponentContext } from "../context";
+import { ComponentContext } from '../context';
 
 /**
  * テーマを適用します。
