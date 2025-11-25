@@ -15,9 +15,10 @@
 
 type TripType = "oneWay" | "roundTrip";
 type ExpenseCategory = "exam" | "other";
+type FolderType = "workSchedule" | "expenseReport" | "receipt";
 
 /**
- * React側から送信されるファイルデータ
+ * ファイルデータ
  */
 interface FileData {
   name: string;
@@ -99,19 +100,55 @@ function getScriptProperty(propertyName: string, errorMessage: string): string {
 }
 
 /**
- * ファイルをGoogle Driveにアップロード
+ * フォルダタイプからプロパティキーを取得
  */
-function uploadFileToDrive(fileData: FileData): string {
-  const folderId = getScriptProperty(
-    "UPLOAD_FOLDER_ID",
-    "アップロード先のフォルダIDが設定されていません。"
-  );
-  const folder = DriveApp.getFolderById(folderId);
-  const decodedData = Utilities.base64Decode(fileData.data);
-  const blob = Utilities.newBlob(decodedData, fileData.mimeType, fileData.name);
-  const file = folder.createFile(blob);
+function getFolderPropertyKey(folderType: FolderType): string {
+  switch (folderType) {
+    case "workSchedule":
+      return "WORK_SCHEDULE_FOLDER_ID";
+    case "expenseReport":
+      return "EXPENSE_REPORT_FOLDER_ID";
+    case "receipt":
+      return "RECEIPT_FOLDER_ID";
+  }
+}
 
-  return file.getUrl();
+/**
+ * フォルダタイプから説明文を取得
+ */
+function getFolderDescription(folderType: FolderType): string {
+  switch (folderType) {
+    case "workSchedule":
+      return "作業表フォルダ";
+    case "expenseReport":
+      return "経費精算書フォルダ";
+    case "receipt":
+      return "領収書フォルダ";
+  }
+}
+
+/**
+ * ファイルをGoogle Driveの指定フォルダにアップロード
+ */
+function uploadFileToDrive(fileData: FileData, folderType: FolderType): string {
+  const propertyKey = getFolderPropertyKey(folderType);
+  const folderDescription = getFolderDescription(folderType);
+
+  const folderId = getScriptProperty(
+    propertyKey,
+    `${folderDescription}のIDが設定されていません。`
+  );
+
+  try {
+    const folder = DriveApp.getFolderById(folderId);
+    const decodedData = Utilities.base64Decode(fileData.data);
+    const blob = Utilities.newBlob(decodedData, fileData.mimeType, fileData.name);
+    const file = folder.createFile(blob);
+
+    return file.getUrl();
+  } catch (error) {
+    throw new Error(`${folderDescription}へのアップロードに失敗しました: ${(error as Error).message}`);
+  }
 }
 
 const EXPENSE_SHEET_NAME = "経費精算";
@@ -132,17 +169,17 @@ const EXPENSE_SHEET_HEADERS = [
   "定期券金額",
   "備考",
 ];
-const USER_EXPENSE_SHEET_NAME = "提出履歴";
-const USER_SPREADSHEET_PROPERTY_PREFIX = "USER_SPREADSHEET_";
-const USER_SPREADSHEET_NAME_PREFIX = "経費精算_";
+const USER_SPREADSHEET_NAME_PREFIX = "経費精算書_";
+const MONTHLY_SHEET_NAME = "経費精算書";
 
 /**
- * スプレッドシートに指定ヘッダーをセットし、無い場合は追加する
+ * 経費精算シート専用のヘッダーを整備する
  */
-function ensureSheetHeader(
-  sheet: GoogleAppsScript.Spreadsheet.Sheet,
-  headers: string[]
+function ensureExpenseSheetHeader(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet
 ): void {
+  const headers = EXPENSE_SHEET_HEADERS;
+
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(headers);
     return;
@@ -157,15 +194,6 @@ function ensureSheetHeader(
   if (needsUpdate) {
     headerRange.setValues([headers]);
   }
-}
-
-/**
- * 経費精算シート専用のヘッダーを整備する
- */
-function ensureExpenseSheetHeader(
-  sheet: GoogleAppsScript.Spreadsheet.Sheet
-): void {
-  ensureSheetHeader(sheet, EXPENSE_SHEET_HEADERS);
 }
 
 /**
@@ -266,11 +294,11 @@ function uploadExpenseReceipts(entries: ExpenseEntry[]): ExpenseEntryRecord[] {
   return entries.map((entry) => {
     const category = entry.category || "other";
     const receiptUrl = entry.receiptFile
-      ? uploadFileToDrive(entry.receiptFile)
+      ? uploadFileToDrive(entry.receiptFile, "receipt")
       : "";
     const certificateUrl =
       category === "exam" && entry.certificateFile
-        ? uploadFileToDrive(entry.certificateFile)
+        ? uploadFileToDrive(entry.certificateFile, "receipt")
         : "";
 
     return {
@@ -338,61 +366,284 @@ function getOrCreateExpenseSheet(
 }
 
 /**
- * ユーザーごとのスプレッドシートIDを保存するプロパティキーを生成する
+ * 指定した日付から月の最終日を取得する
  */
-function getUserSpreadsheetPropertyKey(userEmail: string): string {
-  return `${USER_SPREADSHEET_PROPERTY_PREFIX}${userEmail}`;
+function getLastDayOfMonth(date: Date): Date {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  // 翌月の0日 = 当月の最終日
+  return new Date(year, month + 1, 0);
 }
 
 /**
- * ユーザー専用スプレッドシートを取得し無い場合は新規作成する
+ * 年月文字列を生成する（例: "2025年1月"）
  */
-function getOrCreateUserSpreadsheet(
-  userEmail: string,
-  userName: string
-): GoogleAppsScript.Spreadsheet.Spreadsheet {
-  const scriptProperties = PropertiesService.getScriptProperties();
-  const propertyKey = getUserSpreadsheetPropertyKey(userEmail);
-  const existingId = scriptProperties.getProperty(propertyKey);
+function formatYearMonth(date: Date): string {
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  return `${year}年${month}月`;
+}
 
-  if (existingId) {
-    try {
-      return SpreadsheetApp.openById(existingId);
-    } catch (error) {
-      console.warn(
-        `ユーザー(${userEmail})のスプレッドシート取得に失敗しました。再作成します。`,
-        error
-      );
-      scriptProperties.deleteProperty(propertyKey);
+/**
+ * スプレッドシートを Drive API v3 で目的のフォルダへ移動する
+ */
+function addSpreadsheetToFolder(
+  spreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet,
+  folderType: FolderType
+): void {
+  const propertyKey = getFolderPropertyKey(folderType);
+  const folderDescription = getFolderDescription(folderType);
+
+  const folderId = getScriptProperty(
+    propertyKey,
+    `${folderDescription}のフォルダIDが設定されていません。`
+  );
+
+  try {
+    const fileId = spreadsheet.getId();
+
+    // === 1. 既存の親フォルダ一覧を取得（v2でも問題ない） ===
+    const file = Drive.Files.get(fileId, {
+      fields: 'parents'
+    });
+
+    const previousParents =
+      file.parents && file.parents.length > 0
+        ? file.parents.join(',')
+        : '';
+
+    Logger.log(`対象ファイル: ${spreadsheet.getName()}`);
+    Logger.log(`旧フォルダ: ${previousParents || '(なし)'}`);
+    Logger.log(`新フォルダ: ${folderId}`);
+
+    // === 2. v3 PATCH リクエスト URL を構築 ===
+    let url =
+      `https://www.googleapis.com/drive/v3/files/${fileId}` +
+      `?addParents=${folderId}` +
+      `&supportsAllDrives=true`;
+
+    if (previousParents) {
+      url += `&removeParents=${encodeURIComponent(previousParents)}`;
     }
+
+    // === 3. リクエスト送信（v3 仕様） ===
+    const response = UrlFetchApp.fetch(url, {
+      method: 'patch',
+      headers: {
+        Authorization: `Bearer ${ScriptApp.getOAuthToken()}`
+      },
+      muteHttpExceptions: true
+    });
+
+    const status = response.getResponseCode();
+    if (status !== 200) {
+      const body = response.getContentText();
+      throw new Error(`Drive API v3 update failed (${status}): ${body}`);
+    }
+
+    Logger.log(`✔ ${folderDescription}への移動に成功: ${spreadsheet.getName()}`);
+
+  } catch (error) {
+    const message = `${folderDescription}への移動に失敗しました: ${(error as Error).message}`;
+    Logger.log(message);
+    throw new Error(message);
   }
-
-  const spreadsheetName = `${USER_SPREADSHEET_NAME_PREFIX}${
-    userName || userEmail
-  }`;
-  const userSpreadsheet = SpreadsheetApp.create(spreadsheetName);
-  const initialSheet = userSpreadsheet.getSheets()[0];
-  initialSheet.setName(USER_EXPENSE_SHEET_NAME);
-  ensureExpenseSheetHeader(initialSheet);
-  scriptProperties.setProperty(propertyKey, userSpreadsheet.getId());
-
-  return userSpreadsheet;
 }
 
 /**
- * ユーザー専用スプレッドシート内に提出履歴シートを確保する
+ * ユーザー専用の月次スプレッドシートを取得し無い場合は新規作成する
  */
-function getOrCreateUserExpenseSheet(
-  spreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet
-): GoogleAppsScript.Spreadsheet.Sheet {
-  let sheet = spreadsheet.getSheetByName(USER_EXPENSE_SHEET_NAME);
+function getOrCreateMonthlySpreadsheet(
+  userEmail: string,
+  userName: string,
+  date: Date
+): GoogleAppsScript.Spreadsheet.Spreadsheet {
+  const yearMonth = formatYearMonth(date);
+  const spreadsheetName = `${USER_SPREADSHEET_NAME_PREFIX}${userName || userEmail}_${yearMonth}`;
 
-  if (!sheet) {
-    sheet = spreadsheet.insertSheet(USER_EXPENSE_SHEET_NAME);
+  // 経費精算書フォルダ内で既存のスプレッドシートを検索
+  try {
+    const folderId = getScriptProperty(
+      "EXPENSE_REPORT_FOLDER_ID",
+      "経費精算書フォルダのIDが設定されていません。"
+    );
+    const folder = DriveApp.getFolderById(folderId);
+    const files = folder.getFilesByName(spreadsheetName);
+
+    // 同名のファイルが見つかった場合、最初のものを使用
+    if (files.hasNext()) {
+      const file = files.next();
+      return SpreadsheetApp.openById(file.getId());
+    }
+  } catch (error) {
+    console.warn(
+      `既存のスプレッドシート検索中にエラーが発生しました: ${(error as Error).message}`
+    );
   }
 
-  ensureExpenseSheetHeader(sheet);
-  return sheet;
+  // 既存のスプレッドシートが見つからない場合、新規作成
+  const monthlySpreadsheet = SpreadsheetApp.create(spreadsheetName);
+
+  // 最初のシートを経費精算書として初期化
+  const firstSheet = monthlySpreadsheet.getSheets()[0];
+  firstSheet.setName(MONTHLY_SHEET_NAME);
+  initializeMonthlyExpenseSheet(firstSheet, userName, date);
+
+  // スプレッドシートの変更を確実にコミット
+  SpreadsheetApp.flush();
+
+  // Google Driveがファイルを認識するまで少し待機
+  Utilities.sleep(2000);
+
+  // 経費精算書フォルダに追加
+  addSpreadsheetToFolder(monthlySpreadsheet, "expenseReport");
+
+  return monthlySpreadsheet;
+}
+
+/**
+ * 月次経費精算書シートを指定されたフォーマットで初期化する
+ */
+function initializeMonthlyExpenseSheet(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+  userName: string,
+  date: Date
+): void {
+  // シートをクリア
+  sheet.clear();
+
+  // A2:D3 = 経費精算書（結合セル）
+  const titleRange = sheet.getRange("A2:D3");
+  titleRange.merge();
+  titleRange.setValue("経費精算書");
+  titleRange.setHorizontalAlignment("center");
+  titleRange.setVerticalAlignment("middle");
+  titleRange.setFontSize(16);
+  titleRange.setFontWeight("bold");
+
+  // B5 = 申請日（固定文字列）
+  sheet.getRange("B5").setValue("申請日");
+  sheet.getRange("B5").setFontWeight("bold");
+
+  // C5 = 申請月の月末日（例：2025/10/31）
+  const lastDay = getLastDayOfMonth(date);
+  sheet.getRange("C5").setValue(lastDay);
+  sheet.getRange("C5").setNumberFormat("yyyy/mm/dd");
+
+  // B6 = 氏名（固定文字列）
+  sheet.getRange("B6").setValue("氏名");
+  sheet.getRange("B6").setFontWeight("bold");
+
+  // C6 = ユーザーごとの氏名
+  sheet.getRange("C6").setValue(userName);
+
+  // A9:D9 = ヘッダー行
+  sheet.getRange("A9").setValue("番号");
+  sheet.getRange("B9").setValue("日付");
+  sheet.getRange("C9").setValue("内容");
+  sheet.getRange("D9").setValue("金額");
+
+  const headerRange = sheet.getRange("A9:D9");
+  headerRange.setFontWeight("bold");
+  headerRange.setBackground("#f3f3f3");
+  headerRange.setBorder(true, true, true, true, true, true);
+
+  // 列幅を調整
+  sheet.setColumnWidth(1, 60);  // A列: 番号
+  sheet.setColumnWidth(2, 100); // B列: 日付
+  sheet.setColumnWidth(3, 300); // C列: 内容
+  sheet.setColumnWidth(4, 100); // D列: 金額
+}
+
+/**
+ * 交通費エントリーの表示用データ行を作成する
+ */
+interface ExpenseRowData {
+  date: string;
+  description: string;
+  amount: number;
+}
+
+/**
+ * 交通費エントリーを表示用データに変換する
+ */
+function convertCommuteToRowData(entry: CommuteEntry): ExpenseRowData {
+  const tripTypeLabel = entry.tripType === "roundTrip" ? "往復" : "片道";
+  const description = `${entry.origin}-${entry.destination} ${tripTypeLabel}`;
+
+  // 片道の金額
+  const oneWayAmount = toNumberAmount(entry.amount);
+
+  // 往復の場合は2倍
+  const amount = entry.tripType === "roundTrip" ? oneWayAmount * 2 : oneWayAmount;
+
+  return {
+    date: entry.date,
+    description,
+    amount
+  };
+}
+
+/**
+ * 経費エントリーを表示用データに変換する
+ */
+function convertExpenseToRowData(entry: ExpenseEntryRecord): ExpenseRowData {
+  return {
+    date: "", // 経費の日付は交通費のdateフィールドのようなものがないため空
+    description: entry.description,
+    amount: toNumberAmount(entry.amount)
+  };
+}
+
+/**
+ * 月次経費精算書シートに交通費・経費データを追加する
+ */
+function addExpenseDataToMonthlySheet(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+  commuteEntries: CommuteEntry[],
+  expenseEntries: ExpenseEntryRecord[]
+): void {
+  // 交通費と経費を結合
+  const commuteRows = commuteEntries.map(convertCommuteToRowData);
+  const expenseRows = expenseEntries.map(convertExpenseToRowData);
+  const allRows = [...commuteRows, ...expenseRows];
+
+  if (allRows.length === 0) {
+    return;
+  }
+
+  // 既存のデータ行数を取得（10行目から開始）
+  const startRow = 10;
+  const lastRow = sheet.getLastRow();
+  let currentRowNumber = lastRow >= startRow ? lastRow - startRow + 2 : 1;
+
+  // データを追加
+  allRows.forEach((rowData, index) => {
+    const rowIndex = startRow + index + (lastRow >= startRow ? lastRow - startRow + 1 : 0);
+
+    // A列: 番号
+    sheet.getRange(rowIndex, 1).setValue(currentRowNumber);
+
+    // B列: 日付
+    if (rowData.date) {
+      sheet.getRange(rowIndex, 2).setValue(rowData.date);
+      sheet.getRange(rowIndex, 2).setNumberFormat("yyyy/mm/dd");
+    }
+
+    // C列: 内容
+    sheet.getRange(rowIndex, 3).setValue(rowData.description);
+
+    // D列: 金額
+    sheet.getRange(rowIndex, 4).setValue(rowData.amount);
+    sheet.getRange(rowIndex, 4).setNumberFormat("#,##0");
+
+    currentRowNumber++;
+  });
+
+  // 追加したデータ範囲に罫線を引く
+  const dataStartRow = startRow + (lastRow >= startRow ? lastRow - startRow + 1 : 0);
+  const dataRange = sheet.getRange(dataStartRow, 1, allRows.length, 4);
+  dataRange.setBorder(true, true, true, true, true, true);
 }
 
 /**
@@ -410,11 +661,11 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
 
     const submittedDate = new Date();
 
-    // ファイルアップロード処理
+    // ファイルアップロード処理（作業表フォルダへ）
     let workScheduleUrl = "";
 
     if (expenseData.workScheduleFile) {
-      workScheduleUrl = uploadFileToDrive(expenseData.workScheduleFile);
+      workScheduleUrl = uploadFileToDrive(expenseData.workScheduleFile, "workSchedule");
     }
 
     const commuteEntries = expenseData.commuteEntries || [];
@@ -459,21 +710,20 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
       workScheduleUrl
     );
 
-    // 提出者ごとのスプレッドシートにも記録
-    const userSpreadsheet = getOrCreateUserSpreadsheet(
+    // 提出者ごとの月次スプレッドシートに記録
+    const monthlySpreadsheet = getOrCreateMonthlySpreadsheet(
       userEmail,
-      expenseData.name
+      expenseData.name,
+      submittedDate
     );
-    const userSheet = getOrCreateUserExpenseSheet(userSpreadsheet);
-    userSheet.appendRow(rowData);
-    const userLastRow = userSheet.getLastRow();
-    setFileHyperlink(
-      userSheet,
-      userLastRow,
-      4,
-      expenseData.workScheduleFile?.name,
-      workScheduleUrl
-    );
+    const monthlySheet = monthlySpreadsheet.getSheetByName(MONTHLY_SHEET_NAME);
+
+    if (!monthlySheet) {
+      throw new Error("月次経費精算書シートの取得に失敗しました。");
+    }
+
+    // 月次シートに交通費・経費データを追加
+    addExpenseDataToMonthlySheet(monthlySheet, commuteEntries, expenseEntryRecords);
 
     return {
       success: true,
@@ -493,4 +743,54 @@ function doGet(): GoogleAppsScript.HTML.HtmlOutput {
   return HtmlService.createHtmlOutputFromFile("index").setTitle(
     "経費精算フォーム"
   );
+}
+
+// ========================================
+// 初回セットアップ用ヘルパー関数
+// ========================================
+
+/**
+ * 【初回セットアップ】スクリプトプロパティを一括設定する
+ *
+ * 使い方:
+ * 1. 下記のIDを実際の値に書き換えて、この関数を実行
+ * 2. または、Apps ScriptエディタのGUIから直接設定
+ *    「プロジェクトの設定」→「スクリプト プロパティ」→「プロパティを追加」
+ */
+function setupAllProperties(): void {
+  const properties = {
+    // ここに実際のIDを設定してください
+    "SPREADSHEET_ID": "YOUR_SPREADSHEET_ID_HERE",
+    "WORK_SCHEDULE_FOLDER_ID": "YOUR_WORK_SCHEDULE_FOLDER_ID_HERE",
+    "EXPENSE_REPORT_FOLDER_ID": "YOUR_EXPENSE_REPORT_FOLDER_ID_HERE",
+    "RECEIPT_FOLDER_ID": "YOUR_RECEIPT_FOLDER_ID_HERE"
+  };
+
+  const scriptProperties = PropertiesService.getScriptProperties();
+  scriptProperties.setProperties(properties);
+
+  Logger.log("✅ すべてのプロパティを設定しました");
+  Logger.log("設定内容:");
+  for (const [key, value] of Object.entries(properties)) {
+    Logger.log(`  ${key}: ${value}`);
+  }
+}
+
+/**
+ * 【確認用】現在の設定を表示する
+ */
+function showCurrentSettings(): void {
+  const scriptProperties = PropertiesService.getScriptProperties();
+  const settings = {
+    "SPREADSHEET_ID": scriptProperties.getProperty("SPREADSHEET_ID") || "未設定",
+    "WORK_SCHEDULE_FOLDER_ID": scriptProperties.getProperty("WORK_SCHEDULE_FOLDER_ID") || "未設定",
+    "EXPENSE_REPORT_FOLDER_ID": scriptProperties.getProperty("EXPENSE_REPORT_FOLDER_ID") || "未設定",
+    "RECEIPT_FOLDER_ID": scriptProperties.getProperty("RECEIPT_FOLDER_ID") || "未設定"
+  };
+
+  Logger.log("📋 現在の設定:");
+  Logger.log(`  全体管理用スプレッドシートID: ${settings.SPREADSHEET_ID}`);
+  Logger.log(`  作業表フォルダID: ${settings.WORK_SCHEDULE_FOLDER_ID}`);
+  Logger.log(`  経費精算書フォルダID: ${settings.EXPENSE_REPORT_FOLDER_ID}`);
+  Logger.log(`  領収書フォルダID: ${settings.RECEIPT_FOLDER_ID}`);
 }
