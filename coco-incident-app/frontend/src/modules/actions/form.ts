@@ -1,6 +1,6 @@
 import * as api from '../api';
-import { initialFormData } from '../state';
-import { FileData } from '../types';
+import { initialFormData, appState } from '../state';
+import { FileData, Incident } from '../types';
 import { ComponentContext } from '../context';
 
 /**
@@ -22,6 +22,22 @@ export async function submitForm(this: ComponentContext) {
     const result = await api.submitIncident(this.formData);
     this.success = true;
     this.improvementSuggestions = result.improvementSuggestions || '';
+
+    // Create a new incident object from form data and add to appState.incidents
+    const newIncident: Incident = {
+      registeredDate:
+        this.formData.registeredDate || new Date().toISOString().split('T')[0],
+      registeredUser: '現在のユーザー', // Placeholder
+      caseName: this.formData.caseName,
+      assignee: this.formData.assignee,
+      status: this.formData.status,
+      updateDate: new Date().toISOString(), // Current date as update date
+      driveFolderUrl: '', // Placeholder as this comes from backend
+      incidentDetailUrl: '', // Placeholder as this comes from backend
+      improvementSuggestions: result.improvementSuggestions || '',
+    };
+    appState.incidents.unshift(newIncident); // Add to the beginning of the list
+
     this.resetForm();
   } catch (error: any) {
     this.error = error.message;

@@ -39,5 +39,4 @@ export function editIncident(this: ComponentContext, incident: Incident) {
 export function backToList(this: ComponentContext) {
   this.currentView = 'list';
   this.resetForm();
-  this.loadIncidents();
 }

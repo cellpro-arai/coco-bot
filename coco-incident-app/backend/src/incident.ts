@@ -8,8 +8,18 @@ function getIncidentList(): IncidentRecord[] {
       'スプレッドシートIDが設定されていません。'
     );
     const ss = SpreadsheetApp.openById(spreadsheetId);
-    const incidentSheet = ss.getSheetByName(INCIDENT_SHEET_NAME);
 
+    // --- Permission Check Start ---
+    const userEmail = Session.getEffectiveUser().getEmail();
+    const userRole = getUserRole(ss, userEmail);
+
+    if (!userRole) {
+      console.warn(`権限がありません: ${userEmail}`);
+      return [];
+    }
+    // --- Permission Check End ---
+
+    const incidentSheet = ss.getSheetByName(INCIDENT_SHEET_NAME);
     if (!incidentSheet) {
       return [];
     }
@@ -19,15 +29,19 @@ function getIncidentList(): IncidentRecord[] {
       return [];
     }
 
-    const dataRange = incidentSheet.getRange(2, 1, lastRow - 1, 8);
-    const values = dataRange.getValues();
+    let values = incidentSheet.getRange(2, 1, lastRow - 1, 8).getValues();
+
+    // --- Filtering based on Role ---
+    if (userRole === 'user') {
+      values = values.filter(row => row[1] === userEmail);
+    }
 
     const records: IncidentRecord[] = [];
 
     for (let i = values.length - 1; i >= 0; i--) {
       const row = values[i];
 
-      records.push({
+      const record: IncidentRecord = {
         registeredDate: row[0] ? new Date(row[0]).toLocaleString('ja-JP') : '',
         registeredUser: row[1] || '',
         caseName: row[2] || '',
@@ -36,7 +50,32 @@ function getIncidentList(): IncidentRecord[] {
         updateDate: row[5] ? new Date(row[5]).toLocaleString('ja-JP') : '',
         driveFolderUrl: row[6] || '',
         incidentDetailUrl: row[7] || '',
-      });
+      };
+
+      if (record.incidentDetailUrl) {
+        try {
+          const detailSheetId = extractSheetIdFromUrl(record.incidentDetailUrl);
+          const detailSpreadsheet = SpreadsheetApp.openById(detailSheetId);
+          const detailSheet = detailSpreadsheet.getSheetByName('詳細');
+          if (detailSheet) {
+            const detailValues = detailSheet.getRange('B1:B4').getValues();
+            record.summary = detailValues[0][0];
+            record.stakeholders = detailValues[1][0];
+            record.details = detailValues[2][0];
+            record.attachments = detailSheet
+              .getRange('B4')
+              .getRichTextValue()
+              ?.getText();
+          }
+        } catch (e) {
+          console.error(
+            `詳細シートの読み込みに失敗しました: ${record.incidentDetailUrl}`,
+            e
+          );
+          // 詳細が取得できなくてもエラーにはせず、取得できた情報だけで続行
+        }
+      }
+      records.push(record);
     }
 
     return records;
@@ -57,6 +96,14 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
     );
     const ss = SpreadsheetApp.openById(spreadsheetId);
     const userEmail = Session.getEffectiveUser().getEmail();
+
+    // --- Permission Check Start ---
+    const userRole = getUserRole(ss, userEmail);
+    if (!userRole) {
+      throw new Error('権限がありません。管理者に問い合わせてください。');
+    }
+    // --- Permission Check End ---
+
     const incidentSheet = getOrCreateIncidentSheet(ss);
 
     const isEditMode = !!(
@@ -105,7 +152,13 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
       const newFolder = parentFolder.createFolder(folderName);
       driveFolderUrl = newFolder.getUrl();
 
-      newFolder.addEditor(userEmail);
+      // --- Update Drive Permissions Start ---
+      const adminEmails = getAdminEmails(ss);
+      adminEmails.forEach(admin => {
+        newFolder.addEditor(admin);
+      });
+      newFolder.addEditor(userEmail); // 念のため作成者も追加
+      // --- Update Drive Permissions End ---
 
       const templateSheetId = getScriptProperty(
         'TEMPLATE_SHEET_ID',

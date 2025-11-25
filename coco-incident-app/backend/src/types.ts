@@ -43,4 +43,8 @@ interface IncidentRecord {
   updateDate: string;
   driveFolderUrl: string;
   incidentDetailUrl: string;
+  summary?: string;
+  stakeholders?: string;
+  details?: string;
+  attachments?: string;
 }
