@@ -1,11 +1,6 @@
 {
   "name": "coco-bot",
   "private": true,
-  "workspaces": [
-    "coco-incident-app",
-    "company-work-app",
-    "expenses-app"
-  ],
   "devDependencies": {
     "prettier": "^3.4.2"
   },
