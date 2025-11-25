@@ -10,8 +10,7 @@
   "scripts": {
     "build": "npm run build --workspace frontend && npm run build --workspace backend",
     "dev": "npm run dev --workspace frontend",
-    "rewrite-clasp-root": "sed -i '' 's/\"rootDir\": *\"[^\"]*\"/\"rootDir\": \"dist\"/' .clasp.json",
-    "push": "npm run build && npm run rewrite-clasp-root && clasp push",
+    "push": "npm run build && clasp push",
     "deploy": "npm run push && clasp deploy"
   },
   "keywords": [
