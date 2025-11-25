@@ -3,6 +3,17 @@
  */
 
 /**
+ * AI解析ステータスの定数
+ */
+export const AI_ANALYSIS_STATUS = {
+  PENDING: 'pending',
+  COMPLETED: 'completed',
+  NONE: 'none',
+} as const;
+
+export type AiAnalysisStatus = typeof AI_ANALYSIS_STATUS[keyof typeof AI_ANALYSIS_STATUS];
+
+/**
  * ファイルデータの型定義
  */
 export interface FileData {
@@ -45,6 +56,8 @@ export interface Incident {
   attachments?: string;
   // フロントエンドで独自に使うプロパティ
   improvementSuggestions?: string; // 編集画面で使うことがある
+  aiAnalysisStatus?: AiAnalysisStatus;
+  aiAnalysis?: string;
 }
 
 /**

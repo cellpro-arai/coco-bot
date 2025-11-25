@@ -117,6 +117,18 @@
                       <i class="bi bi-flag-fill me-1"></i>
                       <span x-text="incident.status"></span>
                     </span>
+                    <template x-if="incident.aiAnalysisStatus === AI_ANALYSIS_STATUS.PENDING">
+                      <span class="badge warning me-2">
+                        <i class="bi bi-hourglass-split me-1"></i>
+                        AI解析待ち
+                      </span>
+                    </template>
+                    <template x-if="incident.aiAnalysisStatus === AI_ANALYSIS_STATUS.COMPLETED">
+                      <span class="badge info me-2">
+                        <i class="bi bi-check-circle-fill me-1"></i>
+                        AI解析済み
+                      </span>
+                    </template>
                   </div>
                   <template x-if="incident.updateDate">
                     <div class="small text-muted mb-2">
@@ -177,6 +189,41 @@
               <li>わかる範囲ですべての関係者を記載してください</li>
             </ul>
           </article>
+
+          <!-- AI解析待ち表示（編集モード時のみ） -->
+          <template x-if="formData.registeredDate && selectedIncident && selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.PENDING">
+            <article class="warning mb-4">
+              <header>
+                <h6 class="mb-0">
+                  <i class="bi bi-hourglass-split me-2"></i>
+                  AI解析待ち
+                </h6>
+              </header>
+              <div>
+                <p class="mb-2">このインシデントはAI解析がまだ完了していません。</p>
+                <p class="mb-3">詳細スプレッドシートを開いて、セルB5のAI数式を手動で更新してください。</p>
+                <a :href="selectedIncident.incidentDetailUrl" target="_blank" rel="noopener noreferrer" class="contrast">
+                  <i class="bi bi-box-arrow-up-right me-1"></i>
+                  詳細スプレッドシートを開く
+                </a>
+              </div>
+            </article>
+          </template>
+
+          <!-- AI解析結果表示（編集モード時のみ） -->
+          <template x-if="formData.registeredDate && selectedIncident && selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.COMPLETED && selectedIncident.aiAnalysis">
+            <article class="info mb-4">
+              <header>
+                <h6 class="mb-0">
+                  <i class="bi bi-robot me-2"></i>
+                  AI解析結果
+                </h6>
+              </header>
+              <div>
+                <div class="text-pre-wrap" x-text="selectedIncident.aiAnalysis" style="white-space: pre-wrap;"></div>
+              </div>
+            </article>
+          </template>
 
           <!-- 前回のAI改善案表示（編集モード時のみ） -->
           <template x-if="formData.registeredDate && formData.previousAiSuggestions">

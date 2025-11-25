@@ -1,7 +1,7 @@
 /**
  * @fileoverview Google Apps Scriptとの通信
  */
-import { Incident, IncidentFormData, IncidentResult } from './types';
+import { Incident, IncidentFormData, IncidentResult, AI_ANALYSIS_STATUS } from './types';
 
 declare const google: any;
 
@@ -38,6 +38,7 @@ export function getIncidentList(): Promise<Incident[]> {
             details: '【発生日時】2025年1月15日 10:00頃\n【現象】503エラーが表示される\n【影響範囲】全ユーザー',
             attachments: 'error_log.txt\nscreenshot.png',
             improvementSuggestions: '定期的な監視体制の強化を推奨します',
+            aiAnalysisStatus: AI_ANALYSIS_STATUS.PENDING,
           },
           {
             registeredDate: '2025/1/14 09:00:00',
@@ -51,6 +52,8 @@ export function getIncidentList(): Promise<Incident[]> {
             summary: 'データベースの一部データに不整合が発見された',
             stakeholders: '社内: データ管理部 高橋主任',
             details: '【発生日時】2025年1月14日\n【現象】顧客データの一部が重複\n【対応】重複データを削除し、正常化',
+            aiAnalysisStatus: AI_ANALYSIS_STATUS.COMPLETED,
+            aiAnalysis: '【AI解析結果】\n根本原因: データベースの同期処理に不具合\n推奨対策:\n1. 同期処理のロジック見直し\n2. 重複チェック機能の実装\n3. 定期的なデータ整合性確認',
           },
         ]);
       }, 500);
@@ -100,6 +103,7 @@ export function submitIncident(
           stakeholders: data.stakeholders,
           details: data.details,
           attachments: data.fileDataList.map(f => f.name).join('\n'),
+          aiAnalysisStatus: AI_ANALYSIS_STATUS.PENDING,
         };
         
         resolve({

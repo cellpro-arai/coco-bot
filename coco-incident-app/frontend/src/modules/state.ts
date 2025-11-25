@@ -2,7 +2,7 @@
  * @fileoverview アプリケーションの状態管理
  */
 
-import { Incident, IncidentFormData } from './types';
+import { Incident, IncidentFormData, AI_ANALYSIS_STATUS } from './types';
 
 // 初期状態のフォームデータ
 export const initialFormData: IncidentFormData = {
@@ -34,6 +34,9 @@ export const appState = {
   improvementSuggestions: '',
   formData: { ...initialFormData },
   selectedIncident: null as Incident | null,
+
+  // 定数
+  AI_ANALYSIS_STATUS,
 };
 
 export type AppState = typeof appState;

@@ -1,4 +1,15 @@
 /**
+ * AI解析ステータスの定数
+ */
+const AI_ANALYSIS_STATUS = {
+  PENDING: 'pending',
+  COMPLETED: 'completed',
+  NONE: 'none',
+} as const;
+
+type AiAnalysisStatus = typeof AI_ANALYSIS_STATUS[keyof typeof AI_ANALYSIS_STATUS];
+
+/**
  * ファイルデータの型定義
  */
 interface FileData {
@@ -47,4 +58,6 @@ interface IncidentRecord {
   stakeholders?: string;
   details?: string;
   attachments?: string;
+  aiAnalysisStatus?: AiAnalysisStatus;
+  aiAnalysis?: string;
 }
