@@ -1,23 +1,26 @@
 {
   "name": "coco-incident-app",
   "version": "1.0.0",
-  "description": "Google Apps Script order form with TypeScript",
+  "description": "Google Apps Script incident management with Vite + TypeScript",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
-    "build": "tsc && npm run copy-files",
-    "copy-files": "cp src/index.html dist/ && cp appsscript.json dist/",
-    "watch": "tsc --watch",
+    "build": "npm run build --workspace frontend && npm run build --workspace backend",
+    "dev": "npm run dev --workspace frontend",
     "push": "npm run build && clasp push",
     "deploy": "npm run build && clasp push && clasp deploy"
   },
   "keywords": [
     "google-apps-script",
-    "typescript"
+    "typescript",
+    "vite"
   ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@google/clasp": "^2.4.2",
-    "@types/google-apps-script": "^1.0.83",
-    "typescript": "^5.3.3"
+    "@google/clasp": "^2.4.2"
   }
 }

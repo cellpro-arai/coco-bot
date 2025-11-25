@@ -1,0 +1,13 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Google Apps Script backend",
+  "scripts": {
+    "build": "tsc && npm run copy-files",
+    "copy-files": "cp ../appsscript.json ../dist/"
+  },
+  "devDependencies": {
+    "@types/google-apps-script": "^1.0.83",
+    "typescript": "^5.3.3"
+  }
+}
