@@ -11,28 +11,28 @@ declare global {
 export function incidentApp() {
   return {
     // ビュー管理
-    currentView: "list" as "list" | "form",
+    currentView: 'list' as 'list' | 'form',
     theme: localStorage.getItem('theme') || 'light',
 
     // データ管理
     incidents: [] as any[],
     loading: false,
-    error: "",
+    error: '',
 
     // フォーム管理
     submitting: false,
     success: false,
-    improvementSuggestions: "",
+    improvementSuggestions: '',
     formData: {
-      registeredDate: "", // 編集モードの場合に設定される（識別子として使用）
-      caseName: "",
-      assignee: "",
-      summary: "",
-      stakeholders: "",
-      details: "",
-      status: "対応中",
+      registeredDate: '', // 編集モードの場合に設定される（識別子として使用）
+      caseName: '',
+      assignee: '',
+      summary: '',
+      stakeholders: '',
+      details: '',
+      status: '対応中',
       fileDataList: [] as any[],
-      previousAiSuggestions: "", // 編集時の前回AI改善案
+      previousAiSuggestions: '', // 編集時の前回AI改善案
     },
 
     // 初期化
@@ -56,26 +56,26 @@ export function incidentApp() {
     // インシデント一覧を読み込み
     loadIncidents() {
       this.loading = true;
-      this.error = "";
+      this.error = '';
 
       if (typeof window.google === 'undefined') {
         // 開発環境用のモックデータ
         setTimeout(() => {
           this.incidents = [
             {
-              registeredDate: "2025-01-15",
-              caseName: "システムダウン",
-              assignee: "山田太郎",
-              summary: "決済システムが停止",
-              status: "対応中"
+              registeredDate: '2025-01-15',
+              caseName: 'システムダウン',
+              assignee: '山田太郎',
+              summary: '決済システムが停止',
+              status: '対応中',
             },
             {
-              registeredDate: "2025-01-14",
-              caseName: "データ不整合",
-              assignee: "佐藤花子",
-              summary: "在庫データに不整合",
-              status: "完了"
-            }
+              registeredDate: '2025-01-14',
+              caseName: 'データ不整合',
+              assignee: '佐藤花子',
+              summary: '在庫データに不整合',
+              status: '完了',
+            },
           ];
           this.loading = false;
         }, 500);
@@ -88,7 +88,7 @@ export function incidentApp() {
           this.loading = false;
         })
         .withFailureHandler((error: any) => {
-          this.error = "データの読み込みに失敗しました: " + error.message;
+          this.error = 'データの読み込みに失敗しました: ' + error.message;
           this.loading = false;
         })
         .getIncidentList();
@@ -97,7 +97,7 @@ export function incidentApp() {
     // 新規起票画面を表示
     showForm() {
       this.resetForm();
-      this.currentView = "form";
+      this.currentView = 'form';
     },
 
     // 編集画面を表示
@@ -106,17 +106,18 @@ export function incidentApp() {
       this.formData.caseName = incident.caseName;
       this.formData.assignee = incident.assignee;
       this.formData.summary = incident.summary;
-      this.formData.stakeholders = incident.stakeholders || "";
-      this.formData.details = incident.details || "";
+      this.formData.stakeholders = incident.stakeholders || '';
+      this.formData.details = incident.details || '';
       this.formData.status = incident.status;
       this.formData.fileDataList = [];
-      this.formData.previousAiSuggestions = incident.improvementSuggestions || "";
-      this.currentView = "form";
+      this.formData.previousAiSuggestions =
+        incident.improvementSuggestions || '';
+      this.currentView = 'form';
     },
 
     // 一覧画面に戻る
     backToList() {
-      this.currentView = "list";
+      this.currentView = 'list';
       this.resetForm();
       this.loadIncidents();
     },
@@ -130,11 +131,11 @@ export function incidentApp() {
       const fileDataList: any[] = [];
       let filesProcessed = 0;
 
-      Array.from(files).forEach((file) => {
+      Array.from(files).forEach(file => {
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = e => {
           if (e.target?.result) {
-            const base64Data = (e.target.result as string).split(",")[1];
+            const base64Data = (e.target.result as string).split(',')[1];
             fileDataList.push({
               name: file.name,
               mimeType: file.type,
@@ -151,14 +152,18 @@ export function incidentApp() {
     },
 
     // フォーム送信
-    submitForm() {
-      if (!this.formData.caseName || !this.formData.assignee || !this.formData.summary) {
-        this.error = "必須項目を入力してください";
+    submitIncident() {
+      if (
+        !this.formData.caseName ||
+        !this.formData.assignee ||
+        !this.formData.summary
+      ) {
+        this.error = '必須項目を入力してください';
         return;
       }
 
       this.submitting = true;
-      this.error = "";
+      this.error = '';
       this.success = false;
 
       if (typeof window.google === 'undefined') {
@@ -166,7 +171,7 @@ export function incidentApp() {
         setTimeout(() => {
           this.success = true;
           this.submitting = false;
-          this.improvementSuggestions = "【モック】改善案が表示されます";
+          this.improvementSuggestions = '【モック】改善案が表示されます';
         }, 1000);
         return;
       }
@@ -175,33 +180,36 @@ export function incidentApp() {
         .withSuccessHandler((result: any) => {
           this.success = true;
           this.submitting = false;
-          this.improvementSuggestions = result.improvementSuggestions || "";
+          this.improvementSuggestions = result.improvementSuggestions || '';
+          this.resetForm();
         })
         .withFailureHandler((error: any) => {
-          this.error = "送信に失敗しました: " + error.message;
+          this.error = '送信に失敗しました: ' + error.message;
           this.submitting = false;
         })
-        .registerIncident(this.formData);
+        .submitIncident(this.formData);
     },
 
     // フォームをリセット
     resetForm() {
-      this.formData.registeredDate = "";
-      this.formData.caseName = "";
-      this.formData.assignee = "";
-      this.formData.summary = "";
-      this.formData.stakeholders = "";
-      this.formData.details = "";
-      this.formData.status = "対応中";
+      this.formData.registeredDate = '';
+      this.formData.caseName = '';
+      this.formData.assignee = '';
+      this.formData.summary = '';
+      this.formData.stakeholders = '';
+      this.formData.details = '';
+      this.formData.status = '対応中';
       this.formData.fileDataList = [];
-      this.formData.previousAiSuggestions = "";
-      const fileInput = document.getElementById("fileUpload") as HTMLInputElement;
+      this.formData.previousAiSuggestions = '';
+      const fileInput = document.getElementById(
+        'fileUpload'
+      ) as HTMLInputElement;
       if (fileInput) {
-        fileInput.value = "";
+        fileInput.value = '';
       }
-      this.error = "";
+      this.error = '';
       this.success = false;
-      this.improvementSuggestions = "";
+      this.improvementSuggestions = '';
     },
   };
 }
