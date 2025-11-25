@@ -812,7 +812,6 @@
                         </thead>
                         <tbody>
                           {formData.expenseEntries.map((entry, index) => {
-                            const hasInput = Boolean(entry.description || entry.amount);
                             const category = entry.category || 'other';
                             const isExam = category === 'exam';
                             return (
