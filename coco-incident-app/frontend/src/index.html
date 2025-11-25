@@ -315,7 +315,7 @@
             <label for="fileUpload">
               <i class="bi bi-cloud-upload me-1"></i>
               <span x-text="formData.registeredDate ? '追加ファイルのアップロード' : '関連ファイルのアップロード'"></span>
-              <input type="file" id="fileUpload" @change="handleFiles" multiple />
+              <input type="file" id="fileUpload" @change="handleFileUpload" multiple />
               <small x-text="formData.registeredDate ? '新しくファイルを追加する場合は選択してください（複数選択可能）' : 'メールのやり取り、契約書類、スクリーンショット、動画などをアップロードできます（複数選択可能）'"></small>
             </label>
             <!-- 選択されたファイルリスト -->

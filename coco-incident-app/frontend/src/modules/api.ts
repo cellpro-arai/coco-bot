@@ -7,6 +7,9 @@ declare const google: any;
 
 const isDevelopment = typeof google === 'undefined';
 
+// 開発環境で権限エラーをテストする場合は localStorage に 'simulatePermissionError' を設定
+const shouldSimulatePermissionError = isDevelopment && localStorage.getItem('simulatePermissionError') === 'true';
+
 /**
  * インシデント一覧を取得します。
  * @returns {Promise<Incident[]>} インシデントのリスト
@@ -16,6 +19,10 @@ export function getIncidentList(): Promise<Incident[]> {
     if (isDevelopment) {
       // 開発環境用のモックデータ
       setTimeout(() => {
+        if (shouldSimulatePermissionError) {
+          reject(new Error('権限がありません。管理者に問い合わせてください。'));
+          return;
+        }
         resolve([
           {
             registeredDate: '2025/1/15 10:30:00',
@@ -70,6 +77,11 @@ export function submitIncident(
     if (isDevelopment) {
       // 開発環境用のモック
       setTimeout(() => {
+        if (shouldSimulatePermissionError) {
+          reject(new Error('権限がありません。管理者に問い合わせてください。'));
+          return;
+        }
+        
         const isUpdate = data.registeredDate && data.registeredDate.trim() !== '';
         const actionType = isUpdate ? '更新' : '登録';
         console.log(`[開発モード] インシデント${actionType}:`, data);

@@ -54,7 +54,8 @@ export async function submitForm(this: ComponentContext) {
       this.incidents.unshift(newIncident);
     }
   } catch (error: any) {
-    this.error = error.message;
+    this.error = error.message || '送信に失敗しました';
+    this.success = false;
   } finally {
     this.submitting = false;
   }

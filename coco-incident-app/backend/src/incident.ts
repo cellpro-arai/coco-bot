@@ -15,7 +15,7 @@ function getIncidentList(): IncidentRecord[] {
 
     if (!userRole) {
       console.warn(`権限がありません: ${userEmail}`);
-      return [];
+      throw new Error('権限がありません。管理者に問い合わせてください。');
     }
     // --- Permission Check End ---
 
