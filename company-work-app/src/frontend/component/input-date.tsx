@@ -1,17 +1,12 @@
 import React, { useMemo, useState } from 'react';
 
-export enum DateFormat {
-  YYYYMMDD = 'yyyy/MM/dd',
-  YYYYMM = 'yyyy/MM',
-}
-
 interface Props extends React.HTMLAttributes<HTMLInputElement> {
   title: string;
   value?: Date;
-  format: DateFormat;
+  required?: boolean;
 }
 
-export const InputDate: React.FC<Props> = ({ value, format, title }: Props) => {
+export const InputDate: React.FC<Props> = ({ value, title, required }: Props) => {
   const [v, setV] = useState<Date | undefined>(value);
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newDate = e.target.value ? new Date(e.target.value) : undefined;
@@ -19,20 +14,13 @@ export const InputDate: React.FC<Props> = ({ value, format, title }: Props) => {
   };
   const valueStr = useMemo(() => {
     if (!v) return '';
-    const year = v.getFullYear();
-    const month = (v.getMonth() + 1).toString().padStart(2, '0');
-    const day = v.getDate().toString().padStart(2, '0');
-    if (format === DateFormat.YYYYMMDD) {
-      return `${year}/${month}/${day}`;
-    } else if (format === DateFormat.YYYYMM) {
-      return `${year}/${month}`;
-    }
-    return '';
-  }, [v, format]);
+    return v.toLocaleString();
+  }, [v]);
 
   return (
     <div>
       <label>{title}</label>
+      <label className='w-[4px] text-red-500 m-[1px]'>{required ? '*' : ''}</label>
       <input type='date' onChange={onChange} value={valueStr} />
     </div>
   );
