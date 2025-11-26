@@ -32,6 +32,8 @@ npx clasp login
 
 ```bash
 npx clasp create --type webapp --title "Sample Sheet App"
+# 上でうまくいかない場合
+clasp create --title "Sample Sheet App"
 ```
 
 #### 既存プロジェクトに接続する場合
