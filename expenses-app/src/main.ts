@@ -262,16 +262,18 @@ function toNumberAmount(value?: string): number {
 
 /**
  * 交通費明細の金額合計を求める
+ * 往復の場合は片道の金額を2倍して計算する
  */
 function sumCommuteAmounts(entries: CommuteEntry[]): number {
   if (!entries || entries.length === 0) {
     return 0;
   }
 
-  return entries.reduce(
-    (total, entry) => total + toNumberAmount(entry.amount),
-    0
-  );
+  return entries.reduce((total, entry) => {
+    const oneWayAmount = toNumberAmount(entry.amount);
+    const amount = entry.tripType === "roundTrip" ? oneWayAmount * 2 : oneWayAmount;
+    return total + amount;
+  }, 0);
 }
 
 /**
