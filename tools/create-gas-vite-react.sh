@@ -85,19 +85,6 @@ export default defineConfig({
 });
 EOF
 
-echo "Prettierのインストール中..."
-npm i -D prettier
-echo ".prettierrcの作成中..."
-cat <<EOF >.prettierrc
-{
-  "semi": true,
-  "singleQuote": true,
-  "printWidth": 80,
-  "tabWidth": 2,
-  "trailingComma": "es5"
-}
-EOF
-
 echo "プロジェクト構造の作成中..."
 mkdir -p src/{frontend,backend}
 
