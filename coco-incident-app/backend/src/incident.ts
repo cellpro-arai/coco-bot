@@ -9,15 +9,8 @@ function getIncidentList(): IncidentRecord[] {
     );
     const ss = SpreadsheetApp.openById(spreadsheetId);
 
-    // --- Permission Check Start ---
     const userEmail = Session.getEffectiveUser().getEmail();
-    const userRole = getUserRole(ss, userEmail);
-
-    if (!userRole) {
-      console.warn(`権限がありません: ${userEmail}`);
-      throw new Error('権限がありません。管理者に問い合わせてください。');
-    }
-    // --- Permission Check End ---
+    const userIsAdmin = isAdmin(userEmail);
 
     const incidentSheet = ss.getSheetByName(INCIDENT_SHEET_NAME);
     if (!incidentSheet) {
@@ -31,8 +24,9 @@ function getIncidentList(): IncidentRecord[] {
 
     let values = incidentSheet.getRange(2, 1, lastRow - 1, 8).getValues();
 
-    // --- Filtering based on Role ---
-    if (userRole === 'user') {
+    // --- Filtering based on Permission ---
+    // 管理者は全件表示、一般ユーザーは自分が登録したもののみ表示
+    if (!userIsAdmin) {
       values = values.filter(row => row[1] === userEmail);
     }
 
@@ -66,12 +60,15 @@ function getIncidentList(): IncidentRecord[] {
               .getRange('B4')
               .getRichTextValue()
               ?.getText();
-            
+
             // B5セルのAI解析結果を取得
             const aiAnalysis = detailValues[4][0];
             if (aiAnalysis && typeof aiAnalysis === 'string') {
               // =AI(...) のような数式が入っている場合は未解析
-              if (aiAnalysis.trim().startsWith('=AI(') || aiAnalysis.trim().startsWith('=ai(')) {
+              if (
+                aiAnalysis.trim().startsWith('=AI(') ||
+                aiAnalysis.trim().startsWith('=ai(')
+              ) {
                 record.aiAnalysisStatus = AI_ANALYSIS_STATUS.PENDING;
               } else if (aiAnalysis.trim().length > 0) {
                 record.aiAnalysisStatus = AI_ANALYSIS_STATUS.COMPLETED;
@@ -112,13 +109,6 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
     );
     const ss = SpreadsheetApp.openById(spreadsheetId);
     const userEmail = Session.getEffectiveUser().getEmail();
-
-    // --- Permission Check Start ---
-    const userRole = getUserRole(ss, userEmail);
-    if (!userRole) {
-      throw new Error('権限がありません。管理者に問い合わせてください。');
-    }
-    // --- Permission Check End ---
 
     const incidentSheet = getOrCreateIncidentSheet(ss);
 
@@ -169,11 +159,11 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
       driveFolderUrl = newFolder.getUrl();
 
       // --- Update Drive Permissions Start ---
-      const adminEmails = getAdminEmails(ss);
+      const adminEmails = getAdminEmails();
       adminEmails.forEach(admin => {
         newFolder.addEditor(admin);
       });
-      newFolder.addEditor(userEmail); // 念のため作成者も追加
+      // newFolder.addEditor(userEmail); // 念のため作成者も追加
       // --- Update Drive Permissions End ---
 
       const templateSheetId = getScriptProperty(
@@ -188,7 +178,11 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
       incidentDetailUrl = newSheet.getUrl();
 
       const detailSheet = SpreadsheetApp.openById(newSheet.getId());
-      const sheet = detailSheet.getSheetByName('詳細');
+      const allSheets = detailSheet.getSheets();
+
+      // テンプレートの最初のシートを取得（「詳細」または「シート1」など）
+      const sheet = allSheets.length > 0 ? allSheets[0] : null;
+
       if (sheet) {
         sheet.getRange('B1').setValue(incidentData.summary);
         sheet.getRange('B2').setValue(incidentData.stakeholders);
@@ -214,6 +208,8 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
           });
           cell.setRichTextValue(richTextBuilder.build());
         }
+      } else {
+        console.error('詳細シートが見つかりません');
       }
 
       targetRow = incidentSheet.getLastRow() + 1;

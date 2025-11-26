@@ -1,5 +1,4 @@
 const INCIDENT_SHEET_NAME = 'インシデント管理';
-const PERMISSION_SHEET_NAME = '権限';
 
 /**
  * インシデント管理シートを取得または作成
@@ -53,65 +52,31 @@ function findIncidentRowByDate(
   return -1;
 }
 
-// Simple in-memory cache for permissions
-let permissionsCache: Map<string, 'admin' | 'user'> | null = null;
+// Simple in-memory cache for admin emails
+let adminEmailsCache: string[] | null = null;
 
 /**
- * 権限シートから全ユーザーの権限を取得し、キャッシュする
+ * スクリプトプロパティから管理者メールアドレス一覧を取得
  */
-function getPermissions(
-  spreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet
-): Map<string, 'admin' | 'user'> {
-  if (permissionsCache) {
-    return permissionsCache;
+function getAdminEmails(): string[] {
+  if (adminEmailsCache) {
+    return adminEmailsCache;
   }
 
-  const permissionSheet = spreadsheet.getSheetByName(PERMISSION_SHEET_NAME);
-  if (!permissionSheet) {
-    throw new Error(`権限シート「${PERMISSION_SHEET_NAME}」が見つかりません。`);
+  const adminEmailsCsv = PropertiesService.getScriptProperties().getProperty('ADMIN_EMAILS');
+  if (!adminEmailsCsv) {
+    console.warn('ADMIN_EMAILSプロパティが設定されていません。');
+    return [];
   }
 
-  const lastRow = permissionSheet.getLastRow();
-  const permissions = new Map<string, 'admin' | 'user'>();
-
-  if (lastRow > 1) {
-    const data = permissionSheet.getRange(2, 1, lastRow - 1, 2).getValues();
-    for (const row of data) {
-      const email = row[0];
-      const role = row[1];
-      if (email && (role === 'admin' || role === 'user')) {
-        permissions.set(email, role);
-      }
-    }
-  }
-
-  permissionsCache = permissions;
-  return permissions;
+  adminEmailsCache = adminEmailsCsv.split(',').map(email => email.trim()).filter(email => email.length > 0);
+  return adminEmailsCache;
 }
 
 /**
- * 指定したメールアドレスのロールを取得
+ * 指定したメールアドレスが管理者かどうかを判定
  */
-function getUserRole(
-  spreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet,
-  email: string
-): 'admin' | 'user' | null {
-  const permissions = getPermissions(spreadsheet);
-  return permissions.get(email) || null;
-}
-
-/**
- * 全てのadminロールのメールアドレスを取得
- */
-function getAdminEmails(
-  spreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet
-): string[] {
-  const permissions = getPermissions(spreadsheet);
-  const admins: string[] = [];
-  for (const [email, role] of permissions.entries()) {
-    if (role === 'admin') {
-      admins.push(email);
-    }
-  }
-  return admins;
+function isAdmin(email: string): boolean {
+  const admins = getAdminEmails();
+  return admins.includes(email);
 }
