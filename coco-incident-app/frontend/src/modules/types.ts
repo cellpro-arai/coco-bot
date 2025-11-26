@@ -1,5 +1,5 @@
 /**
- * @fileoverview frontend/src/modules/types.ts
+ * @fileoverview 型定義
  */
 
 /**
@@ -11,7 +11,8 @@ export const AI_ANALYSIS_STATUS = {
   NONE: 'none',
 } as const;
 
-export type AiAnalysisStatus = typeof AI_ANALYSIS_STATUS[keyof typeof AI_ANALYSIS_STATUS];
+export type AiAnalysisStatus =
+  (typeof AI_ANALYSIS_STATUS)[keyof typeof AI_ANALYSIS_STATUS];
 
 /**
  * ファイルデータの型定義

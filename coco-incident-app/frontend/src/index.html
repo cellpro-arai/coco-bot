@@ -1,19 +1,4 @@
 <!DOCTYPE html>
-<!--
-  【セルプロ】インシデント管理システム - Alpine.js版 SPA
-
-  【Alpine.jsの主な機能】
-  - x-data: コンポーネントの状態管理
-  - x-init: 初期化処理
-  - x-show: 条件付き表示
-  - x-model: 双方向データバインディング
-  - @submit.prevent: イベントハンドラ
-  - x-text: テキスト表示
-
-  【画面構成】
-  - 一覧画面: インシデントをカード形式で表示
-  - 入力画面: インシデント起票・編集フォーム
--->
 <html>
 
 <head>
@@ -26,148 +11,149 @@
 </head>
 
 <body>
-  <main class="container" x-data="incidentApp()" x-init="init()">
+  <div id="app-wrapper" x-data="incidentApp()" x-init="init()">
     <!-- ヘッダー -->
-    <article class="text-center py-3" style="position: relative;">
-      <div style="position: absolute; top: 0.5rem; right: 0.5rem;">
-        <button @click="toggleTheme()" class="contrast" style="width: auto; height: auto; padding: 0.3rem 0.6rem;">
+    <header class="container py-3">
+      <div class="header-theme-button">
+        <button @click="toggleTheme()" class="contrast">
           <i class="bi" :class="theme === 'light' ? 'bi-moon-fill' : 'bi-sun-fill'"></i>
         </button>
       </div>
-      <div class="d-flex align-items-center justify-content-center mb-2">
-        <i class="bi bi-exclamation-triangle-fill me-2" style="font-size: 2rem; color: var(--pico-primary);"></i>
+      <div class="d-flex align-items-center mb-2">
+        <i class="bi bi-exclamation-triangle-fill me-2 header-icon"></i>
         <h1 class="mb-0">【セルプロ】インシデント管理システム</h1>
       </div>
       <p class="mb-0">
         トラブル情報を詳細に記録し、適切な対応を行うための管理システムです
       </p>
-    </article>
+    </header>
 
-    <!-- 一覧画面 -->
-    <div x-show="currentView === 'list'">
-      <!-- ツールバー -->
-      <nav class="container-fluid">
-        <ul>
-          <li>
-            <hgroup>
-              <h2 class="mb-0"><i class="bi bi-list-ul me-2"></i>インシデント一覧</h2>
-            </hgroup>
-          </li>
-        </ul>
-        <ul>
-          <li>
-            <button class="secondary" @click="loadIncidents()" :disabled="loading">
-              <i class="bi bi-arrow-clockwise me-2"></i>更新
-            </button>
-          </li>
-          <li>
-            <button @click="showForm()">
-              <i class="bi bi-plus-circle me-2"></i>新規起票
-            </button>
-          </li>
-        </ul>
-      </nav>
+    <main class="container">
+      <!-- 一覧画面 -->
+      <div x-show="currentView === 'list'">
+        <!-- ツールバー -->
+        <nav class="container-fluid">
+          <ul>
+            <li>
+              <hgroup>
+                <h2 class="mb-0"><i class="bi bi-list-ul me-2"></i>インシデント一覧</h2>
+              </hgroup>
+            </li>
+          </ul>
+          <ul>
+            <li>
+              <button class="secondary" @click="loadIncidents()" :disabled="loading">
+                <i class="bi bi-arrow-clockwise me-2"></i>更新
+              </button>
+            </li>
+            <li>
+              <button @click="showForm()">
+                <i class="bi bi-plus-circle me-2"></i>新規起票
+              </button>
+            </li>
+          </ul>
+        </nav>
 
-      <!-- ローディング -->
-      <template x-if="loading">
-        <article class="text-center py-5" aria-busy="true">
-          <p>
-            データを読み込んでいます...
-          </p>
-        </article>
-      </template>
+        <!-- ローディング -->
+        <template x-if="loading">
+          <article class="text-center py-5" aria-busy="true">
+            <p>
+              データを読み込んでいます...
+            </p>
+          </article>
+        </template>
 
-      <!-- エラー表示 -->
-      <template x-if="error && !loading">
-        <article class="danger">
-          <i class="bi bi-exclamation-circle-fill me-2"></i>
-          <span x-text="error"></span>
-        </article>
-      </template>
+        <!-- エラー表示 -->
+        <template x-if="error && !loading">
+          <article class="danger">
+            <i class="bi bi-exclamation-circle-fill me-2"></i>
+            <span x-text="error"></span>
+          </article>
+        </template>
 
-      <!-- カード一覧 -->
-      <template x-if="!loading && !error">
-        <div>
-          <template x-if="incidents.length === 0">
-            <article class="info text-center">
-              <i class="bi bi-info-circle me-2"></i>
-              インシデントはまだ登録されていません
-            </article>
-          </template>
+        <!-- カード一覧 -->
+        <template x-if="!loading && !error">
+          <div>
+            <template x-if="incidents.length === 0">
+              <article class="info text-center">
+                <i class="bi bi-info-circle me-2"></i>
+                インシデントはまだ登録されていません
+              </article>
+            </template>
 
-          <div class="grid">
-            <template x-for="incident in incidents" :key="incident.registeredDate">
-              <div class="col">
-                <article class="incident-card" @click="editIncident(incident)">
-                  <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h5 class="mb-0" x-text="incident.caseName"></h5>
-                    <span class="badge secondary" x-text="incident.registeredDate"></span>
-                  </div>
-                  <div class="mb-2">
-                    <span class="badge primary me-2">
-                      <i class="bi bi-person-fill me-1"></i>
-                      <span x-text="incident.assignee"></span>
-                    </span>
-                    <span class="badge me-2" :class="{
+            <div class="grid">
+              <template x-for="incident in incidents" :key="incident.registeredDate">
+                <div class="col">
+                  <article @click="editIncident(incident)">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                      <h5 class="mb-0" x-text="incident.caseName"></h5>
+                      <span class="badge secondary" x-text="incident.registeredDate"></span>
+                    </div>
+                    <div class="mb-2">
+                      <span class="badge primary me-2">
+                        <i class="bi bi-person-fill me-1"></i>
+                        <span x-text="incident.assignee"></span>
+                      </span>
+                      <span class="badge me-2" :class="{
                         'warning': incident.status === '対応中',
                         'secondary': incident.status === '保留',
                         'success': incident.status === '解決済み',
                         'contrast': incident.status === 'クローズ'
                       }">
-                      <i class="bi bi-flag-fill me-1"></i>
-                      <span x-text="incident.status"></span>
-                    </span>
-                    <template x-if="incident.aiAnalysisStatus === AI_ANALYSIS_STATUS.PENDING">
-                      <span class="badge warning me-2">
-                        <i class="bi bi-hourglass-split me-1"></i>
-                        AI解析待ち
+                        <i class="bi bi-flag-fill me-1"></i>
+                        <span x-text="incident.status"></span>
                       </span>
-                    </template>
-                    <template x-if="incident.aiAnalysisStatus === AI_ANALYSIS_STATUS.COMPLETED">
-                      <span class="badge info me-2">
-                        <i class="bi bi-check-circle-fill me-1"></i>
-                        AI解析済み
-                      </span>
-                    </template>
-                  </div>
-                  <template x-if="incident.updateDate">
-                    <div class="small text-muted mb-2">
-                      <i class="bi bi-clock-fill me-1"></i>
-                      更新日時: <span x-text="incident.updateDate"></span>
+                      <template x-if="incident.aiAnalysisStatus === AI_ANALYSIS_STATUS.PENDING">
+                        <span class="badge warning me-2">
+                          <i class="bi bi-hourglass-split me-1"></i>
+                          AI解析待ち
+                        </span>
+                      </template>
+                      <template x-if="incident.aiAnalysisStatus === AI_ANALYSIS_STATUS.COMPLETED">
+                        <span class="badge info me-2">
+                          <i class="bi bi-check-circle-fill me-1"></i>
+                          AI解析済み
+                        </span>
+                      </template>
                     </div>
-                  </template>
-                  <p class="text-truncate-2 mb-2" x-text="incident.summary"></p>
-                  <div class="small text-muted">
-                    <div class="text-truncate-3" x-text="incident.details"></div>
-                  </div>
-                  <template x-if="incident.attachments">
-                    <div class="mt-2">
-                      <span class="badge success">
-                        <i class="bi bi-paperclip me-1"></i>
-                        添付ファイルあり
-                      </span>
+                    <template x-if="incident.updateDate">
+                      <div class="small text-muted mb-2">
+                        <i class="bi bi-clock-fill me-1"></i>
+                        更新日時: <span x-text="incident.updateDate"></span>
+                      </div>
+                    </template>
+                    <p class="text-truncate-2 mb-2" x-text="incident.summary"></p>
+                    <div class="small text-muted">
+                      <div class="text-truncate-3" x-text="incident.details"></div>
                     </div>
-                  </template>
-                </article>
-              </div>
-            </template>
+                    <template x-if="incident.attachments">
+                      <div class="mt-2">
+                        <span class="badge success">
+                          <i class="bi bi-paperclip me-1"></i>
+                          添付ファイルあり
+                        </span>
+                      </div>
+                    </template>
+                  </article>
+                </div>
+              </template>
+            </div>
           </div>
-        </div>
-      </template>
-    </div>
+        </template>
+      </div>
 
-    <!-- 入力フォーム画面 -->
-    <div x-show="currentView === 'form'">
-      <!-- 戻るボタン -->
-      <p>
-        <button class="secondary" @click="backToList()">
-          <i class="bi bi-arrow-left me-2"></i>
-          一覧へ戻る
-        </button>
-      </p>
+      <!-- 入力フォーム画面 -->
+      <div x-show="currentView === 'form'">
+        <!-- 戻るボタン -->
+        <p>
+          <button class="secondary" @click="backToList()">
+            <i class="bi bi-arrow-left me-2"></i>
+            一覧へ戻る
+          </button>
+        </p>
 
-      <!-- フォームカード -->
-      <article class="p-4">
+        <!-- フォームカード -->
+        <article class="p-4">
           <!-- エラー表示 -->
           <template x-if="error">
             <article class="danger d-flex align-items-center mb-4" role="alert">
@@ -191,7 +177,8 @@
           </article>
 
           <!-- AI解析待ち表示（編集モード時のみ） -->
-          <template x-if="formData.registeredDate && selectedIncident && selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.PENDING">
+          <template
+            x-if="formData.registeredDate && selectedIncident && selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.PENDING">
             <article class="warning mb-4">
               <header>
                 <h6 class="mb-0">
@@ -202,7 +189,8 @@
               <div>
                 <p class="mb-2">このインシデントはAI解析がまだ完了していません。</p>
                 <p class="mb-3">詳細スプレッドシートを開いて、セルB5のAI数式を手動で更新してください。</p>
-                <a :href="selectedIncident.incidentDetailUrl" target="_blank" rel="noopener noreferrer" class="contrast">
+                <a :href="selectedIncident.incidentDetailUrl" target="_blank" rel="noopener noreferrer"
+                  class="contrast">
                   <i class="bi bi-box-arrow-up-right me-1"></i>
                   詳細スプレッドシートを開く
                 </a>
@@ -211,7 +199,8 @@
           </template>
 
           <!-- AI解析結果表示（編集モード時のみ） -->
-          <template x-if="formData.registeredDate && selectedIncident && selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.COMPLETED && selectedIncident.aiAnalysis">
+          <template
+            x-if="formData.registeredDate && selectedIncident && selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.COMPLETED && selectedIncident.aiAnalysis">
             <article class="info mb-4">
               <header>
                 <h6 class="mb-0">
@@ -220,7 +209,7 @@
                 </h6>
               </header>
               <div>
-                <div class="text-pre-wrap" x-text="selectedIncident.aiAnalysis" style="white-space: pre-wrap;"></div>
+                <div class="text-pre-wrap" x-text="selectedIncident.aiAnalysis"></div>
               </div>
             </article>
           </template>
@@ -235,7 +224,7 @@
                 </h6>
               </header>
               <div>
-                <div class="text-pre-wrap" x-text="formData.previousAiSuggestions" style="white-space: pre-wrap;"></div>
+                <div class="text-pre-wrap" x-text="formData.previousAiSuggestions"></div>
               </div>
             </article>
           </template>
@@ -246,8 +235,7 @@
             <label for="caseName" class="required-label">
               <i class="bi bi-folder-fill text-primary me-1"></i>
               案件名
-              <input type="text" id="caseName" x-model="formData.caseName" required
-                placeholder="例: 〇〇システム障害" />
+              <input type="text" id="caseName" x-model="formData.caseName" required placeholder="例: 〇〇システム障害" />
               <small>案件を識別できる名前を記入してください</small>
             </label>
 
@@ -255,8 +243,7 @@
             <label for="assignee" class="required-label">
               <i class="bi bi-person-fill text-primary me-1"></i>
               担当者
-              <input type="text" id="assignee" x-model="formData.assignee" required
-                placeholder="例: 山田太郎" />
+              <input type="text" id="assignee" x-model="formData.assignee" required placeholder="例: 山田太郎" />
               <small>このインシデントを担当する方の名前を1名記入してください</small>
             </label>
 
@@ -286,8 +273,7 @@
             <label for="stakeholders" class="required-label">
               <i class="bi bi-people-fill text-primary me-1"></i>
               ステークホルダー
-              <textarea id="stakeholders" x-model="formData.stakeholders" rows="5" required
-                placeholder="例:
+              <textarea id="stakeholders" x-model="formData.stakeholders" rows="5" required placeholder="例:
 - 顧客: 株式会社ABC 田中様
 - 社内: 開発部 鈴木課長、営業部 佐藤係長
 - ベンダー: XYZ社 高橋様"></textarea>
@@ -338,14 +324,15 @@
             <hr />
 
             <!-- 既存の添付ファイル（編集モード時） -->
-            <template x-if="formData.registeredDate && selectedIncident && selectedIncident.attachments && selectedIncident.attachments.trim()">
+            <template
+              x-if="formData.registeredDate && selectedIncident && selectedIncident.attachments && selectedIncident.attachments.trim()">
               <div class="mb-3">
                 <label>
                   <i class="bi bi-paperclip me-1"></i>
                   既存の添付ファイル
                 </label>
                 <article class="info">
-                  <div class="small" style="white-space: pre-wrap;" x-text="selectedIncident.attachments"></div>
+                  <div class="small text-pre-wrap" x-text="selectedIncident.attachments"></div>
                   <template x-if="selectedIncident.driveFolderUrl">
                     <div class="mt-2">
                       <a :href="selectedIncident.driveFolderUrl" target="_blank" rel="noopener noreferrer">
@@ -363,7 +350,8 @@
               <i class="bi bi-cloud-upload me-1"></i>
               <span x-text="formData.registeredDate ? '追加ファイルのアップロード' : '関連ファイルのアップロード'"></span>
               <input type="file" id="fileUpload" @change="handleFileUpload" multiple />
-              <small x-text="formData.registeredDate ? '新しくファイルを追加する場合は選択してください（複数選択可能）' : 'メールのやり取り、契約書類、スクリーンショット、動画などをアップロードできます（複数選択可能）'"></small>
+              <small
+                x-text="formData.registeredDate ? '新しくファイルを追加する場合は選択してください（複数選択可能）' : 'メールのやり取り、契約書類、スクリーンショット、動画などをアップロードできます（複数選択可能）'"></small>
             </label>
             <!-- 選択されたファイルリスト -->
             <template x-if="formData.fileDataList && formData.fileDataList.length > 0">
@@ -413,7 +401,7 @@
                     </h5>
                   </header>
                   <div>
-                    <div class="text-pre-wrap" x-text="improvementSuggestions" style="white-space: pre-wrap;"></div>
+                    <div class="text-pre-wrap" x-text="improvementSuggestions"></div>
                   </div>
                   <footer>
                     <button @click="backToList()">
@@ -425,12 +413,15 @@
               </template>
             </article>
           </template>
-  </main>
-  <footer class="container text-center">
-    <p class="mb-0">
+        </article>
+      </div>
+    </main>
+
+    <!-- フッター -->
+    <footer class="container">
       <small>&copy; 2025 Cell Promote Inc. (Coco Incident). All rights reserved.</small>
-    </p>
-  </footer>
+    </footer>
+  </div>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
 
