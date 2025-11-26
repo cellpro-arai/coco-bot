@@ -172,6 +172,11 @@ const EXPENSE_SHEET_HEADERS = [
 const USER_SPREADSHEET_NAME_PREFIX = "経費精算書_";
 const MONTHLY_SHEET_NAME = "経費精算書";
 
+const COLOR_PRIMARY = "#0070C0";
+const COLOR_WHITE = "white";
+const BORDER_SOLID = SpreadsheetApp.BorderStyle.SOLID;
+const BORDER_MEDIUM = SpreadsheetApp.BorderStyle.SOLID_MEDIUM;
+
 /**
  * 経費精算シート専用のヘッダーを整備する
  */
@@ -502,58 +507,87 @@ function getOrCreateMonthlySpreadsheet(
 }
 
 /**
- * 月次経費精算書シートを指定されたフォーマットで初期化する
+ * 月次経費精算書シートを指定フォーマットで初期化
  */
 function initializeMonthlyExpenseSheet(
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
   userName: string,
   date: Date
 ): void {
-  // シートをクリア
+
+  // ========= 初期化 =========
   sheet.clear();
 
-  // A2:D3 = 経費精算書（結合セル）
+  // ========= タイトル =========
   const titleRange = sheet.getRange("A2:D3");
-  titleRange.merge();
-  titleRange.setValue("経費精算書");
-  titleRange.setHorizontalAlignment("center");
-  titleRange.setVerticalAlignment("middle");
-  titleRange.setFontSize(16);
-  titleRange.setFontWeight("bold");
+  titleRange
+    .merge()
+    .setValue("経費精算書")
+    .setFontSize(14)
+    .setFontWeight("bold")
+    .setHorizontalAlignment("center")
+    .setVerticalAlignment("middle")
+    .setBackground(COLOR_PRIMARY)
+    .setFontColor(COLOR_WHITE)
+    .setBorder(true, true, true, true, false, false, null, BORDER_MEDIUM);
 
-  // B5 = 申請日（固定文字列）
-  sheet.getRange("B5").setValue("申請日");
-  sheet.getRange("B5").setFontWeight("bold");
+  // ========= 申請日 =========
+  const b5 = sheet.getRange("B5");
+  b5.setValue("申請日")
+    .setFontSize(12)
+    .setFontWeight("bold")
+    .setHorizontalAlignment("center")
+    .setVerticalAlignment("middle")
+    .setBackground(COLOR_PRIMARY)
+    .setFontColor(COLOR_WHITE)
+    .setBorder(true, true, true, true, false, false, null, BORDER_MEDIUM);
 
-  // C5 = 申請月の月末日（例：2025/10/31）
-  const lastDay = getLastDayOfMonth(date);
-  sheet.getRange("C5").setValue(lastDay);
-  sheet.getRange("C5").setNumberFormat("yyyy/mm/dd");
+  const c5 = sheet.getRange("C5");
+  c5.setValue(getLastDayOfMonth(date))
+    .setNumberFormat("yyyy年mm月dd日")
+    .setFontSize(14)
+    .setHorizontalAlignment("center")
+    .setVerticalAlignment("middle")
+    .setBorder(true, true, true, true, false, false, null, BORDER_MEDIUM);
 
-  // B6 = 氏名（固定文字列）
-  sheet.getRange("B6").setValue("氏名");
-  sheet.getRange("B6").setFontWeight("bold");
+  // ========= 氏名 =========
+  const b6 = sheet.getRange("B6");
+  b6.setValue("氏名")
+    .setFontSize(12)
+    .setFontWeight("bold")
+    .setBackground(COLOR_PRIMARY)
+    .setFontColor(COLOR_WHITE)
+    .setHorizontalAlignment("center")
+    .setVerticalAlignment("middle")
+    .setBorder(true, true, true, true, false, false, null, BORDER_MEDIUM);
 
-  // C6 = ユーザーごとの氏名
-  sheet.getRange("C6").setValue(userName);
+  const c6 = sheet.getRange("C6");
+  c6.setValue(userName)
+    .setFontSize(14)
+    .setHorizontalAlignment("center")
+    .setVerticalAlignment("middle")
+    .setBorder(true, true, true, true, false, false, null, BORDER_MEDIUM);
 
-  // A9:D9 = ヘッダー行
-  sheet.getRange("A9").setValue("番号");
-  sheet.getRange("B9").setValue("日付");
-  sheet.getRange("C9").setValue("内容");
-  sheet.getRange("D9").setValue("金額");
-
+  // ========= 明細ヘッダー =========
   const headerRange = sheet.getRange("A9:D9");
-  headerRange.setFontWeight("bold");
-  headerRange.setBackground("#f3f3f3");
-  headerRange.setBorder(true, true, true, true, true, true);
+  headerRange
+    .setValues([["番号", "日付", "内容", "金額"]])
+    .setFontWeight("bold")
+    .setFontSize(12)
+    .setBackground(COLOR_PRIMARY)
+    .setFontColor(COLOR_WHITE)
+    .setHorizontalAlignment("center")
+    .setVerticalAlignment("middle")
+    .setBorder(true, true, true, true, true, true, null, BORDER_SOLID)
+    .setBorder(true, null, null, true, null, null, null, BORDER_MEDIUM);
 
-  // 列幅を調整
-  sheet.setColumnWidth(1, 60);  // A列: 番号
-  sheet.setColumnWidth(2, 100); // B列: 日付
-  sheet.setColumnWidth(3, 300); // C列: 内容
-  sheet.setColumnWidth(4, 100); // D列: 金額
+  // ========= 列幅調整 =========
+  sheet.setColumnWidth(1, 60);   // A列: 番号
+  sheet.setColumnWidth(2, 100);  // B列: 日付
+  sheet.setColumnWidth(3, 300);  // C列: 内容
+  sheet.setColumnWidth(4, 100);  // D列: 金額
 }
+
 
 /**
  * 交通費エントリーの表示用データ行を作成する
@@ -635,7 +669,7 @@ function addExpenseDataToMonthlySheet(
 
     // D列: 金額
     sheet.getRange(rowIndex, 4).setValue(rowData.amount);
-    sheet.getRange(rowIndex, 4).setNumberFormat("#,##0");
+    sheet.getRange(rowIndex, 4).setNumberFormat("¥#,##0");
 
     currentRowNumber++;
   });
@@ -643,7 +677,51 @@ function addExpenseDataToMonthlySheet(
   // 追加したデータ範囲に罫線を引く
   const dataStartRow = startRow + (lastRow >= startRow ? lastRow - startRow + 1 : 0);
   const dataRange = sheet.getRange(dataStartRow, 1, allRows.length, 4);
-  dataRange.setBorder(true, true, true, true, true, true);
+  const centerRange = sheet.getRange(dataStartRow, 1, allRows.length, 1);
+  centerRange.setHorizontalAlignment("center");
+  // データ行全体
+  dataRange.setBorder(
+    false, true, true, true, true, true,
+    null,
+    SpreadsheetApp.BorderStyle.SOLID
+  )
+  .setFontSize(11)
+  .setVerticalAlignment("middle");
+
+  // 右側（D列）だけ太線にする
+  const rightEdgeRange = sheet.getRange(dataStartRow, 4, allRows.length, 1);
+  rightEdgeRange.setBorder(
+    null, null, null, true, null, null,
+    null,
+    SpreadsheetApp.BorderStyle.SOLID_MEDIUM
+  );
+
+  // 合計金額行を追加
+  const totalRow = dataStartRow + allRows.length;
+  const totalAmount = allRows.reduce((sum, row) => sum + row.amount, 0);
+
+  // A:C列に「合計金額」を結合して表示
+  const totalLabelRange = sheet.getRange(totalRow, 1, 1, 3);
+  totalLabelRange.merge();
+  totalLabelRange.setFontWeight("bold");
+  totalLabelRange.setFontSize(12);
+  totalLabelRange.setValue("合計金額");
+  totalLabelRange.setHorizontalAlignment("center");
+  totalLabelRange.setVerticalAlignment("middle");
+  totalLabelRange.setBackground("#0070C0");
+  totalLabelRange.setFontColor("white");
+
+  // D列に合計金額を表示
+  sheet.getRange(totalRow, 4).setValue(totalAmount);
+  sheet.getRange(totalRow, 4).setNumberFormat("¥#,##0");
+  sheet.getRange(totalRow, 4).setFontWeight("bold");
+  sheet.getRange(totalRow, 4).setFontSize(14);
+
+  // 合計金額行に罫線を引く
+  const totalRowRange = sheet.getRange(totalRow, 1, 1, 4);
+  totalRowRange
+  .setBorder(true, true, true, true, true, true, null, BORDER_SOLID)
+  .setBorder(null, true, true, true, null, null, null, BORDER_MEDIUM);
 }
 
 /**
@@ -721,6 +799,9 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
     if (!monthlySheet) {
       throw new Error("月次経費精算書シートの取得に失敗しました。");
     }
+
+    // 既存のシートをクリアして新規フォーマットで再初期化
+    initializeMonthlyExpenseSheet(monthlySheet, expenseData.name, submittedDate);
 
     // 月次シートに交通費・経費データを追加
     addExpenseDataToMonthlySheet(monthlySheet, commuteEntries, expenseEntryRecords);
