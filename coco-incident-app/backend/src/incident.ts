@@ -24,7 +24,6 @@ function getIncidentList(): IncidentRecord[] {
 
     let values = incidentSheet.getRange(2, 1, lastRow - 1, 8).getValues();
 
-    // --- Filtering based on Permission ---
     // 管理者は全件表示、一般ユーザーは自分が登録したもののみ表示
     if (!userIsAdmin) {
       values = values.filter(row => row[1] === userEmail);
@@ -50,7 +49,11 @@ function getIncidentList(): IncidentRecord[] {
         try {
           const detailSheetId = extractSheetIdFromUrl(record.incidentDetailUrl);
           const detailSpreadsheet = SpreadsheetApp.openById(detailSheetId);
-          const detailSheet = detailSpreadsheet.getSheetByName('詳細');
+          const allSheets = detailSpreadsheet.getSheets();
+
+          // テンプレートの最初のシートを取得（「詳細」または「シート1」など）
+          const detailSheet = allSheets.length > 0 ? allSheets[0] : null;
+
           if (detailSheet) {
             const detailValues = detailSheet.getRange('B1:B5').getValues();
             record.summary = detailValues[0][0];
@@ -158,13 +161,10 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
       const newFolder = parentFolder.createFolder(folderName);
       driveFolderUrl = newFolder.getUrl();
 
-      // --- Update Drive Permissions Start ---
       const adminEmails = getAdminEmails();
       adminEmails.forEach(admin => {
         newFolder.addEditor(admin);
       });
-      // newFolder.addEditor(userEmail); // 念のため作成者も追加
-      // --- Update Drive Permissions End ---
 
       const templateSheetId = getScriptProperty(
         'TEMPLATE_SHEET_ID',
