@@ -2,6 +2,7 @@ import * as api from '../api';
 import { initialFormData } from '../state';
 import { FileData, Incident } from '../types';
 import { ComponentContext } from '../context';
+import { backToList } from './changeView';
 
 /**
  * フォームを送信します。
@@ -17,15 +18,21 @@ export async function submitForm(this: ComponentContext) {
   }
   this.submitting = true;
   this.error = '';
-  this.success = false;
+
   try {
     const result = await api.submitIncident(this.formData);
-    this.success = true;
-    this.improvementSuggestions = result.improvementSuggestions || '';
 
     const isUpdate = !!(
       this.formData.registeredDate && this.formData.registeredDate.trim()
     );
+
+    const submittedIncidentData: Incident = {
+      ...result.record,
+      summary: this.formData.summary,
+      stakeholders: this.formData.stakeholders,
+      details: this.formData.details,
+      improvementSuggestions: result.improvementSuggestions || '',
+    };
 
     if (isUpdate) {
       // 更新: 既存のインシデントを探して更新
@@ -33,32 +40,27 @@ export async function submitForm(this: ComponentContext) {
         inc => inc.registeredDate === this.formData.registeredDate
       );
       if (index !== -1) {
-        // バックエンドから返されたrecordで更新
-        this.incidents[index] = {
-          ...result.record,
-          summary: this.formData.summary,
-          stakeholders: this.formData.stakeholders,
-          details: this.formData.details,
-          improvementSuggestions: result.improvementSuggestions || '',
-        };
+        this.incidents[index] = submittedIncidentData;
       }
     } else {
-      // 新規登録: バックエンドから返されたrecordをリストの先頭に追加
-      const newIncident: Incident = {
-        ...result.record,
-        summary: this.formData.summary,
-        stakeholders: this.formData.stakeholders,
-        details: this.formData.details,
-        improvementSuggestions: result.improvementSuggestions || '',
-      };
-      this.incidents.unshift(newIncident);
+      // 新規登録: リストの先頭に追加
+      this.incidents.unshift(submittedIncidentData);
     }
+    this.submittedIncident = submittedIncidentData;
+    this.showSuccessModal = true;
   } catch (error: any) {
     this.error = error.message || '送信に失敗しました';
-    this.success = false;
   } finally {
     this.submitting = false;
   }
+}
+
+/**
+ * 送信成功モーダルを閉じて一覧に戻ります。
+ */
+export function closeSuccessModal(this: ComponentContext) {
+  this.showSuccessModal = false;
+  backToList.call(this);
 }
 
 /**
@@ -104,6 +106,6 @@ export function resetForm(this: ComponentContext) {
     fileInput.value = '';
   }
   this.error = '';
-  this.success = false;
-  this.improvementSuggestions = '';
+  this.submittedIncident = null;
+  this.showSuccessModal = false;
 }

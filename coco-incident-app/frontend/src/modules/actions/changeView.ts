@@ -29,7 +29,6 @@ export function editIncident(this: ComponentContext, incident: Incident) {
   this.formData.summary = incident.summary || '';
   this.formData.stakeholders = incident.stakeholders || '';
   this.formData.details = incident.details || '';
-  this.formData.previousAiSuggestions = incident.improvementSuggestions || '';
   this.formData.fileDataList = [];
 
   this.currentView = 'form';

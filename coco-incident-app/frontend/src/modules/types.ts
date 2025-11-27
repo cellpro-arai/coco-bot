@@ -35,7 +35,6 @@ export interface IncidentFormData {
   details: string;
   status: string;
   fileDataList: FileData[];
-  previousAiSuggestions: string; // 編集時の前回AI改善案
 }
 
 /**

@@ -14,7 +14,6 @@ export const initialFormData: IncidentFormData = {
   details: '',
   status: '対応中',
   fileDataList: [],
-  previousAiSuggestions: '',
 };
 
 // アプリケーションの全体的な状態
@@ -30,8 +29,8 @@ export const appState = {
 
   // フォーム管理
   submitting: false,
-  success: false,
-  improvementSuggestions: '',
+  showSuccessModal: false,
+  submittedIncident: null as Incident | null,
   formData: { ...initialFormData },
   selectedIncident: null as Incident | null,
 
