@@ -103,10 +103,17 @@
                         class="d-flex justify-content-between align-items-start mb-2"
                       >
                         <h5 class="mb-0" x-text="incident.caseName"></h5>
-                        <span
-                          class="badge secondary"
-                          x-text="incident.registeredDate"
-                        ></span>
+                        <span class="badge secondary">
+                          <template x-if="incident.updateDate">
+                            <span
+                              class="d-flex align-items-center"
+                              style="line-height: 1"
+                            >
+                              <i class="bi bi-clock-fill me-1"></i>
+                              <span x-text="incident.updateDate"></span>
+                            </span>
+                          </template>
+                        </span>
                       </div>
                       <div class="mb-2">
                         <span class="badge primary me-2">
@@ -142,22 +149,10 @@
                           </span>
                         </template>
                       </div>
-                      <template x-if="incident.updateDate">
-                        <div class="small text-muted mb-2">
-                          <i class="bi bi-clock-fill me-1"></i>
-                          更新日時: <span x-text="incident.updateDate"></span>
-                        </div>
-                      </template>
                       <p
                         class="text-truncate-2 mb-2"
                         x-text="incident.summary"
                       ></p>
-                      <div class="small text-muted">
-                        <div
-                          class="text-truncate-3"
-                          x-text="incident.details"
-                        ></div>
-                      </div>
                       <template x-if="incident.attachments">
                         <div class="mt-2">
                           <span class="badge success">
@@ -262,69 +257,73 @@
 
             <!-- フォーム -->
             <form @submit.prevent="submitForm">
-              <!-- 案件名 -->
-              <label for="caseName">
-                <span class="required-label">
-                  <i class="bi bi-folder-fill text-primary me-1"></i>
-                  案件名
-                </span>
-                <input
-                  type="text"
-                  id="caseName"
-                  x-model="formData.caseName"
-                  required
-                  placeholder="例: 〇〇システム障害"
-                />
-                <small>案件を識別できる名前を記入してください</small>
-              </label>
-              <!-- 担当者 -->
-              <label for="assignee">
-                <span class="required-label">
-                  <i class="bi bi-person-fill text-primary me-1"></i>
-                  担当者
-                </span>
-                <input
-                  type="text"
-                  id="assignee"
-                  x-model="formData.assignee"
-                  required
-                  placeholder="例: 山田太郎"
-                />
-                <small
-                  >このインシデントを担当する方の名前を1名記入してください</small
-                >
-              </label>
+              <div class="grid">
+                <!-- 案件名 -->
+                <label for="caseName">
+                  <span class="required-label">
+                    <i class="bi bi-folder-fill text-primary me-1"></i>
+                    案件名
+                  </span>
+                  <input
+                    type="text"
+                    id="caseName"
+                    x-model="formData.caseName"
+                    required
+                    placeholder="例: 〇〇システム障害"
+                  />
+                  <small>案件を識別できる名前を記入してください</small>
+                </label>
+                <!-- 担当者 -->
+                <label for="assignee">
+                  <span class="required-label">
+                    <i class="bi bi-person-fill text-primary me-1"></i>
+                    担当者
+                  </span>
+                  <input
+                    type="text"
+                    id="assignee"
+                    x-model="formData.assignee"
+                    required
+                    placeholder="例: 山田太郎"
+                  />
+                  <small
+                    >このインシデントを担当する方の名前を1名記入してください</small
+                  >
+                </label>
+              </div>
 
-              <!-- ステータス -->
-              <label for="status">
-                <span class="required-label">
-                  <i class="bi bi-flag-fill text-primary me-1"></i>
-                  ステータス
-                </span>
-                <select id="status" x-model="formData.status" required>
-                  <option value="対応中">対応中</option>
-                  <option value="保留">保留</option>
-                  <option value="解決済み">解決済み</option>
-                  <option value="クローズ">クローズ</option>
-                </select>
-                <small>現在の対応状況を選択してください</small>
-              </label>
+              <div class="grid">
+                <!-- ステータス -->
+                <label for="status">
+                  <span class="required-label">
+                    <i class="bi bi-flag-fill text-primary me-1"></i>
+                    ステータス
+                  </span>
+                  <select id="status" x-model="formData.status" required>
+                    <option value="対応中">対応中</option>
+                    <option value="保留">保留</option>
+                    <option value="解決済み">解決済み</option>
+                    <option value="クローズ">クローズ</option>
+                  </select>
+                  <small>現在の対応状況を選択してください</small>
+                </label>
 
-              <!-- トラブル概要 -->
-              <label for="summary">
-                <span class="required-label">
-                  <i class="bi bi-card-text text-primary me-1"></i>
-                  トラブル概要
-                </span>
-                <textarea
-                  id="summary"
-                  x-model="formData.summary"
-                  rows="3"
-                  required
-                  placeholder="例: サーバーがダウンし、サービスにアクセスできない状態が発生しました"
-                ></textarea>
-                <small>トラブルの概要を簡潔に記入してください</small>
-              </label>
+                <!-- トラブル概要 -->
+                <label for="summary">
+                  <span class="required-label">
+                    <i class="bi bi-card-text text-primary me-1"></i>
+                    トラブル概要
+                  </span>
+                  <textarea
+                    id="summary"
+                    x-model="formData.summary"
+                    rows="3"
+                    required
+                    placeholder="例: サーバーがダウンし、サービスにアクセスできない状態が発生しました"
+                  ></textarea>
+                  <small>トラブルの概要を簡潔に記入してください</small>
+                </label>
+              </div>
 
               <!-- ステークホルダー -->
               <label for="stakeholders">

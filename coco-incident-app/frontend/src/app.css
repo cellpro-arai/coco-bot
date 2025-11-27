@@ -239,3 +239,8 @@ article {
     border: 1px solid var(--pico-primary);
   }
 }
+
+/* Custom styles for incident list cards */
+.grid > .col > article {
+  height: 100%;
+}
