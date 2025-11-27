@@ -1,109 +1,4 @@
 /**
- * Slackに通知を送信（Bot Token版）
- */
-function sendSlackNotification(incident: {
-  caseName: string;
-  assignee: string;
-  status: string;
-  summary: string;
-  incidentDetailUrl: string;
-  registeredUser: string;
-}): void {
-  try {
-    const token =
-      PropertiesService.getScriptProperties().getProperty('SLACK_BOT_TOKEN');
-
-    if (!token) {
-      console.warn('SLACK_BOT_TOKEN が設定されていません');
-      return;
-    }
-
-    // 送信先チャンネルを指定（チャンネル名またはチャンネルID）
-    const channel =
-      PropertiesService.getScriptProperties().getProperty('SLACK_CHANNEL');
-
-    const payload = {
-      channel: channel,
-      text: `🚨 新しいインシデントが登録されました`,
-      blocks: [
-        {
-          type: 'header',
-          text: {
-            type: 'plain_text',
-            text: `🚨 ${incident.caseName}`,
-            emoji: true,
-          },
-        },
-        {
-          type: 'section',
-          fields: [
-            {
-              type: 'mrkdwn',
-              text: `*担当者:*\n${incident.assignee}`,
-            },
-            {
-              type: 'mrkdwn',
-              text: `*ステータス:*\n${incident.status}`,
-            },
-            {
-              type: 'mrkdwn',
-              text: `*登録者:*\n${incident.registeredUser}`,
-            },
-          ],
-        },
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: `*概要:*\n${incident.summary}`,
-          },
-        },
-        {
-          type: 'actions',
-          elements: [
-            {
-              type: 'button',
-              text: {
-                type: 'plain_text',
-                text: '詳細を見る',
-                emoji: true,
-              },
-              url: incident.incidentDetailUrl,
-              style: 'primary',
-            },
-          ],
-        },
-      ],
-    };
-
-    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-      method: 'post',
-      contentType: 'application/json',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      payload: JSON.stringify(payload),
-      muteHttpExceptions: true,
-    };
-
-    const response = UrlFetchApp.fetch(
-      'https://slack.com/api/chat.postMessage',
-      options
-    );
-
-    const result = JSON.parse(response.getContentText());
-
-    if (!result.ok) {
-      console.error('Slack通知送信エラー:', result.error);
-    } else {
-      console.log('Slack通知送信成功');
-    }
-  } catch (error) {
-    console.error('sendSlackNotification error:', error);
-  }
-}
-
-/**
  * インシデントのステータス変更をSlackに通知
  */
 function notifyStatusChanged(
@@ -225,15 +120,64 @@ function notifyStatusChanged(
 }
 
 /**
+ * Slackワークスペース内の全ユーザーのメールアドレスを取得
+ */
+function getAllSlackUserEmails(): void {
+  try {
+    const token =
+      PropertiesService.getScriptProperties().getProperty('SLACK_BOT_TOKEN');
+
+    if (!token) {
+      console.warn('SLACK_BOT_TOKEN が設定されていません');
+      return;
+    }
+
+    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      method: 'get',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      muteHttpExceptions: true,
+    };
+
+    const response = UrlFetchApp.fetch(
+      'https://slack.com/api/users.list',
+      options
+    );
+
+    const result = JSON.parse(response.getContentText());
+
+    if (!result.ok) {
+      console.error('Slackユーザー一覧取得エラー:', result.error);
+      return;
+    }
+
+    console.log('=== Slackユーザーのメールアドレス一覧 ===');
+
+    result.members.forEach((user: any) => {
+      // Botやデフォルトユーザーを除外
+      if (!user.is_bot && !user.deleted && user.profile && user.profile.email) {
+        console.log(
+          `${user.profile.real_name || user.name}: ${user.profile.email} (ID: ${user.id})`
+        );
+      }
+    });
+
+    console.log('=====================================');
+  } catch (error) {
+    console.error('getAllSlackUserEmails error:', error);
+  }
+}
+
+/**
  * Slack通知のテスト
  */
 function testSlackNotification(): void {
-  sendSlackNotification({
-    caseName: 'テストインシデント',
-    assignee: '山田太郎',
-    status: '対応中',
-    summary: 'これはテスト通知です',
-    incidentDetailUrl: 'https://example.com',
-    registeredUser: 'test@example.com',
-  });
+  notifyStatusChanged(
+    'テストインシデント',
+    '山田太郎',
+    '未対応',
+    '対応中',
+    'https://example.com'
+  );
 }
