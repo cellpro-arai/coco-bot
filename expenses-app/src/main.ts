@@ -41,6 +41,7 @@ interface CommuteEntry {
  * 経費明細の入力内容
  */
 interface ExpenseEntry {
+  date: string;
   category: ExpenseCategory;
   description: string;
   amount: string;
@@ -52,6 +53,7 @@ interface ExpenseEntry {
  * ファイルアップロード後の経費明細（URL付き）
  */
 interface ExpenseEntryRecord {
+  date: string;
   category: ExpenseCategory;
   description: string;
   amount: string;
@@ -309,6 +311,7 @@ function uploadExpenseReceipts(entries: ExpenseEntry[]): ExpenseEntryRecord[] {
         : "";
 
     return {
+      date: entry.date,
       category,
       description: entry.description,
       amount: entry.amount,
@@ -330,7 +333,8 @@ function formatExpenseEntries(entries: ExpenseEntryRecord[]): string {
     .map((entry, index) => {
       const categoryLabel =
         entry.category === "exam" ? "試験申請" : "その他";
-      const base = `${index + 1}. [${categoryLabel}] ${entry.description}（${entry.amount}円）`;
+      const dateText = entry.date ? `${entry.date} ` : "";
+      const base = `${index + 1}. ${dateText}[${categoryLabel}] ${entry.description}（${entry.amount}円）`;
       const attachments = [];
 
       if (entry.receiptUrl) {
@@ -625,7 +629,7 @@ function convertCommuteToRowData(entry: CommuteEntry): ExpenseRowData {
  */
 function convertExpenseToRowData(entry: ExpenseEntryRecord): ExpenseRowData {
   return {
-    date: "", // 経費の日付は交通費のdateフィールドのようなものがないため空
+    date: entry.date,
     description: entry.description,
     amount: toNumberAmount(entry.amount)
   };

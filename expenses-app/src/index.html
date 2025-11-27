@@ -247,107 +247,134 @@
       align-items: center;
       gap: 0.75rem;
       flex-wrap: wrap;
+      margin-bottom: 1rem;
     }
 
-    .expense-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 0.35rem;
+    .expense-table-header button {
+      padding: 0.32rem 0.75rem;
+      font-size: 0.82rem;
+      line-height: 1;
+      min-height: 1.35rem;
+    }
+
+    .expense-cards-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .expense-card {
+      background: var(--pico-card-background-color);
+      border: 1px solid var(--pico-muted-border-color);
+      border-radius: var(--pico-border-radius);
+      padding: 0.75rem;
+      transition: all 0.2s ease;
       font-size: 0.85rem;
-      table-layout: fixed;
     }
 
-    .expense-table th,
-    .expense-table td {
-      padding: 0.2rem 0.3rem;
-      border-bottom: 1px solid #dcdcdc;
-      vertical-align: middle;
+    .expense-card:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transform: translateY(-1px);
     }
 
-    .expense-table th {
+    .expense-card-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .expense-card-row-3 {
+      display: grid;
+      grid-template-columns: 140px 1fr 120px;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .expense-card-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .expense-card-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .expense-card-field-full {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      grid-column: 1 / -1;
+    }
+
+    .expense-card-label {
+      font-size: 0.75rem;
       font-weight: 600;
-      text-align: left;
+      color: var(--pico-muted-color);
+      margin-bottom: 0;
+      line-height: 1;
     }
 
-    .expense-table input,
-    .expense-table select {
+    .expense-card input,
+    .expense-card select {
       width: 100%;
       box-sizing: border-box;
-      padding: 0.16rem 0.35rem;
+      padding: 0.2rem 0.4rem;
       font-size: 0.78rem;
-      height: 1.35rem;
+      height: 1.4rem;
       line-height: 1.2;
       margin-bottom: 0;
     }
 
-    .expense-table input[type="file"] {
+    .expense-card input[type="file"] {
       padding: 0;
       font-size: 0.78rem;
-      height: 1.35rem;
-      line-height: 1.35rem;
+      height: 1.4rem;
+      line-height: 1.4rem;
     }
 
-    .expense-table input[type="file"]::file-selector-button,
-    .expense-table input[type="file"]::-webkit-file-upload-button {
+    .expense-card input[type="file"]::file-selector-button,
+    .expense-card input[type="file"]::-webkit-file-upload-button {
       padding: 0.16rem 0.5rem;
       font-size: 0.78rem;
       height: 100%;
       line-height: 1.2;
     }
 
-    .expense-table th:nth-child(1),
-    .expense-table td:nth-child(1) {
-      width: 12%;
-      min-width: 95px;
-    }
-
-    .expense-table th:nth-child(2),
-    .expense-table td:nth-child(2) {
-      width: 30%;
-      min-width: 160px;
-    }
-
-    .expense-table th:nth-child(3),
-    .expense-table td:nth-child(3) {
-      width: 12%;
-      min-width: 90px;
-    }
-
-    .expense-table th:nth-child(4),
-    .expense-table td:nth-child(4) {
-      width: 18%;
-      min-width: 140px;
-    }
-
-    .expense-table th:nth-child(5),
-    .expense-table td:nth-child(5) {
-      width: 18%;
-      min-width: 140px;
-    }
-
-    .expense-table th:nth-child(6),
-    .expense-table td:nth-child(6) {
-      width: 10%;
-      min-width: 90px;
-    }
-
-    .expense-table button {
-      margin-bottom: 0;
-    }
-
-    .expense-entry-actions {
+    .expense-card-actions {
       display: flex;
-      gap: 0.35rem;
-      justify-content: flex-start;
-      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: flex-end;
+      margin-top: 0.5rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--pico-muted-border-color);
     }
 
-    .expense-entry-actions button,
-    .expense-table-header button {
-      padding: 0.32rem 0.75rem;
-      font-size: 0.82rem;
-      line-height: 1;
-      min-height: 1.35rem;
+    .expense-card-actions button {
+      padding: 0.3rem 0.75rem;
+      font-size: 0.8rem;
+      margin-bottom: 0;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 768px) {
+      .expense-card-row,
+      .expense-card-row-3 {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .expense-card {
+        padding: 0.5rem;
+      }
+
+      .expense-card-actions {
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+      }
     }
 
     .work-schedule-input {
@@ -386,6 +413,7 @@
     });
 
     const createEmptyExpenseEntry = () => ({
+      date: '',
       category: 'other',
       description: '',
       amount: '',
@@ -546,13 +574,13 @@
         const entries = [];
 
         for (const entry of formData.expenseEntries) {
-          const hasValue = entry.description || entry.amount;
+          const hasValue = entry.date || entry.description || entry.amount;
           if (!hasValue) {
             continue;
           }
 
-          if (!entry.description || !entry.amount) {
-            throw new Error('経費の内容と金額を入力してください。');
+          if (!entry.date || !entry.description || !entry.amount) {
+            throw new Error('経費の日付、内容、金額を入力してください。');
           }
 
           if (!entry.receiptFile) {
@@ -580,6 +608,7 @@
           }
 
           entries.push({
+            date: entry.date,
             category,
             description: entry.description,
             amount: entry.amount,
@@ -818,99 +847,101 @@
                   <legend>経費</legend>
                   <div className="expense-table-container">
                     <div className="expense-table-header">
-                      <small>ジャンルを選択し、内容と金額を入力してください。試験申請は領収書と合格通知書の添付が必須です。</small>
+                      <small>経費種別を選択し、日付、内容、金額を入力してください。試験申請は領収書と合格通知書の添付が必須です。</small>
                       <button type="button" className="secondary" onClick={addExpenseEntry}>
                         + 経費を追加
                       </button>
                     </div>
                     {hasExpenseEntries ? (
-                      <table className="expense-table">
-                        <thead>
-                          <tr>
-                            <th id="expense-category-header">ジャンル</th>
-                            <th id="expense-description-header">内容</th>
-                            <th id="expense-amount-header">金額（円）</th>
-                            <th id="expense-receipt-header">領収書</th>
-                            <th id="expense-certificate-header">合格通知書</th>
-                            <th id="expense-actions-header">操作</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {formData.expenseEntries.map((entry, index) => {
-                            const category = entry.category || 'other';
-                            const isExam = category === 'exam';
-                            return (
-                              <tr key={`expense-${index}`}>
-                                <td>
+                      <div className="expense-cards-grid">
+                        {formData.expenseEntries.map((entry, index) => {
+                          const category = entry.category || 'other';
+                          const isExam = category === 'exam';
+                          return (
+                            <div key={`expense-${index}`} className="expense-card">
+                              <div className="expense-card-row-3">
+                                <div className="expense-card-field">
+                                  <label htmlFor={`expense-date-${index}`} className="expense-card-label">日付</label>
+                                  <input
+                                    type="date"
+                                    id={`expense-date-${index}`}
+                                    value={entry.date}
+                                    onChange={(e) => handleExpenseEntryChange(index, 'date', e.target.value)}
+                                    required
+                                  />
+                                </div>
+                                <div className="expense-card-field">
+                                  <label htmlFor={`expense-category-${index}`} className="expense-card-label">経費種別</label>
                                   <select
                                     id={`expense-category-${index}`}
                                     value={category}
-                                    aria-labelledby="expense-category-header"
                                     onChange={(e) => handleExpenseEntryChange(index, 'category', e.target.value)}
                                   >
                                     <option value="exam">試験申請</option>
                                     <option value="other">その他</option>
                                   </select>
-                                </td>
-                                <td>
-                                  <input
-                                    type="text"
-                                    id={`expense-description-${index}`}
-                                    value={entry.description}
-                                    aria-labelledby="expense-description-header"
-                                    onChange={(e) => handleExpenseEntryChange(index, 'description', e.target.value)}
-                                    placeholder="例: 備品購入"
-                                    required
-                                  />
-                                </td>
-                                <td>
+                                </div>
+                                <div className="expense-card-field">
+                                  <label htmlFor={`expense-amount-${index}`} className="expense-card-label">金額（円）</label>
                                   <input
                                     type="number"
                                     min="0"
                                     id={`expense-amount-${index}`}
                                     value={entry.amount}
-                                    aria-labelledby="expense-amount-header"
                                     onChange={(e) => handleExpenseEntryChange(index, 'amount', e.target.value)}
                                     placeholder="例: 1200"
                                     required
                                   />
-                                </td>
-                                <td>
+                                </div>
+                              </div>
+                              <div className="expense-card-row">
+                                <div className="expense-card-field-full">
+                                  <label htmlFor={`expense-description-${index}`} className="expense-card-label">内容</label>
+                                  <input
+                                    type="text"
+                                    id={`expense-description-${index}`}
+                                    value={entry.description}
+                                    onChange={(e) => handleExpenseEntryChange(index, 'description', e.target.value)}
+                                    placeholder="例: 備品購入"
+                                    required
+                                  />
+                                </div>
+                              </div>
+                              <div className="expense-card-row">
+                                <div className="expense-card-field">
+                                  <label htmlFor={`expense-receipt-${index}`} className="expense-card-label">領収書</label>
                                   <input
                                     type="file"
                                     id={`expense-receipt-${index}`}
                                     accept=".pdf,.xlsx,.xls,.jpg,.jpeg,.png,.heic"
-                                    aria-labelledby="expense-receipt-header"
                                     onChange={(e) => handleExpenseReceiptChange(index, e.target.files[0] || null)}
                                     required
                                   />
-                                </td>
-                                <td>
-                                  {isExam ? (
+                                </div>
+                                {isExam && (
+                                  <div className="expense-card-field">
+                                    <label htmlFor={`expense-certificate-${index}`} className="expense-card-label">
+                                      合格通知書
+                                    </label>
                                     <input
                                       type="file"
                                       id={`expense-certificate-${index}`}
                                       accept=".pdf,.xlsx,.xls,.jpg,.jpeg,.png,.heic"
-                                      aria-labelledby="expense-certificate-header"
                                       onChange={(e) => handleExpenseCertificateChange(index, e.target.files[0] || null)}
                                       required
                                     />
-                                  ) : (
-                                    <small className="text-muted">不要</small>
-                                  )}
-                                </td>
-                                <td>
-                                  <div className="expense-entry-actions" aria-labelledby="expense-actions-header">
-                                    <button type="button" className="secondary" onClick={() => removeExpenseEntry(index)}>
-                                      削除
-                                    </button>
                                   </div>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                                )}
+                              </div>
+                              <div className="expense-card-actions">
+                                <button type="button" className="secondary" onClick={() => removeExpenseEntry(index)}>
+                                  削除
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     ) : (
                       <p className="text-muted">「+ 経費を追加」を押すと入力欄が表示されます。</p>
                     )}
