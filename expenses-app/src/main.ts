@@ -159,11 +159,8 @@ const EXPENSE_SHEET_HEADERS = [
   "提出者",
   "氏名",
   "勤務表",
-  "交通費明細",
-  "交通費合計",
-  "経費明細",
-  "経費合計",
-  "合計金額",
+  "経費精算書",
+  "領収書",
   "開始時間",
   "終了時間",
   "定期券購入",
@@ -180,26 +177,150 @@ const BORDER_SOLID = SpreadsheetApp.BorderStyle.SOLID;
 const BORDER_MEDIUM = SpreadsheetApp.BorderStyle.SOLID_MEDIUM;
 
 /**
- * 経費精算シート専用のヘッダーを整備する
+ * ヘッダー行から各列の位置を検出する
+ */
+function getHeaderColumnPositions(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet
+): Map<string, number> {
+  const lastColumn = sheet.getLastColumn();
+  if (lastColumn === 0) {
+    return new Map();
+  }
+
+  const headerRow = sheet.getRange(1, 1, 1, lastColumn).getValues()[0];
+  const positions = new Map<string, number>();
+
+  EXPENSE_SHEET_HEADERS.forEach((header) => {
+    const index = headerRow.indexOf(header);
+    if (index !== -1) {
+      positions.set(header, index + 1); // 1-indexed
+    }
+  });
+
+  return positions;
+}
+
+/**
+ * 存在しないヘッダーを右端に追加する
+ */
+function addMissingHeaders(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+  positions: Map<string, number>
+): Map<string, number> {
+  let nextColumn = sheet.getLastColumn() + 1;
+
+  EXPENSE_SHEET_HEADERS.forEach((header) => {
+    if (!positions.has(header)) {
+      // ヘッダーを右端に追加
+      sheet.getRange(1, nextColumn).setValue(header);
+      positions.set(header, nextColumn);
+      nextColumn++;
+    }
+  });
+
+  return positions;
+}
+
+/**
+ * ヘッダー行にGoogleフォーム風のスタイルを適用する
+ */
+function styleHeaderRow(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
+  const lastColumn = sheet.getLastColumn();
+  if (lastColumn === 0) {
+    return;
+  }
+
+  const headerRange = sheet.getRange(1, 1, 1, lastColumn);
+
+  // Googleフォーム風の深い紫色（スクリーンショット参考）
+  const headerColor = "#673AB7";
+
+  headerRange
+    .setBackground(headerColor)
+    .setFontColor("white")
+    .setFontWeight("bold")
+    .setFontSize(11)
+    .setHorizontalAlignment("center")
+    .setVerticalAlignment("middle")
+    .setBorder(
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      "black",
+      SpreadsheetApp.BorderStyle.SOLID
+    );
+
+  // セルの高さを余裕のあるサイズに設定
+  sheet.setRowHeight(1, 32);
+}
+
+/**
+ * 経費精算シート専用のヘッダーを整備する（スマート検出版）
  */
 function ensureExpenseSheetHeader(
   sheet: GoogleAppsScript.Spreadsheet.Sheet
 ): void {
   const headers = EXPENSE_SHEET_HEADERS;
 
+  // シートが空の場合は、最初の行にヘッダーを追加
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(headers);
+    styleHeaderRow(sheet);
     return;
   }
 
-  const headerRange = sheet.getRange(1, 1, 1, headers.length);
-  const currentHeaders = headerRange.getValues()[0];
-  const needsUpdate =
-    headers.length !== currentHeaders.length ||
-    headers.some((header, index) => currentHeaders[index] !== header);
+  // 既存のヘッダー位置を検出
+  const positions = getHeaderColumnPositions(sheet);
 
-  if (needsUpdate) {
-    headerRange.setValues([headers]);
+  // 存在しないヘッダーがあれば右端に追加
+  if (positions.size < headers.length) {
+    addMissingHeaders(sheet, positions);
+  }
+
+  // ヘッダー行にスタイルを適用
+  styleHeaderRow(sheet);
+}
+
+/**
+ * ヘッダー位置マップに基づいて行データを追加する
+ */
+function appendRowWithHeaderPositions(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+  headerPositions: Map<string, number>,
+  dataMap: Map<string, string | number | Date>
+): number {
+  const newRow = sheet.getLastRow() + 1;
+
+  dataMap.forEach((value, header) => {
+    const column = headerPositions.get(header);
+    if (column) {
+      sheet.getRange(newRow, column).setValue(value);
+    }
+  });
+
+  return newRow;
+}
+
+/**
+ * シートにフィルターを作成する（存在しない場合のみ）
+ */
+function ensureFilterOnSheet(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
+  // 既存のフィルターを取得
+  const existingFilter = sheet.getFilter();
+
+  // フィルターが存在しない場合は作成
+  if (!existingFilter) {
+    const lastRow = sheet.getLastRow();
+    const lastColumn = sheet.getLastColumn();
+
+    // データが存在する場合のみフィルターを作成
+    if (lastRow > 0 && lastColumn > 0) {
+      const range = sheet.getRange(1, 1, lastRow, lastColumn);
+      range.createFilter();
+    }
   }
 }
 
@@ -224,30 +345,51 @@ function setFileHyperlink(
 }
 
 /**
- * 交通費詳細の配列を表示用テキストに整形する
+ * 1つのセルに複数のハイパーリンクを設定する
  */
-function formatCommuteEntries(entries: CommuteEntry[]): string {
-  if (!entries || entries.length === 0) {
-    return "";
+function setMultipleHyperlinks(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+  row: number,
+  column: number,
+  links: Array<{ text: string; url: string }>
+): void {
+  if (!links || links.length === 0) {
+    return;
   }
 
-  return entries
-    .map((entry, index) => {
-      const amountText = entry.amount ? `${entry.amount}円` : "";
-      const tripTypeText =
-        entry.tripType === "roundTrip" ? "往復" : "片道";
-      const parts = [
-        `${index + 1}.`,
-        `【${tripTypeText}】`,
-        entry.date,
-        `${entry.origin}→${entry.destination}`,
-        amountText,
-      ].filter(Boolean);
+  // 1. 最初に全文を構築し、各リンクの位置を記録
+  let fullText = "";
+  const linkPositions: Array<{ start: number; end: number; url: string }> = [];
+  let currentIndex = 0;
 
-      return parts.join(" ");
-    })
-    .join("\n");
+  links.forEach((link, index) => {
+    if (index > 0) {
+      fullText += ", ";
+      currentIndex += 2;
+    }
+
+    const startIndex = currentIndex;
+    fullText += link.text;
+    currentIndex += link.text.length;
+
+    linkPositions.push({
+      start: startIndex,
+      end: currentIndex,
+      url: link.url,
+    });
+  });
+
+  // 2. RichTextBuilderを作成してまずsetTextを呼び出す
+  let richTextBuilder = SpreadsheetApp.newRichTextValue().setText(fullText);
+
+  // 3. その後、各リンクにsetLinkUrlを呼び出す
+  linkPositions.forEach((pos) => {
+    richTextBuilder = richTextBuilder.setLinkUrl(pos.start, pos.end, pos.url);
+  });
+
+  sheet.getRange(row, column).setRichTextValue(richTextBuilder.build());
 }
+
 
 /**
  * 文字列の金額から数値のみ抽出して数値化する
@@ -262,35 +404,6 @@ function toNumberAmount(value?: string): number {
   return isNaN(parsed) ? 0 : parsed;
 }
 
-/**
- * 交通費明細の金額合計を求める
- * 往復の場合は片道の金額を2倍して計算する
- */
-function sumCommuteAmounts(entries: CommuteEntry[]): number {
-  if (!entries || entries.length === 0) {
-    return 0;
-  }
-
-  return entries.reduce((total, entry) => {
-    const oneWayAmount = toNumberAmount(entry.amount);
-    const amount = entry.tripType === "roundTrip" ? oneWayAmount * 2 : oneWayAmount;
-    return total + amount;
-  }, 0);
-}
-
-/**
- * 経費明細の金額合計を求める
- */
-function sumExpenseAmounts(entries: ExpenseEntryRecord[]): number {
-  if (!entries || entries.length === 0) {
-    return 0;
-  }
-
-  return entries.reduce(
-    (total, entry) => total + toNumberAmount(entry.amount),
-    0
-  );
-}
 
 /**
  * 経費の添付ファイルをアップロードしダウンロードURLを付与する
@@ -321,34 +434,6 @@ function uploadExpenseReceipts(entries: ExpenseEntry[]): ExpenseEntryRecord[] {
   });
 }
 
-/**
- * 経費詳細レコードを一覧表示向けテキストにまとめる
- */
-function formatExpenseEntries(entries: ExpenseEntryRecord[]): string {
-  if (!entries || entries.length === 0) {
-    return "";
-  }
-
-  return entries
-    .map((entry, index) => {
-      const categoryLabel =
-        entry.category === "exam" ? "試験申請" : "その他";
-      const dateText = entry.date ? `${entry.date} ` : "";
-      const base = `${index + 1}. ${dateText}[${categoryLabel}] ${entry.description}（${entry.amount}円）`;
-      const attachments = [];
-
-      if (entry.receiptUrl) {
-        attachments.push(`領収書: ${entry.receiptUrl}`);
-      }
-
-      if (entry.certificateUrl) {
-        attachments.push(`合格通知書: ${entry.certificateUrl}`);
-      }
-
-      return attachments.length ? `${base}\n${attachments.join("\n")}` : base;
-    })
-    .join("\n\n");
-}
 
 /**
  * 定期区間の入力値を「最寄り駅-勤務先の駅」の形式に整形する
@@ -373,6 +458,7 @@ function getOrCreateExpenseSheet(
   }
 
   ensureExpenseSheetHeader(sheet);
+  ensureFilterOnSheet(sheet);
   return sheet;
 }
 
@@ -754,44 +840,10 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
 
     const commuteEntries = expenseData.commuteEntries || [];
     const expenseEntries = expenseData.expenseEntries || [];
-    const commuteDetailsText = formatCommuteEntries(commuteEntries);
     const expenseEntryRecords = uploadExpenseReceipts(expenseEntries);
-    const expenseDetailsText = formatExpenseEntries(expenseEntryRecords);
-    const totalCommuteAmount = sumCommuteAmounts(commuteEntries);
-    const totalExpenseAmount = sumExpenseAmounts(expenseEntryRecords);
-    const totalAmount = totalCommuteAmount + totalExpenseAmount;
     const commuterRoute = formatCommuterRoute(
       expenseData.nearestStation,
       expenseData.workStation
-    );
-    const rowData = [
-      submittedDate,
-      userEmail,
-      expenseData.name,
-      workScheduleUrl,
-      commuteDetailsText,
-      totalCommuteAmount,
-      expenseDetailsText,
-      totalExpenseAmount,
-      totalAmount,
-      expenseData.workStartTime,
-      expenseData.workEndTime,
-      expenseData.hasCommuterPass === "yes" ? "有り" : "無し",
-      commuterRoute,
-      expenseData.monthlyFee,
-      expenseData.remarks,
-    ];
-
-    // 新規行を追加
-    expenseSheet.appendRow(rowData);
-    // ファイル列にハイパーリンクを設定
-    const lastRow = expenseSheet.getLastRow();
-    setFileHyperlink(
-      expenseSheet,
-      lastRow,
-      4,
-      expenseData.workScheduleFile?.name,
-      workScheduleUrl
     );
 
     // 提出者ごとの月次スプレッドシートに記録
@@ -811,6 +863,94 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
 
     // 月次シートに交通費・経費データを追加
     addExpenseDataToMonthlySheet(monthlySheet, commuteEntries, expenseEntryRecords);
+
+    // 月次スプレッドシートのURLを取得
+    const monthlySpreadsheetUrl = monthlySpreadsheet.getUrl();
+
+    // 領収書リンクのリストを作成
+    const receiptLinks: Array<{ text: string; url: string }> = [];
+    expenseEntryRecords.forEach((entry, index) => {
+      if (entry.receiptUrl) {
+        receiptLinks.push({
+          text: `領収書${index + 1}`,
+          url: entry.receiptUrl,
+        });
+      }
+      if (entry.certificateUrl) {
+        receiptLinks.push({
+          text: `合格通知書${index + 1}`,
+          url: entry.certificateUrl,
+        });
+      }
+    });
+
+    // 提出がない場合のチェック
+    const hasWorkSchedule = !!workScheduleUrl;
+    const hasReceipts = receiptLinks.length > 0;
+    const hasExpenseData = commuteEntries.length > 0 || expenseEntryRecords.length > 0;
+
+    // ヘッダー位置を検出
+    const headerPositions = getHeaderColumnPositions(expenseSheet);
+
+    // データマップを作成
+    const dataMap = new Map<string, string | number | Date>();
+    dataMap.set("提出日時", submittedDate);
+    dataMap.set("提出者", userEmail);
+    dataMap.set("氏名", expenseData.name);
+    dataMap.set("勤務表", hasWorkSchedule ? workScheduleUrl : "提出なし");
+    dataMap.set("経費精算書", hasExpenseData ? "経費精算書" : "提出なし");
+    dataMap.set("領収書", hasReceipts ? "領収書" : "提出なし");
+    dataMap.set("開始時間", expenseData.workStartTime);
+    dataMap.set("終了時間", expenseData.workEndTime);
+    dataMap.set("定期券購入", expenseData.hasCommuterPass === "yes" ? "有り" : "無し");
+    dataMap.set("定期区間", commuterRoute);
+    dataMap.set("定期券金額", expenseData.monthlyFee);
+    dataMap.set("備考", expenseData.remarks);
+
+    // 新規行を追加（スマート検出した列位置に基づいて）
+    const lastRow = appendRowWithHeaderPositions(expenseSheet, headerPositions, dataMap);
+
+    // 提出日時列に日時形式を設定
+    const submittedDateColumn = headerPositions.get("提出日時");
+    if (submittedDateColumn) {
+      expenseSheet.getRange(lastRow, submittedDateColumn).setNumberFormat("yyyy/mm/dd hh:mm:ss");
+    }
+
+    // ファイル列にハイパーリンクを設定（提出がある場合のみ）
+    if (hasWorkSchedule) {
+      const column = headerPositions.get("勤務表");
+      if (column) {
+        setFileHyperlink(
+          expenseSheet,
+          lastRow,
+          column,
+          expenseData.workScheduleFile?.name,
+          workScheduleUrl
+        );
+      }
+    }
+
+    // 経費精算書列にハイパーリンクを設定（データがある場合のみ）
+    if (hasExpenseData) {
+      const column = headerPositions.get("経費精算書");
+      if (column) {
+        setFileHyperlink(
+          expenseSheet,
+          lastRow,
+          column,
+          "経費精算書",
+          monthlySpreadsheetUrl
+        );
+      }
+    }
+
+    // 領収書列に複数のハイパーリンクを設定（提出がある場合のみ）
+    if (hasReceipts) {
+      const column = headerPositions.get("領収書");
+      if (column) {
+        setMultipleHyperlinks(expenseSheet, lastRow, column, receiptLinks);
+      }
+    }
 
     return {
       success: true,
