@@ -243,4 +243,29 @@ article {
 /* Custom styles for incident list cards */
 .grid > .col > article {
   height: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid var(--pico-card-border-color);
+
+  &:hover {
+    border-color: var(--pico-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+
+  h5 {
+    margin-bottom: 0;
+  }
+
+  .update-date {
+    white-space: nowrap;
+    margin-left: 1rem;
+  }
 }

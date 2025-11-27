@@ -99,21 +99,14 @@
                 >
                   <div class="col">
                     <article @click="editIncident(incident)">
-                      <div
-                        class="d-flex justify-content-between align-items-start mb-2"
-                      >
-                        <h5 class="mb-0" x-text="incident.caseName"></h5>
-                        <span class="badge secondary">
-                          <template x-if="incident.updateDate">
-                            <span
-                              class="d-flex align-items-center"
-                              style="line-height: 1"
-                            >
-                              <i class="bi bi-clock-fill me-1"></i>
-                              <span x-text="incident.updateDate"></span>
-                            </span>
-                          </template>
-                        </span>
+                      <div class="card-header">
+                        <h5 x-text="incident.caseName"></h5>
+                        <template x-if="incident.updateDate">
+                          <small class="update-date">
+                            <i class="bi bi-clock-fill"></i>
+                            <span x-text="incident.updateDate"></span>
+                          </small>
+                        </template>
                       </div>
                       <div class="mb-2">
                         <span class="badge primary me-2">
@@ -132,35 +125,11 @@
                           <i class="bi bi-flag-fill me-1"></i>
                           <span x-text="incident.status"></span>
                         </span>
-                        <template
-                          x-if="incident.aiAnalysisStatus === AI_ANALYSIS_STATUS.PENDING"
-                        >
-                          <span class="badge warning me-2">
-                            <i class="bi bi-hourglass-split me-1"></i>
-                            AI解析待ち
-                          </span>
-                        </template>
-                        <template
-                          x-if="incident.aiAnalysisStatus === AI_ANALYSIS_STATUS.COMPLETED"
-                        >
-                          <span class="badge info me-2">
-                            <i class="bi bi-check-circle-fill me-1"></i>
-                            AI解析済み
-                          </span>
-                        </template>
                       </div>
                       <p
                         class="text-truncate-2 mb-2"
                         x-text="incident.summary"
                       ></p>
-                      <template x-if="incident.attachments">
-                        <div class="mt-2">
-                          <span class="badge success">
-                            <i class="bi bi-paperclip me-1"></i>
-                            添付ファイルあり
-                          </span>
-                        </div>
-                      </template>
                     </article>
                   </div>
                 </template>
