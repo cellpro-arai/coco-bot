@@ -6,12 +6,18 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --outDir ../../dist",
     "format": "prettier --write ."
   },
   "devDependencies": {
-    "prettier": "^3.6.2",
-    "typescript": "^5.3.3",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "lightningcss": "^1.30.2",
+    "preact": "^10.27.2",
+    "prettier": "^3.7.1",
+    "typescript": "^5.9.3",
     "vite": "^7.2.4",
-    "vite-plugin-singlefile": "^2.0.0"
+    "vite-plugin-singlefile": "^2.3.0"
   }
 }
