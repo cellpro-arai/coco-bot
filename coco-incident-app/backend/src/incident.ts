@@ -226,6 +226,12 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
     }
 
     if (isEditMode) {
+      const existingData = incidentSheet
+        .getRange(targetRow, 1, 1, 8)
+        .getValues()[0];
+      const oldStatus = existingData[4] as string;
+      const newStatus = incidentData.status;
+
       incidentSheet
         .getRange(targetRow, 3, 1, 4)
         .setValues([
@@ -236,6 +242,22 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
             updateDate,
           ],
         ]);
+
+      // ステータスが変更された場合にSlack通知
+      if (oldStatus !== newStatus) {
+        try {
+          notifyStatusChanged(
+            incidentData.caseName,
+            incidentData.assignee,
+            oldStatus,
+            newStatus,
+            incidentDetailUrl
+          );
+        } catch (e) {
+          console.error('Slack通知の送信に失敗しました:', e);
+          // 通知失敗してもエラーにはしない
+        }
+      }
 
       if (incidentDetailUrl) {
         const detailSheetId = extractSheetIdFromUrl(incidentDetailUrl);
