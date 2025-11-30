@@ -170,6 +170,70 @@ function getAllSlackUserEmails(): void {
 }
 
 /**
+ * メールアドレスからSlackユーザー情報を取得
+ */
+function getAccountByEmail(email: string): {
+  id: string;
+  name: string;
+  realName: string;
+  email: string;
+} | null {
+  try {
+    const token =
+      PropertiesService.getScriptProperties().getProperty('SLACK_BOT_TOKEN');
+
+    if (!token) {
+      console.warn('SLACK_BOT_TOKEN が設定されていません');
+      return null;
+    }
+
+    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      method: 'get',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      muteHttpExceptions: true,
+    };
+
+    const response = UrlFetchApp.fetch(
+      `https://slack.com/api/users.lookupByEmail?email=${encodeURIComponent(email)}`,
+      options
+    );
+
+    const result = JSON.parse(response.getContentText());
+
+    if (!result.ok) {
+      console.warn(`ユーザーが見つかりませんでした: ${email}`, result.error);
+      return null;
+    }
+
+    const user = result.user;
+    return {
+      id: user.id,
+      name: user.name,
+      realName: user.profile.real_name || user.name,
+      email: user.profile.email,
+    };
+  } catch (error) {
+    console.error('getAccountByEmail error:', error);
+    return null;
+  }
+}
+
+function getUserNameByEmail(email: string): string | null {
+  const account = getAccountByEmail(email);
+  return account ? account.realName : null;
+}
+
+/**
+ * 現在のGAS実行ユーザーに紐づくSlackユーザー情報を取得
+ */
+function getCurrentUserNameByEmail(): string | null {
+  const email = Session.getActiveUser().getEmail();
+  return getUserNameByEmail(email);
+}
+
+/**
  * Slack通知のテスト
  */
 function testSlackNotification(): void {
