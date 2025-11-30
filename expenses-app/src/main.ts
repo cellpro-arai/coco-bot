@@ -14,7 +14,8 @@
  */
 
 type TripType = "oneWay" | "roundTrip";
-type ExpenseCategory = "exam" | "other";
+type ExpenseCategory = "ebook" | "udemy" | "seminar" | "certification" | "other";
+type OfficeFrequency = "fullRemote" | "weekly1to2" | "weekly3to5";
 type FolderType = "workSchedule" | "expenseReport" | "receipt";
 
 /**
@@ -66,11 +67,13 @@ interface ExpenseEntryRecord {
  */
 interface ExpenseData {
   name: string;
-  workScheduleFile: FileData | null;
+  submissionMonth: string;
+  workScheduleFiles: FileData[];
   commuteEntries: CommuteEntry[];
   expenseEntries: ExpenseEntry[];
   workStartTime: string;
   workEndTime: string;
+  officeFrequency: OfficeFrequency;
   hasCommuterPass: 'yes' | 'no';
   nearestStation: string;
   workStation: string;
@@ -158,11 +161,13 @@ const EXPENSE_SHEET_HEADERS = [
   "提出日時",
   "提出者",
   "氏名",
+  "提出月",
   "勤務表",
   "経費精算書",
   "領収書",
   "開始時間",
   "終了時間",
+  "出社頻度",
   "定期券購入",
   "定期区間",
   "定期券金額",
@@ -419,7 +424,7 @@ function uploadExpenseReceipts(entries: ExpenseEntry[]): ExpenseEntryRecord[] {
       ? uploadFileToDrive(entry.receiptFile, "receipt")
       : "";
     const certificateUrl =
-      category === "exam" && entry.certificateFile
+      category === "certification" && entry.certificateFile
         ? uploadFileToDrive(entry.certificateFile, "receipt")
         : "";
 
@@ -443,6 +448,22 @@ function formatCommuterRoute(
   destination: string
 ): string {
   return [origin, destination].filter(Boolean).join("-");
+}
+
+/**
+ * 出社頻度を日本語ラベルに変換する
+ */
+function formatOfficeFrequency(frequency: OfficeFrequency): string {
+  switch (frequency) {
+    case "fullRemote":
+      return "フルリモート";
+    case "weekly1to2":
+      return "週1~2出社";
+    case "weekly3to5":
+      return "週3~5出社";
+    default:
+      return frequency;
+  }
 }
 
 /**
@@ -499,44 +520,23 @@ function addSpreadsheetToFolder(
   try {
     const fileId = spreadsheet.getId();
 
-    // === 1. 既存の親フォルダ一覧を取得（v2でも問題ない） ===
-    const file = Drive.Files.get(fileId, {
-      fields: 'parents'
-    });
-
-    const previousParents =
-      file.parents && file.parents.length > 0
-        ? file.parents.join(',')
-        : '';
-
     Logger.log(`対象ファイル: ${spreadsheet.getName()}`);
-    Logger.log(`旧フォルダ: ${previousParents || '(なし)'}`);
-    Logger.log(`新フォルダ: ${folderId}`);
+    Logger.log(`移動先フォルダID: ${folderId}`);
 
-    // === 2. v3 PATCH リクエスト URL を構築 ===
-    let url =
-      `https://www.googleapis.com/drive/v3/files/${fileId}` +
-      `?addParents=${folderId}` +
-      `&supportsAllDrives=true`;
+    // === DriveApp を使用してファイルを移動（シンプル & 外部リクエスト不要） ===
+    const file = DriveApp.getFileById(fileId);
+    const targetFolder = DriveApp.getFolderById(folderId);
 
-    if (previousParents) {
-      url += `&removeParents=${encodeURIComponent(previousParents)}`;
+    // 既存の親フォルダから削除
+    const parents = file.getParents();
+    while (parents.hasNext()) {
+      const parent = parents.next();
+      Logger.log(`旧フォルダから削除: ${parent.getName()}`);
+      parent.removeFile(file);
     }
 
-    // === 3. リクエスト送信（v3 仕様） ===
-    const response = UrlFetchApp.fetch(url, {
-      method: 'patch',
-      headers: {
-        Authorization: `Bearer ${ScriptApp.getOAuthToken()}`
-      },
-      muteHttpExceptions: true
-    });
-
-    const status = response.getResponseCode();
-    if (status !== 200) {
-      const body = response.getContentText();
-      throw new Error(`Drive API v3 update failed (${status}): ${body}`);
-    }
+    // 新しいフォルダに追加
+    targetFolder.addFile(file);
 
     Logger.log(`✔ ${folderDescription}への移動に成功: ${spreadsheet.getName()}`);
 
@@ -832,10 +832,13 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
     const submittedDate = new Date();
 
     // ファイルアップロード処理（作業表フォルダへ）
-    let workScheduleUrl = "";
+    const workScheduleUrls: string[] = [];
 
-    if (expenseData.workScheduleFile) {
-      workScheduleUrl = uploadFileToDrive(expenseData.workScheduleFile, "workSchedule");
+    if (expenseData.workScheduleFiles && expenseData.workScheduleFiles.length > 0) {
+      expenseData.workScheduleFiles.forEach((file) => {
+        const url = uploadFileToDrive(file, "workSchedule");
+        workScheduleUrls.push(url);
+      });
     }
 
     const commuteEntries = expenseData.commuteEntries || [];
@@ -885,7 +888,7 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
     });
 
     // 提出がない場合のチェック
-    const hasWorkSchedule = !!workScheduleUrl;
+    const hasWorkSchedule = workScheduleUrls.length > 0;
     const hasReceipts = receiptLinks.length > 0;
     const hasExpenseData = commuteEntries.length > 0 || expenseEntryRecords.length > 0;
 
@@ -897,11 +900,13 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
     dataMap.set("提出日時", submittedDate);
     dataMap.set("提出者", userEmail);
     dataMap.set("氏名", expenseData.name);
-    dataMap.set("勤務表", hasWorkSchedule ? workScheduleUrl : "提出なし");
+    dataMap.set("提出月", expenseData.submissionMonth);
+    dataMap.set("勤務表", hasWorkSchedule ? "勤務表" : "提出なし");
     dataMap.set("経費精算書", hasExpenseData ? "経費精算書" : "提出なし");
     dataMap.set("領収書", hasReceipts ? "領収書" : "提出なし");
     dataMap.set("開始時間", expenseData.workStartTime);
     dataMap.set("終了時間", expenseData.workEndTime);
+    dataMap.set("出社頻度", formatOfficeFrequency(expenseData.officeFrequency));
     dataMap.set("定期券購入", expenseData.hasCommuterPass === "yes" ? "有り" : "無し");
     dataMap.set("定期区間", commuterRoute);
     dataMap.set("定期券金額", expenseData.monthlyFee);
@@ -916,17 +921,15 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
       expenseSheet.getRange(lastRow, submittedDateColumn).setNumberFormat("yyyy/mm/dd hh:mm:ss");
     }
 
-    // ファイル列にハイパーリンクを設定（提出がある場合のみ）
+    // 勤務表列に複数のハイパーリンクを設定（提出がある場合のみ）
     if (hasWorkSchedule) {
       const column = headerPositions.get("勤務表");
       if (column) {
-        setFileHyperlink(
-          expenseSheet,
-          lastRow,
-          column,
-          expenseData.workScheduleFile?.name,
-          workScheduleUrl
-        );
+        const workScheduleLinks = expenseData.workScheduleFiles.map((file, index) => ({
+          text: file.name || `勤務表${index + 1}`,
+          url: workScheduleUrls[index]
+        }));
+        setMultipleHyperlinks(expenseSheet, lastRow, column, workScheduleLinks);
       }
     }
 

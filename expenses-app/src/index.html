@@ -147,8 +147,8 @@
 
     @media (max-width: 1199px) {
       .commute-card {
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: auto auto auto;
+        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-rows: auto auto;
         gap: 0.4rem;
         max-width: 100%;
       }
@@ -161,32 +161,32 @@
 
       .commute-card-field:nth-child(2) {
         /* 最寄り駅 */
-        grid-column: 1;
-        grid-row: 2;
+        grid-column: 2;
+        grid-row: 1;
       }
 
       .commute-card-field:nth-child(3) {
         /* 訪問先駅 */
-        grid-column: 2;
-        grid-row: 2;
+        grid-column: 3;
+        grid-row: 1;
       }
 
       .commute-card-field:nth-child(4) {
         /* 区分 */
         grid-column: 1;
-        grid-row: 3;
+        grid-row: 2;
       }
 
       .commute-card-field:nth-child(5) {
         /* 片道の金額 */
         grid-column: 2;
-        grid-row: 3;
+        grid-row: 2;
       }
 
       .commute-card-actions {
         /* ボタン */
-        grid-column: 2;
-        grid-row: 1;
+        grid-column: 3;
+        grid-row: 2;
         justify-content: flex-end;
       }
     }
@@ -287,7 +287,7 @@
 
     .expense-card-row-3 {
       display: grid;
-      grid-template-columns: 140px 1fr 120px;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 0.75rem;
       margin-bottom: 0.75rem;
     }
@@ -414,19 +414,52 @@
 
     const createEmptyExpenseEntry = () => ({
       date: '',
-      category: 'other',
+      category: 'ebook',
       description: '',
       amount: '',
       receiptFile: null,
       certificateFile: null
     });
 
+    const getDefaultSubmissionMonth = () => {
+      const today = new Date();
+      const day = today.getDate();
+
+      // 7日以前の場合は先月を返す
+      if (day <= 7) {
+        today.setMonth(today.getMonth() - 1);
+      }
+
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      return `${year}-${month}`;
+    };
+
+    const getSubmissionMonthOptions = () => {
+      const today = new Date();
+      const options = [];
+
+      // 前月、当月、翌月の3つの選択肢を生成
+      for (let i = -1; i <= 1; i++) {
+        const date = new Date(today.getFullYear(), today.getMonth() + i, 1);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const value = `${year}-${month}`;
+        const label = `${year}年${month}月`;
+        options.push({ value, label });
+      }
+
+      return options;
+    };
+
     function App() {
       const [formData, setFormData] = useState({
         name: '',
-        workScheduleFile: null,
+        submissionMonth: getDefaultSubmissionMonth(),
+        workScheduleFiles: [],
         workStartTime: '09:00',
         workEndTime: '18:00',
+        officeFrequency: 'fullRemote',
         hasCommuterPass: 'no',
         nearestStation: '',
         workStation: '',
@@ -448,11 +481,24 @@
         }));
       };
 
-      const handleFileChange = (e) => {
-        const { name, files } = e.target;
+      const handleWorkScheduleFilesChange = (e) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length > 0) {
+          setFormData(prev => ({
+            ...prev,
+            workScheduleFiles: [...prev.workScheduleFiles, ...files]
+          }));
+          // ファイル入力をリセットして同じファイルを再度選択できるようにする
+          if (workScheduleInputRef.current) {
+            workScheduleInputRef.current.value = '';
+          }
+        }
+      };
+
+      const removeWorkScheduleFile = (indexToRemove) => {
         setFormData(prev => ({
           ...prev,
-          [name]: files[0] || null
+          workScheduleFiles: prev.workScheduleFiles.filter((_, index) => index !== indexToRemove)
         }));
       };
 
@@ -507,7 +553,7 @@
               nextEntry.receiptFile = null;
               nextEntry.certificateFile = null;
             }
-            if (field === 'category' && value !== 'exam') {
+            if (field === 'category' && value !== 'certification') {
               nextEntry.certificateFile = null;
             }
             return nextEntry;
@@ -589,8 +635,8 @@
 
           const category = entry.category || 'other';
 
-          if (category === 'exam' && !entry.certificateFile) {
-            throw new Error('試験申請の経費には合格通知書の添付が必須です。');
+          if (category === 'certification' && !entry.certificateFile) {
+            throw new Error('資格受験の経費には合格通知書の添付が必須です。');
           }
 
           const receiptFileData = await encodeFileToBase64(entry.receiptFile);
@@ -600,7 +646,7 @@
           }
 
           let certificateFileData = null;
-          if (category === 'exam') {
+          if (category === 'certification') {
             certificateFileData = await encodeFileToBase64(entry.certificateFile);
             if (!certificateFileData) {
               throw new Error('合格通知書の変換に失敗しました。');
@@ -625,17 +671,22 @@
         setSubmitted(true);
 
         try {
-          // ファイルをBase64エンコード
-          const workScheduleFileData = await encodeFileToBase64(formData.workScheduleFile);
+          // 勤務表ファイルをBase64エンコード
+          const workScheduleFilesData = await Promise.all(
+            formData.workScheduleFiles.map(file => encodeFileToBase64(file))
+          );
+
           const commuteEntries = collectCommuteEntries();
           const expenseEntries = await collectExpenseEntries();
 
           // バックエンドに送信するデータを準備
           const expenseData = {
             name: formData.name,
-            workScheduleFile: workScheduleFileData,
+            submissionMonth: formData.submissionMonth,
+            workScheduleFiles: workScheduleFilesData,
             workStartTime: formData.workStartTime,
             workEndTime: formData.workEndTime,
+            officeFrequency: formData.officeFrequency,
             hasCommuterPass: formData.hasCommuterPass,
             nearestStation: formData.nearestStation,
             workStation: formData.workStation,
@@ -655,9 +706,11 @@
               }
               setFormData({
                 name: '',
-                workScheduleFile: null,
+                submissionMonth: getDefaultSubmissionMonth(),
+                workScheduleFiles: [],
                 workStartTime: '09:00',
                 workEndTime: '18:00',
+                officeFrequency: 'fullRemote',
                 hasCommuterPass: 'no',
                 nearestStation: '',
                 workStation: '',
@@ -734,6 +787,26 @@
                   />
                 </label>
 
+                {/* 提出月 */}
+                <fieldset>
+                  <legend className="required-label">提出月</legend>
+                  <label htmlFor="submissionMonth">
+                    <select
+                      id="submissionMonth"
+                      name="submissionMonth"
+                      value={formData.submissionMonth}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      {getSubmissionMonthOptions().map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </fieldset>
+
                 {/* 勤務表 */}
                 <fieldset>
                   <label htmlFor="workScheduleFile">勤務表</label>
@@ -742,18 +815,32 @@
                       ref={workScheduleInputRef}
                       type="file"
                       id="workScheduleFile"
-                      name="workScheduleFile"
-                      onChange={handleFileChange}
+                      onChange={handleWorkScheduleFilesChange}
                       accept=".pdf,.xlsx,.xls,.jpg,.jpeg,.png"
                       style={{ display: 'none' }}
+                      multiple
                     />
                     <button type="button" className="secondary" onClick={handleWorkScheduleButtonClick}>
                       勤務表を選択
                     </button>
-                    {formData.workScheduleFile && (
-                      <span className="file-name">{formData.workScheduleFile.name}</span>
-                    )}
                   </div>
+                  {formData.workScheduleFiles.length > 0 && (
+                    <div style={{ marginTop: '0.5rem' }}>
+                      {formData.workScheduleFiles.map((file, index) => (
+                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
+                          <span className="file-name" style={{ flex: 1 }}>{file.name}</span>
+                          <button
+                            type="button"
+                            className="secondary"
+                            onClick={() => removeWorkScheduleFile(index)}
+                            style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}
+                          >
+                            削除
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </fieldset>
 
                 {/* 交通費 */}
@@ -761,11 +848,13 @@
                   <legend>交通費</legend>
                   <div className="commute-table-container">
                     <div className="commute-table-header">
-                      <small>日付・最寄り駅・訪問先駅・金額を入力してください。</small>
                       <button type="button" className="secondary" onClick={addCommuteEntry}>
                         + 交通費を追加
                       </button>
                     </div>
+                    {hasCommuteEntries && (
+                      <small>日付・最寄り駅・訪問先駅・金額を入力してください。</small>
+                    )}
                     {hasCommuteEntries ? (
                       <div className="commute-cards-grid">
                         {formData.commuteEntries.map((entry, index) => (
@@ -787,7 +876,7 @@
                                 id={`commute-origin-${index}`}
                                 value={entry.origin}
                                 onChange={(e) => handleCommuteEntryChange(index, 'origin', e.target.value)}
-                                placeholder="例: 渋谷"
+                                placeholder="例: 渋谷駅"
                                 required
                               />
                             </div>
@@ -798,7 +887,7 @@
                                 id={`commute-destination-${index}`}
                                 value={entry.destination}
                                 onChange={(e) => handleCommuteEntryChange(index, 'destination', e.target.value)}
-                                placeholder="例: 新宿"
+                                placeholder="例: 新宿駅"
                                 required
                               />
                             </div>
@@ -847,19 +936,35 @@
                   <legend>経費</legend>
                   <div className="expense-table-container">
                     <div className="expense-table-header">
-                      <small>経費種別を選択し、日付、内容、金額を入力してください。試験申請は領収書と合格通知書の添付が必須です。</small>
                       <button type="button" className="secondary" onClick={addExpenseEntry}>
                         + 経費を追加
                       </button>
                     </div>
+                    {hasExpenseEntries && (
+                      <small>経費種別を選択し、日付、金額、内容を入力してください。資格受験は領収書に加え、合格通知書の添付が必須です。</small>
+                    )}
                     {hasExpenseEntries ? (
                       <div className="expense-cards-grid">
                         {formData.expenseEntries.map((entry, index) => {
                           const category = entry.category || 'other';
-                          const isExam = category === 'exam';
+                          const isCertification = category === 'certification';
                           return (
                             <div key={`expense-${index}`} className="expense-card">
                               <div className="expense-card-row-3">
+                                <div className="expense-card-field">
+                                  <label htmlFor={`expense-category-${index}`} className="expense-card-label">経費種別</label>
+                                  <select
+                                    id={`expense-category-${index}`}
+                                    value={category}
+                                    onChange={(e) => handleExpenseEntryChange(index, 'category', e.target.value)}
+                                  >
+                                    <option value="ebook">電子書籍</option>
+                                    <option value="udemy">Udemy講座</option>
+                                    <option value="seminar">勉強会</option>
+                                    <option value="certification">資格受験</option>
+                                    <option value="other">その他</option>
+                                  </select>
+                                </div>
                                 <div className="expense-card-field">
                                   <label htmlFor={`expense-date-${index}`} className="expense-card-label">日付</label>
                                   <input
@@ -869,17 +974,6 @@
                                     onChange={(e) => handleExpenseEntryChange(index, 'date', e.target.value)}
                                     required
                                   />
-                                </div>
-                                <div className="expense-card-field">
-                                  <label htmlFor={`expense-category-${index}`} className="expense-card-label">経費種別</label>
-                                  <select
-                                    id={`expense-category-${index}`}
-                                    value={category}
-                                    onChange={(e) => handleExpenseEntryChange(index, 'category', e.target.value)}
-                                  >
-                                    <option value="exam">試験申請</option>
-                                    <option value="other">その他</option>
-                                  </select>
                                 </div>
                                 <div className="expense-card-field">
                                   <label htmlFor={`expense-amount-${index}`} className="expense-card-label">金額（円）</label>
@@ -909,27 +1003,53 @@
                               </div>
                               <div className="expense-card-row">
                                 <div className="expense-card-field">
-                                  <label htmlFor={`expense-receipt-${index}`} className="expense-card-label">領収書</label>
-                                  <input
-                                    type="file"
-                                    id={`expense-receipt-${index}`}
-                                    accept=".pdf,.xlsx,.xls,.jpg,.jpeg,.png,.heic"
-                                    onChange={(e) => handleExpenseReceiptChange(index, e.target.files[0] || null)}
-                                    required
-                                  />
-                                </div>
-                                {isExam && (
-                                  <div className="expense-card-field">
-                                    <label htmlFor={`expense-certificate-${index}`} className="expense-card-label">
-                                      合格通知書
-                                    </label>
+                                  <span className="expense-card-label">領収書</span>
+                                  <div className="work-schedule-input">
                                     <input
                                       type="file"
-                                      id={`expense-certificate-${index}`}
+                                      id={`expense-receipt-${index}`}
                                       accept=".pdf,.xlsx,.xls,.jpg,.jpeg,.png,.heic"
-                                      onChange={(e) => handleExpenseCertificateChange(index, e.target.files[0] || null)}
+                                      onChange={(e) => handleExpenseReceiptChange(index, e.target.files[0] || null)}
+                                      style={{ display: 'none' }}
                                       required
                                     />
+                                    <button
+                                      type="button"
+                                      className="secondary"
+                                      onClick={() => document.getElementById(`expense-receipt-${index}`).click()}
+                                    >
+                                      領収書を選択
+                                    </button>
+                                    {entry.receiptFile && (
+                                      <span className="file-name">{entry.receiptFile.name}</span>
+                                    )}
+                                  </div>
+                                </div>
+                                {isCertification && (
+                                  <div className="expense-card-field">
+                                    <span className="expense-card-label">
+                                      合格通知書
+                                    </span>
+                                    <div className="work-schedule-input">
+                                      <input
+                                        type="file"
+                                        id={`expense-certificate-${index}`}
+                                        accept=".pdf,.xlsx,.xls,.jpg,.jpeg,.png,.heic"
+                                        onChange={(e) => handleExpenseCertificateChange(index, e.target.files[0] || null)}
+                                        style={{ display: 'none' }}
+                                        required
+                                      />
+                                      <button
+                                        type="button"
+                                        className="secondary"
+                                        onClick={() => document.getElementById(`expense-certificate-${index}`).click()}
+                                      >
+                                        合格通知書を選択
+                                      </button>
+                                      {entry.certificateFile && (
+                                        <span className="file-name">{entry.certificateFile.name}</span>
+                                      )}
+                                    </div>
                                   </div>
                                 )}
                               </div>
@@ -948,12 +1068,13 @@
                   </div>
                 </fieldset>
 
-                {/* 現場の定時 */}
+                {/* 現場勤務状況 */}
                 <fieldset>
-                  <legend className="required-label">現場の定時</legend>
+                  <legend className="required-label">現場勤務状況</legend>
+
                   <div className="grid">
                     <label htmlFor="workStartTime">
-                      開始
+                      始業時間
                       <input
                         type="time"
                         id="workStartTime"
@@ -965,7 +1086,7 @@
                     </label>
 
                     <label htmlFor="workEndTime">
-                      終了
+                      就業時間
                       <input
                         type="time"
                         id="workEndTime"
@@ -976,6 +1097,22 @@
                       />
                     </label>
                   </div>
+
+                  {/* 出社頻度 */}
+                  <label htmlFor="officeFrequency">
+                    出社頻度
+                    <select
+                      id="officeFrequency"
+                      name="officeFrequency"
+                      value={formData.officeFrequency}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="fullRemote">フルリモート</option>
+                      <option value="weekly1to2">週1~2出社</option>
+                      <option value="weekly3to5">週3~5出社</option>
+                    </select>
+                  </label>
                 </fieldset>
 
                 {/* 定期券購入 */}
@@ -1006,33 +1143,35 @@
                 {/* 定期券詳細（条件付き表示） */}
                 {formData.hasCommuterPass === 'yes' && (
                   <fieldset>
-                    <legend>定期券詳細</legend>
+                    <legend className="required-label">定期券詳細</legend>
 
-                    <label htmlFor="nearestStation">
-                      最寄り駅
-                      <input
-                        type="text"
-                        id="nearestStation"
-                        name="nearestStation"
-                        value={formData.nearestStation}
-                        onChange={handleInputChange}
-                        required={formData.hasCommuterPass === 'yes'}
-                        placeholder="例: 渋谷駅"
-                      />
-                    </label>
+                    <div className="grid">
+                      <label htmlFor="nearestStation">
+                        最寄り駅
+                        <input
+                          type="text"
+                          id="nearestStation"
+                          name="nearestStation"
+                          value={formData.nearestStation}
+                          onChange={handleInputChange}
+                          required={formData.hasCommuterPass === 'yes'}
+                          placeholder="例: 渋谷駅"
+                        />
+                      </label>
 
-                    <label htmlFor="workStation">
-                      勤務先の駅
-                      <input
-                        type="text"
-                        id="workStation"
-                        name="workStation"
-                        value={formData.workStation}
-                        onChange={handleInputChange}
-                        required={formData.hasCommuterPass === 'yes'}
-                        placeholder="例: 新宿駅"
-                      />
-                    </label>
+                      <label htmlFor="workStation">
+                        勤務先の駅
+                        <input
+                          type="text"
+                          id="workStation"
+                          name="workStation"
+                          value={formData.workStation}
+                          onChange={handleInputChange}
+                          required={formData.hasCommuterPass === 'yes'}
+                          placeholder="例: 新宿駅"
+                        />
+                      </label>
+                    </div>
 
                     <label htmlFor="monthlyFee">
                       月額（円）
