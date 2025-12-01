@@ -19,7 +19,9 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
   const [error, setError] = useState('');
 
   useEffect(() => {
-    loadIncidents();
+    if (incidents.length === 0) {
+      loadIncidents();
+    }
   }, []);
 
   const loadIncidents = async () => {
