@@ -35,6 +35,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
       setLoading(false);
     }
   };
+
   return (
     <div>
       {/* ツールバー */}

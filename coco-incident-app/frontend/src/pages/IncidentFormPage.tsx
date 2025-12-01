@@ -4,20 +4,20 @@ import {
   IncidentFormData,
   FileData,
   AI_ANALYSIS_STATUS,
+  PLACEHOLDERS,
 } from '../types';
 import * as api from '../services/apiService';
+import SuccessModal from '../components/SuccessModal';
 
 interface IncidentFormPageProps {
   selectedIncident: Incident | null;
   setIncidents: React.Dispatch<React.SetStateAction<Incident[]>>;
-  onSuccess: (incident: Incident) => void;
   backToList: () => void;
 }
 
 const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
   selectedIncident,
   setIncidents,
-  onSuccess,
   backToList,
 }) => {
   const [formData, setFormData] = useState<IncidentFormData>({
@@ -32,6 +32,10 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [submittedIncident, setSubmittedIncident] = useState<Incident | null>(
+    null
+  );
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -115,12 +119,18 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
         setIncidents((prev: Incident[]) => [submittedIncidentData, ...prev]);
       }
 
-      onSuccess(submittedIncidentData);
+      setSubmittedIncident(submittedIncidentData);
+      setShowSuccessModal(true);
     } catch (error: any) {
       setError(error.message || '送信に失敗しました');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const closeSuccessModal = () => {
+    setShowSuccessModal(false);
+    backToList();
   };
 
   return (
@@ -299,10 +309,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
               onChange={handleInputChange}
               rows={5}
               required
-              placeholder={`例:
-- 顧客: 株式会社ABC 田中様
-- 社内: 開発部 鈴木課長、営業部 佐藤係長
-- ベンダー: XYZ社 高橋様`}
+              placeholder={PLACEHOLDERS.STAKEHOLDER}
             ></textarea>
             <small>
               <strong>関係するすべての人物を記載してください：</strong>
@@ -328,24 +335,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
               onChange={handleInputChange}
               rows={10}
               required
-              placeholder={`例:
-【発生日時】2025年1月15日 14:30頃
-【発覚の経緯】顧客からの問い合わせ
-
-【現象】
-- サービスページにアクセスすると503エラーが表示される
-- 管理画面も同様にアクセス不可
-
-【影響範囲】全ユーザー（約1000名）
-
-【対応状況】
-14:35 - インフラチームに連絡、調査開始
-14:50 - サーバー再起動を実施、復旧せず
-15:10 - ログを確認、メモリ不足が原因と判明
-
-【その他】
-- 前日にデータベースの大量更新を実施していた
-- 同様の事象は過去にも一度発生（2024年12月）`}
+              placeholder={PLACEHOLDERS.TROUBLE_DETAIL}
             ></textarea>
             <small>
               <strong>以下の情報をできるだけ詳しく記載してください：</strong>
@@ -455,6 +445,13 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
           </button>
         </form>
       </article>
+
+      {showSuccessModal && submittedIncident && (
+        <SuccessModal
+          submittedIncident={submittedIncident}
+          closeSuccessModal={closeSuccessModal}
+        />
+      )}
     </div>
   );
 };
