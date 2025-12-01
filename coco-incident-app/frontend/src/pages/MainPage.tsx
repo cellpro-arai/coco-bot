@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import './app.css';
-import { initialFormData } from './modules/state';
-import * as api from './modules/api';
-import { Incident, IncidentFormData, FileData } from './modules/types';
+import '../app.css';
+import { initialFormData } from '../modules/state';
+import * as api from '../modules/api';
+import { Incident, IncidentFormData, FileData } from '../modules/types';
 
-// Components
-import Header from './components/Header';
-import IncidentList from './components/IncidentList';
-import IncidentForm from './components/IncidentForm';
-import SuccessModal from './components/SuccessModal';
+import Header from '../components/Header';
+import IncidentListPage from './IncidentListPage';
+import IncidentFormPage from './IncidentFormPage';
+import SuccessModal from '../components/SuccessModal';
+import useTheme from '../hooks/useTheme';
 
-function App() {
-  // State management
+function MainPage() {
   const [currentView, setCurrentView] = useState<'list' | 'form'>('list');
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -29,26 +27,12 @@ function App() {
     null
   );
 
-  // Initialize app
+  // useTheme hook
+  const { theme, toggleTheme } = useTheme();
+
   useEffect(() => {
-    applyTheme();
     loadIncidents();
   }, []);
-
-  // Apply theme
-  useEffect(() => {
-    applyTheme();
-  }, [theme]);
-
-  const applyTheme = () => {
-    document.documentElement.setAttribute('data-theme', theme);
-  };
-
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-  };
 
   const loadIncidents = async () => {
     setLoading(true);
@@ -192,7 +176,7 @@ function App() {
 
       <main className="container">
         {currentView === 'list' && (
-          <IncidentList
+          <IncidentListPage
             incidents={incidents}
             loading={loading}
             error={error}
@@ -203,7 +187,7 @@ function App() {
         )}
 
         {currentView === 'form' && (
-          <IncidentForm
+          <IncidentFormPage
             formData={formData}
             setFormData={setFormData}
             selectedIncident={selectedIncident}
@@ -233,4 +217,4 @@ function App() {
   );
 }
 
-export default App;
+export default MainPage;
