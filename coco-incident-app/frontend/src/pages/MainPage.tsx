@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import '../app.css';
-import { Incident } from '../modules/types';
+import { Incident } from '../types/types';
 
 import Header from '../components/Header';
 import IncidentListPage from './IncidentListPage';

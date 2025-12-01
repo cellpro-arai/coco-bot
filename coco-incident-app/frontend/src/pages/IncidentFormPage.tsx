@@ -4,8 +4,8 @@ import {
   IncidentFormData,
   FileData,
   AI_ANALYSIS_STATUS,
-} from '../modules/types';
-import * as api from '../modules/api';
+} from '../types/types';
+import * as api from '../services/apiService';
 
 interface IncidentFormPageProps {
   selectedIncident: Incident | null;

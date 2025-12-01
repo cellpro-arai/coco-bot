@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Incident } from '../modules/types';
-import * as api from '../modules/api';
+import { Incident } from '../types/types';
+import * as api from '../services/apiService';
 
 interface IncidentListPageProps {
   incidents: Incident[];
