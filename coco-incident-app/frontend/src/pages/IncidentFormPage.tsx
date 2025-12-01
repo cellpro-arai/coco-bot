@@ -1,33 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Incident,
   IncidentFormData,
+  FileData,
   AI_ANALYSIS_STATUS,
 } from '../modules/types';
+import { initialFormData } from '../modules/state';
+import * as api from '../modules/api';
 
 interface IncidentFormPageProps {
-  formData: IncidentFormData;
-  setFormData: React.Dispatch<React.SetStateAction<IncidentFormData>>;
   selectedIncident: Incident | null;
-  error: string;
-  submitting: boolean;
-  submitForm: (e: React.FormEvent) => void;
+  setIncidents: React.Dispatch<React.SetStateAction<Incident[]>>;
+  onSuccess: (incident: Incident) => void;
   backToList: () => void;
-  handleFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  removeFile: (index: number) => void;
 }
 
 const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
-  formData,
-  setFormData,
   selectedIncident,
-  error,
-  submitting,
-  submitForm,
+  setIncidents,
+  onSuccess,
   backToList,
-  handleFileUpload,
-  removeFile,
 }) => {
+  const [formData, setFormData] = useState<IncidentFormData>({
+    ...initialFormData,
+    registeredDate: selectedIncident?.registeredDate || '',
+    caseName: selectedIncident?.caseName || '',
+    assignee: selectedIncident?.assignee || '',
+    status: selectedIncident?.status || '対応中',
+    summary: selectedIncident?.summary || '',
+    stakeholders: selectedIncident?.stakeholders || '',
+    details: selectedIncident?.details || '',
+    fileDataList: [],
+  });
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -35,6 +42,87 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
   ) => {
     const { id, value } = e.target;
     setFormData(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const fileDataList: FileData[] = [];
+    let filesProcessed = 0;
+
+    Array.from(files as FileList).forEach((file: File) => {
+      const reader = new FileReader();
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        if (e.target?.result) {
+          const base64Data = (e.target.result as string).split(',')[1];
+          fileDataList.push({
+            name: file.name,
+            mimeType: file.type,
+            data: base64Data,
+          });
+        }
+        filesProcessed++;
+        if (filesProcessed === files.length) {
+          setFormData((prev: IncidentFormData) => ({ ...prev, fileDataList }));
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeFile = (index: number) => {
+    setFormData((prev: IncidentFormData) => ({
+      ...prev,
+      fileDataList: prev.fileDataList.filter(
+        (_: FileData, i: number) => i !== index
+      ),
+    }));
+  };
+
+  const submitForm = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.caseName || !formData.assignee || !formData.summary) {
+      setError('必須項目を入力してください');
+      return;
+    }
+
+    setSubmitting(true);
+    setError('');
+
+    try {
+      const result = await api.submitIncident(formData);
+      const isUpdate = !!(
+        formData.registeredDate && formData.registeredDate.trim()
+      );
+
+      const submittedIncidentData: Incident = {
+        ...result.record,
+        summary: formData.summary,
+        stakeholders: formData.stakeholders,
+        details: formData.details,
+        improvementSuggestions: result.improvementSuggestions || '',
+      };
+
+      if (isUpdate) {
+        setIncidents((prev: Incident[]) =>
+          prev.map((inc: Incident) =>
+            inc.registeredDate === formData.registeredDate
+              ? submittedIncidentData
+              : inc
+          )
+        );
+      } else {
+        setIncidents((prev: Incident[]) => [submittedIncidentData, ...prev]);
+      }
+
+      onSuccess(submittedIncidentData);
+    } catch (error: any) {
+      setError(error.message || '送信に失敗しました');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

@@ -1,23 +1,40 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Incident } from '../modules/types';
+import * as api from '../modules/api';
 
 interface IncidentListPageProps {
   incidents: Incident[];
-  loading: boolean;
-  error: string;
-  loadIncidents: () => void;
+  setIncidents: React.Dispatch<React.SetStateAction<Incident[]>>;
   showForm: () => void;
   editIncident: (incident: Incident) => void;
 }
 
 const IncidentListPage: React.FC<IncidentListPageProps> = ({
   incidents,
-  loading,
-  error,
-  loadIncidents,
+  setIncidents,
   showForm,
   editIncident,
 }) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    loadIncidents();
+  }, []);
+
+  const loadIncidents = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await api.getIncidentList();
+      setIncidents(data);
+    } catch (error: any) {
+      setError(error.message || 'データの読み込みに失敗しました');
+      setIncidents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div>
       {/* ツールバー */}
