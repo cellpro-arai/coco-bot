@@ -5,7 +5,6 @@ import {
   FileData,
   AI_ANALYSIS_STATUS,
 } from '../modules/types';
-import { initialFormData } from '../modules/state';
 import * as api from '../modules/api';
 
 interface IncidentFormPageProps {
@@ -22,7 +21,6 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
   backToList,
 }) => {
   const [formData, setFormData] = useState<IncidentFormData>({
-    ...initialFormData,
     registeredDate: selectedIncident?.registeredDate || '',
     caseName: selectedIncident?.caseName || '',
     assignee: selectedIncident?.assignee || '',

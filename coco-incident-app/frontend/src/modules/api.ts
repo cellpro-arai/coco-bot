@@ -1,14 +1,20 @@
 /**
  * @fileoverview Google Apps Scriptとの通信
  */
-import { Incident, IncidentFormData, IncidentResult, AI_ANALYSIS_STATUS } from './types';
+import {
+  Incident,
+  IncidentFormData,
+  IncidentResult,
+  AI_ANALYSIS_STATUS,
+} from './types';
 
 declare const google: any;
 
 const isDevelopment = typeof google === 'undefined';
 
 // 開発環境で権限エラーをテストする場合は localStorage に 'simulatePermissionError' を設定
-const shouldSimulatePermissionError = isDevelopment && localStorage.getItem('simulatePermissionError') === 'true';
+const shouldSimulatePermissionError =
+  isDevelopment && localStorage.getItem('simulatePermissionError') === 'true';
 
 /**
  * インシデント一覧を取得します。
@@ -35,7 +41,8 @@ export function getIncidentList(): Promise<Incident[]> {
             incidentDetailUrl: 'https://docs.google.com/spreadsheets/d/mock1',
             summary: 'サーバーがダウンし、サービスにアクセスできない状態',
             stakeholders: '顧客: 株式会社ABC 田中様\n社内: 開発部 鈴木課長',
-            details: '【発生日時】2025年1月15日 10:00頃\n【現象】503エラーが表示される\n【影響範囲】全ユーザー',
+            details:
+              '【発生日時】2025年1月15日 10:00頃\n【現象】503エラーが表示される\n【影響範囲】全ユーザー',
             attachments: 'error_log.txt\nscreenshot.png',
             improvementSuggestions: '定期的な監視体制の強化を推奨します',
             aiAnalysisStatus: AI_ANALYSIS_STATUS.PENDING,
@@ -51,9 +58,11 @@ export function getIncidentList(): Promise<Incident[]> {
             incidentDetailUrl: 'https://docs.google.com/spreadsheets/d/mock2',
             summary: 'データベースの一部データに不整合が発見された',
             stakeholders: '社内: データ管理部 高橋主任',
-            details: '【発生日時】2025年1月14日\n【現象】顧客データの一部が重複\n【対応】重複データを削除し、正常化',
+            details:
+              '【発生日時】2025年1月14日\n【現象】顧客データの一部が重複\n【対応】重複データを削除し、正常化',
             aiAnalysisStatus: AI_ANALYSIS_STATUS.COMPLETED,
-            aiAnalysis: '【AI解析結果】\n根本原因: データベースの同期処理に不具合\n推奨対策:\n1. 同期処理のロジック見直し\n2. 重複チェック機能の実装\n3. 定期的なデータ整合性確認',
+            aiAnalysis:
+              '【AI解析結果】\n根本原因: データベースの同期処理に不具合\n推奨対策:\n1. 同期処理のロジック見直し\n2. 重複チェック機能の実装\n3. 定期的なデータ整合性確認',
           },
         ]);
       }, 500);
@@ -84,14 +93,17 @@ export function submitIncident(
           reject(new Error('権限がありません。管理者に問い合わせてください。'));
           return;
         }
-        
-        const isUpdate = data.registeredDate && data.registeredDate.trim() !== '';
+
+        const isUpdate =
+          data.registeredDate && data.registeredDate.trim() !== '';
         const actionType = isUpdate ? '更新' : '登録';
         console.log(`[開発モード] インシデント${actionType}:`, data);
-        
+
         const now = new Date();
         const record: Incident = {
-          registeredDate: isUpdate ? data.registeredDate : now.toLocaleString('ja-JP'),
+          registeredDate: isUpdate
+            ? data.registeredDate
+            : now.toLocaleString('ja-JP'),
           registeredUser: 'dev@example.com',
           caseName: data.caseName,
           assignee: data.assignee,
@@ -105,7 +117,7 @@ export function submitIncident(
           attachments: data.fileDataList.map(f => f.name).join('\n'),
           aiAnalysisStatus: AI_ANALYSIS_STATUS.PENDING,
         };
-        
+
         resolve({
           success: true,
           message: `インシデント情報を${actionType}しました`,
@@ -116,9 +128,7 @@ export function submitIncident(
       }, 1000);
     } else {
       google.script.run
-        .withSuccessHandler((result: IncidentResult) =>
-          resolve(result)
-        )
+        .withSuccessHandler((result: IncidentResult) => resolve(result))
         .withFailureHandler((error: Error) =>
           reject(new Error(`送信に失敗しました: ${error.message}`))
         )
