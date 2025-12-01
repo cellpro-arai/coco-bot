@@ -1,5 +1,5 @@
 import React from 'react';
-import { Incident, IncidentFormData, AI_ANALYSIS_STATUS } from '../types/types';
+import { Incident, IncidentFormData, AI_ANALYSIS_STATUS } from '../types';
 
 interface IncidentFormProps {
   formData: IncidentFormData;

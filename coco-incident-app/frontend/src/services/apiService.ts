@@ -6,7 +6,7 @@ import {
   IncidentFormData,
   IncidentResult,
   AI_ANALYSIS_STATUS,
-} from '../types/types';
+} from '../types';
 
 declare const google: any;
 

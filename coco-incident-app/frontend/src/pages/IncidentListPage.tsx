@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Incident } from '../types/types';
+import { Incident } from '../types';
 import * as api from '../services/apiService';
 
 interface IncidentListPageProps {

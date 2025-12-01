@@ -1,5 +1,5 @@
 import React from 'react';
-import { Incident } from '../types/types';
+import { Incident } from '../types';
 
 interface SuccessModalProps {
   submittedIncident: Incident;

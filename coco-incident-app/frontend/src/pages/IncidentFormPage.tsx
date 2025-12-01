@@ -4,7 +4,7 @@ import {
   IncidentFormData,
   FileData,
   AI_ANALYSIS_STATUS,
-} from '../types/types';
+} from '../types';
 import * as api from '../services/apiService';
 
 interface IncidentFormPageProps {
