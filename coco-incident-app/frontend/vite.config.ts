@@ -15,7 +15,9 @@ export default defineConfig({
     },
   },
   css: {
-    transformer: 'lightningcss',
+    modules: {
+      localsConvention: 'camelCase',
+    },
   },
   build: {
     outDir: '../../dist',

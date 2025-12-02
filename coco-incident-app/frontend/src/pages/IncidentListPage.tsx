@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Incident } from '../types';
 import * as api from '../services/apiService';
+import { Badge } from '../components/common';
+import styles from './IncidentListPage.module.css';
 
 interface IncidentListPageProps {
   incidents: Incident[];
@@ -96,23 +98,29 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
             <div className="grid">
               {incidents.map(incident => (
                 <div key={incident.registeredDate} className="col">
-                  <article onClick={() => editIncident(incident)}>
-                    <div className="card-header">
+                  <article
+                    onClick={() => editIncident(incident)}
+                    className={styles.incidentCard}
+                  >
+                    <div className={styles.cardHeader}>
                       <h5>{incident.caseName}</h5>
                       {incident.updateDate && (
-                        <small className="update-date">
+                        <small className={styles.updateDate}>
                           <i className="bi bi-clock-fill"></i>
                           <span>{incident.updateDate}</span>
                         </small>
                       )}
                     </div>
                     <div className="mb-2">
-                      <span className="badge primary me-2">
-                        <i className="bi bi-person-fill me-1"></i>
-                        <span>{incident.assignee}</span>
-                      </span>
-                      <span
-                        className={`badge me-2 ${
+                      <Badge
+                        variant="primary"
+                        icon="bi bi-person-fill"
+                        className="me-2"
+                      >
+                        {incident.assignee}
+                      </Badge>
+                      <Badge
+                        variant={
                           incident.status === '対応中'
                             ? 'warning'
                             : incident.status === '保留'
@@ -121,12 +129,13 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                                 ? 'success'
                                 : incident.status === 'クローズ'
                                   ? 'contrast'
-                                  : ''
-                        }`}
+                                  : undefined
+                        }
+                        icon="bi bi-flag-fill"
+                        className="me-2"
                       >
-                        <i className="bi bi-flag-fill me-1"></i>
-                        <span>{incident.status}</span>
-                      </span>
+                        {incident.status}
+                      </Badge>
                     </div>
                     <p className="text-truncate-2 mb-2">{incident.summary}</p>
                   </article>

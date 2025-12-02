@@ -8,14 +8,6 @@
     overflow: hidden;
   }
 
-  :is(&-truncate-3) {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
   :is(&-center) {
     text-align: center;
   }
@@ -126,86 +118,12 @@ body {
   margin: 0;
 }
 
-#app-wrapper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-header {
-  position: relative;
-
-  .header-theme-button {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    width: auto;
-    height: auto;
-    padding: 0.3rem 0.6rem;
-  }
-
-  .header-icon {
-    font-size: 2rem;
-    color: var(--pico-primary);
-  }
-}
-
-main {
-  flex: 1;
-}
-
-footer {
-  padding: 1rem 0;
-  text-align: center;
-}
-
 /* Other Utilities */
 .small {
   font-size: 0.875rem;
 }
 
 /* Components */
-.badge {
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1;
-  border-radius: 0.25rem;
-  background-color: var(--pico-secondary);
-  color: var(--pico-secondary-inverse);
-
-  :is(&.primary) {
-    background-color: var(--pico-primary);
-    color: var(--pico-primary-inverse);
-  }
-
-  :is(&.secondary) {
-    background-color: var(--pico-secondary);
-    color: var(--pico-secondary-inverse);
-  }
-
-  :is(&.success) {
-    background-color: #2ecc71;
-    color: white;
-  }
-
-  :is(&.warning) {
-    background-color: #f39c12;
-    color: white;
-  }
-
-  :is(&.info) {
-    background-color: #3498db;
-    color: white;
-  }
-
-  :is(&.contrast) {
-    background-color: var(--pico-contrast);
-    color: var(--pico-contrast-inverse);
-  }
-}
-
 .required-label {
   :is(&::after) {
     content: ' *';
@@ -237,35 +155,5 @@ article {
   :is(&.primary) {
     background-color: var(--pico-primary-background);
     border: 1px solid var(--pico-primary);
-  }
-}
-
-/* Custom styles for incident list cards */
-.grid > .col > article {
-  height: 100%;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 2px solid var(--pico-card-border-color);
-
-  :is(&:hover) {
-    border-color: var(--pico-primary);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-  }
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 0.5rem;
-
-  h5 {
-    margin-bottom: 0;
-  }
-
-  .update-date {
-    white-space: nowrap;
-    margin-left: 1rem;
   }
 }

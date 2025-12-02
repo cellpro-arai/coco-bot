@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './Header.module.css';
 
 interface HeaderProps {
   theme: string;
@@ -7,8 +8,8 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
   return (
-    <header className="container py-3">
-      <div className="header-theme-button">
+    <header className={`container py-3 ${styles.header}`}>
+      <div className={styles.themeButton}>
         <button onClick={toggleTheme} className="contrast">
           <i
             className={`bi ${theme === 'light' ? 'bi-moon-fill' : 'bi-sun-fill'}`}

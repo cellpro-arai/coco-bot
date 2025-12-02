@@ -6,6 +6,7 @@ import Header from '../components/Header';
 import IncidentListPage from './IncidentListPage';
 import IncidentFormPage from './IncidentFormPage';
 import useTheme from '../hooks/useTheme';
+import styles from './MainPage.module.css';
 
 function MainPage() {
   const [currentView, setCurrentView] = useState<'list' | 'form'>('list');
@@ -32,7 +33,7 @@ function MainPage() {
   };
 
   return (
-    <div id="app-wrapper">
+    <div id="app-wrapper" className={styles.appWrapper}>
       <Header theme={theme} toggleTheme={toggleTheme} />
 
       <main className="container">

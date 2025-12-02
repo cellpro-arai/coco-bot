@@ -1,0 +1,28 @@
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.cardHeader h5 {
+  margin-bottom: 0;
+}
+
+.updateDate {
+  white-space: nowrap;
+  margin-left: 1rem;
+}
+
+.incidentCard {
+  height: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid var(--pico-card-border-color);
+}
+
+.incidentCard:hover {
+  border-color: var(--pico-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
