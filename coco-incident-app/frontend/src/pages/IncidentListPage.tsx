@@ -4,6 +4,16 @@ import * as api from '../services/apiService';
 import { Badge } from '../components/common';
 import styles from './IncidentListPage.module.css';
 import Article, { ARTICLE_VARIANT } from '../components/Article';
+import {
+  ArrowClockwiseIcon,
+  ClockFillIcon,
+  ExclamationCircleFillIcon,
+  FlagFillIcon,
+  InfoCircleIcon,
+  ListUlIcon,
+  PersonFillIcon,
+  PlusCircleIcon,
+} from '../components/icons';
 
 interface IncidentListPageProps {
   incidents: Incident[];
@@ -49,7 +59,8 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
           <li>
             <hgroup>
               <h2 className="mb-0">
-                <i className="bi bi-list-ul me-2"></i>インシデント一覧
+                <ListUlIcon className="me-2" />
+                インシデント一覧
               </h2>
             </hgroup>
           </li>
@@ -61,12 +72,14 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
               onClick={loadIncidents}
               disabled={loading}
             >
-              <i className="bi bi-arrow-clockwise me-2"></i>更新
+              <ArrowClockwiseIcon className="me-2" />
+              更新
             </button>
           </li>
           <li>
             <button onClick={showForm}>
-              <i className="bi bi-plus-circle me-2"></i>新規起票
+              <PlusCircleIcon className="me-2" />
+              新規起票
             </button>
           </li>
         </ul>
@@ -82,7 +95,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
       {/* エラー表示 */}
       {error && !loading && (
         <Article variant={ARTICLE_VARIANT.DANGER}>
-          <i className="bi bi-exclamation-circle-fill me-2"></i>
+          <ExclamationCircleFillIcon className="me-2" />
           <span>{error}</span>
         </Article>
       )}
@@ -92,7 +105,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
         <div>
           {incidents.length === 0 ? (
             <Article variant={ARTICLE_VARIANT.INFO} className="text-center">
-              <i className="bi bi-info-circle me-2"></i>
+              <InfoCircleIcon className="me-2" />
               インシデントはまだ登録されていません
             </Article>
           ) : (
@@ -107,7 +120,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                       <h5>{incident.caseName}</h5>
                       {incident.updateDate && (
                         <small className={styles.updateDate}>
-                          <i className="bi bi-clock-fill"></i>
+                          <ClockFillIcon className="me-1" />
                           <span>{incident.updateDate}</span>
                         </small>
                       )}
@@ -115,7 +128,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                     <div className="mb-2">
                       <Badge
                         variant="primary"
-                        icon="bi bi-person-fill"
+                        icon={<PersonFillIcon className="me-1" />}
                         className="me-2"
                       >
                         {incident.assignee}
@@ -132,7 +145,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                                   ? 'contrast'
                                   : undefined
                         }
-                        icon="bi bi-flag-fill"
+                        icon={<FlagFillIcon className="me-1" />}
                         className="me-2"
                       >
                         {incident.status}

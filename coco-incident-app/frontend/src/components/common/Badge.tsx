@@ -10,7 +10,7 @@ export type BadgeVariant =
 
 interface BadgeProps {
   variant?: BadgeVariant;
-  icon?: string;
+  icon?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
 }
@@ -27,10 +27,11 @@ const Badge: React.FC<BadgeProps> = ({
 
   return (
     <span className={classes}>
-      {icon && <i className={icon}></i>}
+      {icon}
       <span>{children}</span>
     </span>
   );
 };
 
 export default Badge;
+

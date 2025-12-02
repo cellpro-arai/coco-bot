@@ -1,8 +1,8 @@
-import { IconType } from './IconType';
 import TooltipLabel from './TooltipLabel';
+import React from 'react';
 
 type Props = {
-  icon: IconType;
+  icon: React.ReactNode;
   title: string;
   explain: string;
   required?: boolean;

@@ -108,6 +108,12 @@ body {
   margin: 0;
 }
 
+#root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 /* Other Utilities */
 .small {
   font-size: 0.875rem;

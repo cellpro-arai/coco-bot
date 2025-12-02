@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Incident } from '../types';
 
-type View = 'list' | 'form';
-
 export const VIEW_VARIANT = {
   LIST: 'list',
   FORM: 'form',
@@ -11,7 +9,9 @@ export const VIEW_VARIANT = {
 export type ViewVariant = (typeof VIEW_VARIANT)[keyof typeof VIEW_VARIANT];
 
 export function useViewManager() {
-  const [currentView, setCurrentView] = useState<View>(VIEW_VARIANT.LIST);
+  const [currentView, setCurrentView] = useState<ViewVariant>(
+    VIEW_VARIANT.LIST
+  );
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(
     null
   );

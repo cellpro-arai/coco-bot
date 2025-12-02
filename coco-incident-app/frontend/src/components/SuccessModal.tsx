@@ -1,6 +1,12 @@
 import React from 'react';
 import { Incident } from '../types';
 import Article, { ARTICLE_VARIANT } from './Article';
+import {
+  ArrowLeftIcon,
+  BoxArrowUpRightIcon,
+  CheckCircleFillIcon,
+  LightbulbFillIcon,
+} from './icons';
 
 interface SuccessModalProps {
   submittedIncident: Incident;
@@ -29,7 +35,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
           ></a>
           <hgroup>
             <h3 className="mb-2">
-              <i className="bi bi-check-circle-fill me-2"></i>
+              <CheckCircleFillIcon className="me-2" />
               <span>
                 インシデント情報の{isUpdate ? '更新' : '登録'}が完了しました！
               </span>
@@ -42,7 +48,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
         <Article variant={ARTICLE_VARIANT.WARNING} className="mb-4">
           <header className="mb-2">
             <h6 className="mb-0">
-              <i className="bi bi-lightbulb-fill me-2"></i>
+              <LightbulbFillIcon className="me-2" />
               AI改善案を生成しましょう
             </h6>
           </header>
@@ -60,14 +66,14 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
             className="contrast"
             role="button"
           >
-            <i className="bi bi-box-arrow-up-right me-1"></i>
+            <BoxArrowUpRightIcon className="me-1" />
             詳細スプレッドシートを開く
           </a>
         </Article>
 
         <footer>
           <button className="autowidth" onClick={closeSuccessModal}>
-            <i className="bi bi-arrow-left me-2"></i>
+            <ArrowLeftIcon className="me-2" />
             一覧へ戻る
           </button>
         </footer>

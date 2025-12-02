@@ -10,6 +10,26 @@ import * as api from '../services/apiService';
 import SuccessModal from '../components/SuccessModal';
 import styles from './IncidentFormPage.module.css';
 import Article, { ARTICLE_VARIANT } from '../components/Article';
+import {
+  ArrowLeftIcon,
+  ExclamationCircleFillIcon,
+  InfoCircleFillIcon,
+  HourglassSplitIcon,
+  BoxArrowUpRightIcon,
+  RobotIcon,
+  FolderFillIcon,
+  PersonFillIcon,
+  FlagFillIcon,
+  CardTextIcon,
+  PeopleFillIcon,
+  FileTextFillIcon,
+  PaperclipIcon,
+  Folder2OpenIcon,
+  CloudUploadIcon,
+  XIcon,
+  ArrowClockwiseIcon,
+  CheckCircleFillIcon,
+} from '../components/icons';
 
 interface IncidentFormPageProps {
   selectedIncident: Incident | null;
@@ -139,7 +159,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
     <div>
       {/* 戻るボタン */}
       <button className="secondary" onClick={backToList}>
-        <i className="bi bi-arrow-left"></i>
+        <ArrowLeftIcon />
         一覧へ戻る
       </button>
 
@@ -152,7 +172,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
             className="d-flex align-items-center mb-4"
             role="alert"
           >
-            <i className="bi bi-exclamation-circle-fill me-2"></i>
+            <ExclamationCircleFillIcon className="me-2" />
             <span>{error}</span>
           </Article>
         )}
@@ -164,7 +184,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
           role="alert"
         >
           <h6 className="d-flex align-items-center mb-3">
-            <i className="bi bi-info-circle-fill me-2"></i>
+            <InfoCircleFillIcon className="me-2" />
             重要な注意事項
           </h6>
           <ul className="mb-0">
@@ -182,7 +202,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
             <Article variant={ARTICLE_VARIANT.WARNING} className="mb-4">
               <header>
                 <h6 className="mb-0">
-                  <i className="bi bi-hourglass-split me-2"></i>
+                  <HourglassSplitIcon className="me-2" />
                   AI解析待ち
                 </h6>
               </header>
@@ -199,7 +219,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                   rel="noopener noreferrer"
                   className="contrast"
                 >
-                  <i className="bi bi-box-arrow-up-right me-1"></i>
+                  <BoxArrowUpRightIcon className="me-1" />
                   詳細スプレッドシートを開く
                 </a>
               </div>
@@ -214,7 +234,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
             <Article variant={ARTICLE_VARIANT.INFO} className="mb-4">
               <header>
                 <h6 className="mb-0">
-                  <i className="bi bi-robot me-2"></i>
+                  <RobotIcon className="me-2" />
                   AI解析結果
                 </h6>
               </header>
@@ -232,7 +252,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
             {/* 案件名 */}
             <label htmlFor="caseName">
               <span className={styles.requiredLabel}>
-                <i className="bi bi-folder-fill text-primary me-1"></i>
+                <FolderFillIcon className="text-primary me-1" />
                 案件名
               </span>
               <input
@@ -248,7 +268,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
             {/* 担当者 */}
             <label htmlFor="assignee">
               <span className={styles.requiredLabel}>
-                <i className="bi bi-person-fill text-primary me-1"></i>
+                <PersonFillIcon className="text-primary me-1" />
                 担当者
               </span>
               <input
@@ -269,7 +289,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
             {/* ステータス */}
             <label htmlFor="status">
               <span className={styles.requiredLabel}>
-                <i className="bi bi-flag-fill text-primary me-1"></i>
+                <FlagFillIcon className="text-primary me-1" />
                 ステータス
               </span>
               <select
@@ -289,7 +309,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
             {/* トラブル概要 */}
             <label htmlFor="summary">
               <span className={styles.requiredLabel}>
-                <i className="bi bi-card-text text-primary me-1"></i>
+                <CardTextIcon className="text-primary me-1" />
                 トラブル概要
               </span>
               <textarea
@@ -307,7 +327,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
           {/* ステークホルダー */}
           <label htmlFor="stakeholders">
             <span className={styles.requiredLabel}>
-              <i className="bi bi-people-fill text-primary me-1"></i>
+              <PeopleFillIcon className="text-primary me-1" />
               ステークホルダー
             </span>
             <textarea
@@ -333,7 +353,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
           {/* トラブル詳細 */}
           <label htmlFor="details">
             <span className={styles.requiredLabel}>
-              <i className="bi bi-file-text-fill text-primary me-1"></i>
+              <FileTextFillIcon className="text-primary me-1" />
               トラブル詳細
             </span>
             <textarea
@@ -367,7 +387,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
             selectedIncident.attachments.trim() && (
               <div className="mb-3">
                 <label>
-                  <i className="bi bi-paperclip me-1"></i>
+                  <PaperclipIcon className="me-1" />
                   既存の添付ファイル
                 </label>
                 <Article variant={ARTICLE_VARIANT.INFO} className="mb-4">
@@ -381,7 +401,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <i className="bi bi-folder2-open me-1"></i>
+                        <Folder2OpenIcon className="me-1" />
                         Driveフォルダを開く
                       </a>
                     </div>
@@ -392,7 +412,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
 
           {/* 関連ファイル */}
           <label htmlFor="fileUpload">
-            <i className="bi bi-cloud-upload me-1"></i>
+            <CloudUploadIcon className="me-1" />
             <span>
               {formData.registeredDate
                 ? '追加ファイルのアップロード'
@@ -424,7 +444,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                       className="contrast outline"
                       onClick={() => removeFile(index)}
                     >
-                      <i className="bi bi-x"></i>
+                      <XIcon />
                     </button>
                   </li>
                 ))}
@@ -438,14 +458,14 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
           <button type="submit" disabled={submitting}>
             {submitting ? (
               <>
-                <span className="bi bi-arrow-clockwise me-2"></span>
+                <ArrowClockwiseIcon className="me-2" />
                 <span>
                   {formData.registeredDate ? '更新中...' : '送信中...'}
                 </span>
               </>
             ) : (
               <>
-                <i className="bi bi-check-circle-fill me-2"></i>
+                <CheckCircleFillIcon className="me-2" />
                 <span>{formData.registeredDate ? '更新する' : '登録する'}</span>
               </>
             )}
