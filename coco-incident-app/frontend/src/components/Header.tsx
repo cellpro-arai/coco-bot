@@ -16,7 +16,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
           ></i>
         </button>
       </div>
-      <div className="d-flex align-items-center mb-2">
+      <div className="align-items-center mb-2">
         <h1 className="mb-0">【セルプロ】インシデント管理システム</h1>
       </div>
       <p className="mb-0">

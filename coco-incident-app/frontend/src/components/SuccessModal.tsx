@@ -1,5 +1,6 @@
 import React from 'react';
 import { Incident } from '../types';
+import Article, { ARTICLE_VARIANT } from './Article';
 
 interface SuccessModalProps {
   submittedIncident: Incident;
@@ -38,7 +39,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
         </header>
 
         {/* AI改善案の生成（手動） */}
-        <article className="warning mb-4">
+        <Article variant={ARTICLE_VARIANT.WARNING} className="mb-4">
           <header className="mb-2">
             <h6 className="mb-0">
               <i className="bi bi-lightbulb-fill me-2"></i>
@@ -62,7 +63,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
             <i className="bi bi-box-arrow-up-right me-1"></i>
             詳細スプレッドシートを開く
           </a>
-        </article>
+        </Article>
 
         <footer>
           <button className="autowidth" onClick={closeSuccessModal}>

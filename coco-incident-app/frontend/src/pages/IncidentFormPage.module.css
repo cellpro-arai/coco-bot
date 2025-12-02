@@ -1,0 +1,4 @@
+.requiredLabel::after {
+  content: ' *';
+  color: var(--pico-del-color);
+}

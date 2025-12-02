@@ -100,16 +100,6 @@
   }
 }
 
-.justify-content {
-  :is(&-center) {
-    justify-content: center;
-  }
-
-  :is(&-between) {
-    justify-content: space-between;
-  }
-}
-
 /* Layout */
 body {
   min-height: 100vh;
@@ -121,39 +111,4 @@ body {
 /* Other Utilities */
 .small {
   font-size: 0.875rem;
-}
-
-/* Components */
-.required-label {
-  :is(&::after) {
-    content: ' *';
-    color: var(--pico-del-color);
-  }
-}
-
-article {
-  :is(&.danger) {
-    background-color: var(--pico-del-background-color);
-    border: 1px solid var(--pico-del-color);
-  }
-
-  :is(&.warning) {
-    background-color: rgba(243, 156, 18, 0.1);
-    border: 1px solid #f39c12;
-  }
-
-  :is(&.info) {
-    background-color: rgba(52, 152, 219, 0.1);
-    border: 1px solid #3498db;
-  }
-
-  :is(&.success) {
-    background-color: rgba(46, 204, 113, 0.1);
-    border: 1px solid #2ecc71;
-  }
-
-  :is(&.primary) {
-    background-color: var(--pico-primary-background);
-    border: 1px solid var(--pico-primary);
-  }
 }

@@ -3,6 +3,7 @@ import { Incident } from '../types';
 import * as api from '../services/apiService';
 import { Badge } from '../components/common';
 import styles from './IncidentListPage.module.css';
+import Article, { ARTICLE_VARIANT } from '../components/Article';
 
 interface IncidentListPageProps {
   incidents: Incident[];
@@ -80,20 +81,20 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
 
       {/* エラー表示 */}
       {error && !loading && (
-        <article className="danger">
+        <Article variant={ARTICLE_VARIANT.DANGER}>
           <i className="bi bi-exclamation-circle-fill me-2"></i>
           <span>{error}</span>
-        </article>
+        </Article>
       )}
 
       {/* カード一覧 */}
       {!loading && !error && (
         <div>
           {incidents.length === 0 ? (
-            <article className="info text-center">
+            <Article variant={ARTICLE_VARIANT.INFO} className="text-center">
               <i className="bi bi-info-circle me-2"></i>
               インシデントはまだ登録されていません
-            </article>
+            </Article>
           ) : (
             <div className="grid">
               {incidents.map(incident => (

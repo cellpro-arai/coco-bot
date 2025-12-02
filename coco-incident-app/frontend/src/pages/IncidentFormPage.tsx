@@ -8,6 +8,8 @@ import {
 } from '../types';
 import * as api from '../services/apiService';
 import SuccessModal from '../components/SuccessModal';
+import styles from './IncidentFormPage.module.css';
+import Article, { ARTICLE_VARIANT } from '../components/Article';
 
 interface IncidentFormPageProps {
   selectedIncident: Incident | null;
@@ -145,17 +147,22 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
       <article className="p-4">
         {/* エラー表示 */}
         {error && (
-          <article
-            className="danger d-flex align-items-center mb-4"
+          <Article
+            variant={ARTICLE_VARIANT.DANGER}
+            className="d-flex align-items-center mb-4"
             role="alert"
           >
             <i className="bi bi-exclamation-circle-fill me-2"></i>
             <span>{error}</span>
-          </article>
+          </Article>
         )}
 
         {/* 重要な注意事項 */}
-        <article className="warning mb-4" role="alert">
+        <Article
+          variant={ARTICLE_VARIANT.WARNING}
+          className="mb-4"
+          role="alert"
+        >
           <h6 className="d-flex align-items-center mb-3">
             <i className="bi bi-info-circle-fill me-2"></i>
             重要な注意事項
@@ -166,13 +173,13 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
             <li>情報の加工や省略は行わないでください</li>
             <li>わかる範囲ですべての関係者を記載してください</li>
           </ul>
-        </article>
+        </Article>
 
         {/* AI解析待ち表示（編集モード時のみ） */}
         {formData.registeredDate &&
           selectedIncident &&
           selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.PENDING && (
-            <article className="warning mb-4">
+            <Article variant={ARTICLE_VARIANT.WARNING} className="mb-4">
               <header>
                 <h6 className="mb-0">
                   <i className="bi bi-hourglass-split me-2"></i>
@@ -196,7 +203,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                   詳細スプレッドシートを開く
                 </a>
               </div>
-            </article>
+            </Article>
           )}
 
         {/* AI解析結果表示（編集モード時のみ） */}
@@ -204,7 +211,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
           selectedIncident &&
           selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.COMPLETED &&
           selectedIncident.aiAnalysis && (
-            <article className="info mb-4">
+            <Article variant={ARTICLE_VARIANT.INFO} className="mb-4">
               <header>
                 <h6 className="mb-0">
                   <i className="bi bi-robot me-2"></i>
@@ -216,7 +223,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                   {selectedIncident.aiAnalysis}
                 </div>
               </div>
-            </article>
+            </Article>
           )}
 
         {/* フォーム */}
@@ -224,7 +231,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
           <div className="grid">
             {/* 案件名 */}
             <label htmlFor="caseName">
-              <span className="required-label">
+              <span className={styles.requiredLabel}>
                 <i className="bi bi-folder-fill text-primary me-1"></i>
                 案件名
               </span>
@@ -240,7 +247,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
             </label>
             {/* 担当者 */}
             <label htmlFor="assignee">
-              <span className="required-label">
+              <span className={styles.requiredLabel}>
                 <i className="bi bi-person-fill text-primary me-1"></i>
                 担当者
               </span>
@@ -261,7 +268,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
           <div className="grid">
             {/* ステータス */}
             <label htmlFor="status">
-              <span className="required-label">
+              <span className={styles.requiredLabel}>
                 <i className="bi bi-flag-fill text-primary me-1"></i>
                 ステータス
               </span>
@@ -281,7 +288,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
 
             {/* トラブル概要 */}
             <label htmlFor="summary">
-              <span className="required-label">
+              <span className={styles.requiredLabel}>
                 <i className="bi bi-card-text text-primary me-1"></i>
                 トラブル概要
               </span>
@@ -299,7 +306,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
 
           {/* ステークホルダー */}
           <label htmlFor="stakeholders">
-            <span className="required-label">
+            <span className={styles.requiredLabel}>
               <i className="bi bi-people-fill text-primary me-1"></i>
               ステークホルダー
             </span>
@@ -325,7 +332,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
 
           {/* トラブル詳細 */}
           <label htmlFor="details">
-            <span className="required-label">
+            <span className={styles.requiredLabel}>
               <i className="bi bi-file-text-fill text-primary me-1"></i>
               トラブル詳細
             </span>
@@ -363,7 +370,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                   <i className="bi bi-paperclip me-1"></i>
                   既存の添付ファイル
                 </label>
-                <article className="info">
+                <Article variant={ARTICLE_VARIANT.INFO} className="mb-4">
                   <div className="small text-pre-wrap">
                     {selectedIncident.attachments}
                   </div>
@@ -379,7 +386,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                       </a>
                     </div>
                   )}
-                </article>
+                </Article>
               </div>
             )}
 
