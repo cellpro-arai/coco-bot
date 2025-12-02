@@ -24,7 +24,6 @@ export default defineConfig({
     emptyOutDir: false,
     minify: true,
     cssCodeSplit: false,
-    cssMinify: 'lightningcss',
     assetsInlineLimit: 100000000,
     rollupOptions: {
       // Bundle React into the output (React 19 has no UMD builds)
