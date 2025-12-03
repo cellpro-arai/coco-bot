@@ -9,6 +9,7 @@ function sendSlack({
   newStatus,
   incidentDetailUrl,
   originalUserEmail,
+  isNewIncident,
 }: {
   caseName: string;
   assignee: string;
@@ -16,34 +17,47 @@ function sendSlack({
   newStatus: string;
   incidentDetailUrl: string;
   originalUserEmail: string;
+  isNewIncident: boolean;
 }) {
-  if (oldStatus !== newStatus) {
-    try {
-      switch (newStatus) {
-        case '差し戻し':
-          break;
-        default:
-          const account = getSlackAccountByEmail(originalUserEmail);
-
-          if (!account) {
-            throw new Error(
-              `ユーザー情報が見つかりません: ${originalUserEmail}`
-            );
-          }
-
-          notifyStatusChanged({
-            caseName: caseName,
-            assignee: assignee,
-            oldStatus: oldStatus,
-            newStatus: newStatus,
-            incidentDetailUrl: incidentDetailUrl,
-            userId: account.id,
-          });
+  try {
+    let accounts: SlackAccount[] = [];
+    if (isNewIncident) {
+      accounts = getAdminAccounts();
+    } else {
+      // 編集の場合はステータス変更時のみ通知
+      if (oldStatus === newStatus) {
+        return;
       }
-    } catch (e) {
-      console.error('Slack通知の送信に失敗しました:', e);
-      // 通知失敗してもエラーにはしない
+
+      // originalUserEmailが現在のGoogleアカウントemailと同じ場合
+      const currentUserEmail = Session.getActiveUser().getEmail();
+      if (originalUserEmail === currentUserEmail) {
+        accounts = getAdminAccounts();
+      } else {
+        const account = getSlackAccountByEmail(originalUserEmail);
+        if (!account) {
+          throw new Error(`ユーザー情報が見つかりません: ${originalUserEmail}`);
+        }
+        accounts.push(account);
+      }
     }
+
+    accounts.forEach(account => {
+      notifySlack({
+        caseName: caseName,
+        assignee: assignee,
+        oldStatus: oldStatus,
+        newStatus: newStatus,
+        incidentDetailUrl: incidentDetailUrl,
+        userId: account.id,
+        message: isNewIncident
+          ? '新しいインシデントが登録されました'
+          : 'インシデントのステータスが変更されました',
+      });
+    });
+  } catch (e) {
+    console.error('Slack通知の送信に失敗しました:', e);
+    // 通知失敗してもエラーにはしない
   }
 }
 
@@ -54,20 +68,22 @@ type NotifyStatusChangedArgs = {
   newStatus: string;
   incidentDetailUrl: string;
   userId: string;
+  message: string;
 };
 
 /**
- * Slackにインシデントのステータス変更を通知する
+ * Slackに通知する
  * @param param0
  * @returns
  */
-function notifyStatusChanged({
+function notifySlack({
   caseName,
   assignee,
   oldStatus,
   newStatus,
   incidentDetailUrl,
   userId,
+  message,
 }: NotifyStatusChangedArgs): void {
   try {
     const token =
@@ -96,9 +112,14 @@ function notifyStatusChanged({
       statusColor = '#E01E5A'; // 赤
     }
 
+    const statusText =
+      oldStatus === ''
+        ? `ステータス: *${newStatus}*`
+        : `*旧ステータス*: ${oldStatus}\n*新ステータス*: ${newStatus}`;
+
     const payload = {
       channel: userId,
-      text: `${emoji} インシデントのステータスが更新されました`,
+      text: `${emoji} ${message}`,
       attachments: [
         {
           color: statusColor,
@@ -107,7 +128,7 @@ function notifyStatusChanged({
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: `*インシデント*: ${caseName}\n*担当者*: ${assignee}\n*旧ステータス*: ${oldStatus}\n*新ステータス*: ${newStatus}`,
+                text: `*インシデント*: ${caseName}\n*担当者*: ${assignee}\n${statusText}`,
               },
             },
             {

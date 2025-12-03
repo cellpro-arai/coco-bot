@@ -21,6 +21,7 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
 
     let driveFolderUrl = '';
     let incidentDetailUrl = '';
+    let oldStatus = '';
 
     const updateDate = new Date();
 
@@ -126,8 +127,7 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
       const existingData = incidentSheet
         .getRange(targetRow, 1, 1, 8)
         .getValues()[0];
-      const oldStatus = existingData[4] as string;
-      const newStatus = incidentData.status;
+      oldStatus = existingData[4] as string;
 
       incidentSheet
         .getRange(targetRow, 3, 1, 4)
@@ -139,16 +139,6 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
             updateDate,
           ],
         ]);
-
-      // Slack通知
-      sendSlack({
-        caseName: incidentData.caseName,
-        assignee: incidentData.assignee,
-        oldStatus: oldStatus,
-        newStatus: newStatus,
-        incidentDetailUrl: incidentDetailUrl,
-        originalUserEmail: originalUserEmail,
-      });
 
       if (incidentDetailUrl) {
         const detailSheetId = extractSheetIdFromUrl(incidentDetailUrl);
@@ -185,6 +175,17 @@ function submitIncident(incidentData: IncidentData): IncidentResult {
         }
       }
     }
+
+    // Slack通知
+    sendSlack({
+      caseName: incidentData.caseName,
+      assignee: incidentData.assignee,
+      oldStatus: oldStatus,
+      newStatus: incidentData.status,
+      incidentDetailUrl: incidentDetailUrl,
+      originalUserEmail: originalUserEmail,
+      isNewIncident: !isEditMode,
+    });
 
     const record: IncidentRecord = {
       registeredDate: incidentDate.toLocaleString('ja-JP'),
