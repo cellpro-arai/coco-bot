@@ -8,8 +8,17 @@ import {
 } from '../types';
 import * as api from '../services/apiService';
 import SuccessModal from '../components/SuccessModal';
-import styles from './IncidentFormPage.module.css';
 import Article, { ARTICLE_VARIANT } from '../components/Article';
+import {
+  Button,
+  Card,
+  FormGroup,
+  FormLabel,
+  FormInput,
+  FormTextarea,
+  FormSelect,
+  FormHelperText,
+} from '../components/ui';
 import {
   ArrowLeftIcon,
   ExclamationCircleFillIcon,
@@ -156,23 +165,23 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
   };
 
   return (
-    <div>
+    <div className="py-4">
       {/* 戻るボタン */}
-      <button className="secondary" onClick={backToList}>
-        <ArrowLeftIcon />
+      <Button variant="secondary" onClick={backToList} className="mb-4">
+        <ArrowLeftIcon className="mr-2" />
         一覧へ戻る
-      </button>
+      </Button>
 
       {/* フォームカード */}
-      <article className="p-4">
+      <Card>
         {/* エラー表示 */}
         {error && (
           <Article
             variant={ARTICLE_VARIANT.DANGER}
-            className="d-flex align-items-center mb-4"
+            className="flex items-center mb-6"
             role="alert"
           >
-            <ExclamationCircleFillIcon className="me-2" />
+            <ExclamationCircleFillIcon className="mr-2" />
             <span>{error}</span>
           </Article>
         )}
@@ -180,11 +189,11 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
         {/* 重要な注意事項 */}
         <Article
           variant={ARTICLE_VARIANT.WARNING}
-          className="mb-4"
+          className="mb-6"
           role="alert"
         >
-          <h6 className="d-flex align-items-center mb-3">
-            <InfoCircleFillIcon className="me-2" />
+          <h6 className="flex items-center mb-3">
+            <InfoCircleFillIcon className="mr-2" />
             重要な注意事項
           </h6>
           <ul className="mb-0">
@@ -199,30 +208,26 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
         {formData.registeredDate &&
           selectedIncident &&
           selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.PENDING && (
-            <Article variant={ARTICLE_VARIANT.WARNING} className="mb-4">
-              <header>
-                <h6 className="mb-0">
-                  <HourglassSplitIcon className="me-2" />
-                  AI解析待ち
-                </h6>
-              </header>
-              <div>
-                <p className="mb-2">
-                  このインシデントはAI解析がまだ完了していません。
-                </p>
-                <p className="mb-3">
-                  詳細スプレッドシートを開いて、セルB5のAI数式を手動で更新してください。
-                </p>
-                <a
-                  href={selectedIncident.incidentDetailUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="contrast"
-                >
-                  <BoxArrowUpRightIcon className="me-1" />
-                  詳細スプレッドシートを開く
-                </a>
-              </div>
+            <Article variant={ARTICLE_VARIANT.WARNING} className="mb-6">
+              <h6 className="flex items-center text-base font-semibold mb-3">
+                <HourglassSplitIcon className="mr-2" />
+                AI解析待ち
+              </h6>
+              <p className="mb-2 text-sm">
+                このインシデントはAI解析がまだ完了していません。
+              </p>
+              <p className="mb-4 text-sm">
+                詳細スプレッドシートを開いて、セルB5のAI数式を手動で更新してください。
+              </p>
+              <a
+                href={selectedIncident.incidentDetailUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-gray-100 font-medium"
+              >
+                <BoxArrowUpRightIcon className="mr-1" />
+                詳細スプレッドシートを開く
+              </a>
             </Article>
           )}
 
@@ -231,31 +236,30 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
           selectedIncident &&
           selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.COMPLETED &&
           selectedIncident.aiAnalysis && (
-            <Article variant={ARTICLE_VARIANT.INFO} className="mb-4">
-              <header>
-                <h6 className="mb-0">
-                  <RobotIcon className="me-2" />
-                  AI解析結果
-                </h6>
-              </header>
-              <div>
-                <div className="text-pre-wrap">
-                  {selectedIncident.aiAnalysis}
-                </div>
+            <Article variant={ARTICLE_VARIANT.INFO} className="mb-6">
+              <h6 className="flex items-center text-base font-semibold mb-3">
+                <RobotIcon className="mr-2" />
+                AI解析結果
+              </h6>
+              <div className="whitespace-pre-wrap text-sm">
+                {selectedIncident.aiAnalysis}
               </div>
             </Article>
           )}
 
         {/* フォーム */}
         <form onSubmit={submitForm}>
-          <div className="grid">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* 案件名 */}
-            <label htmlFor="caseName">
-              <span className={styles.requiredLabel}>
-                <FolderFillIcon className="text-primary me-1" />
+            <FormGroup>
+              <FormLabel
+                htmlFor="caseName"
+                required
+                icon={<FolderFillIcon className="text-blue-600" />}
+              >
                 案件名
-              </span>
-              <input
+              </FormLabel>
+              <FormInput
                 type="text"
                 id="caseName"
                 value={formData.caseName}
@@ -263,15 +267,21 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                 required
                 placeholder="例: 〇〇システム障害"
               />
-              <small>案件を識別できる名前を記入してください</small>
-            </label>
+              <FormHelperText>
+                案件を識別できる名前を記入してください
+              </FormHelperText>
+            </FormGroup>
+
             {/* 担当者 */}
-            <label htmlFor="assignee">
-              <span className={styles.requiredLabel}>
-                <PersonFillIcon className="text-primary me-1" />
+            <FormGroup>
+              <FormLabel
+                htmlFor="assignee"
+                required
+                icon={<PersonFillIcon className="text-blue-600" />}
+              >
                 担当者
-              </span>
-              <input
+              </FormLabel>
+              <FormInput
                 type="text"
                 id="assignee"
                 value={formData.assignee}
@@ -279,20 +289,23 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                 required
                 placeholder="例: 山田太郎"
               />
-              <small>
+              <FormHelperText>
                 このインシデントを担当する方の名前を1名記入してください
-              </small>
-            </label>
+              </FormHelperText>
+            </FormGroup>
           </div>
 
-          <div className="grid">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* ステータス */}
-            <label htmlFor="status">
-              <span className={styles.requiredLabel}>
-                <FlagFillIcon className="text-primary me-1" />
+            <FormGroup>
+              <FormLabel
+                htmlFor="status"
+                required
+                icon={<FlagFillIcon className="text-blue-600" />}
+              >
                 ステータス
-              </span>
-              <select
+              </FormLabel>
+              <FormSelect
                 id="status"
                 value={formData.status}
                 onChange={handleInputChange}
@@ -302,71 +315,82 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                 <option value="保留">保留</option>
                 <option value="解決済み">解決済み</option>
                 <option value="クローズ">クローズ</option>
-              </select>
-              <small>現在の対応状況を選択してください</small>
-            </label>
+              </FormSelect>
+              <FormHelperText>現在の対応状況を選択してください</FormHelperText>
+            </FormGroup>
 
             {/* トラブル概要 */}
-            <label htmlFor="summary">
-              <span className={styles.requiredLabel}>
-                <CardTextIcon className="text-primary me-1" />
+            <FormGroup>
+              <FormLabel
+                htmlFor="summary"
+                required
+                icon={<CardTextIcon className="text-blue-600" />}
+              >
                 トラブル概要
-              </span>
-              <textarea
+              </FormLabel>
+              <FormTextarea
                 id="summary"
                 value={formData.summary}
                 onChange={handleInputChange}
                 rows={3}
                 required
                 placeholder="例: サーバーがダウンし、サービスにアクセスできない状態が発生しました"
-              ></textarea>
-              <small>トラブルの概要を簡潔に記入してください</small>
-            </label>
+              />
+              <FormHelperText>
+                トラブルの概要を簡潔に記入してください
+              </FormHelperText>
+            </FormGroup>
           </div>
 
           {/* ステークホルダー */}
-          <label htmlFor="stakeholders">
-            <span className={styles.requiredLabel}>
-              <PeopleFillIcon className="text-primary me-1" />
+          <FormGroup>
+            <FormLabel
+              htmlFor="stakeholders"
+              required
+              icon={<PeopleFillIcon className="text-blue-600" />}
+            >
               ステークホルダー
-            </span>
-            <textarea
+            </FormLabel>
+            <FormTextarea
               id="stakeholders"
               value={formData.stakeholders}
               onChange={handleInputChange}
               rows={5}
               required
               placeholder={PLACEHOLDERS.STAKEHOLDER}
-            ></textarea>
-            <small>
+            />
+            <FormHelperText>
               <strong>関係するすべての人物を記載してください：</strong>
-              <ul className="mb-0 mt-1">
+              <ul className="list-disc list-inside mt-1 space-y-1">
                 <li>顧客・クライアント</li>
                 <li>社内関係者（上司、同僚、他部署など）</li>
                 <li>外部ベンダー・協力会社</li>
                 <li>その他関係者</li>
               </ul>
               些細な関わりでも、名前がわかる人は全員記載してください
-            </small>
-          </label>
+            </FormHelperText>
+          </FormGroup>
 
           {/* トラブル詳細 */}
-          <label htmlFor="details">
-            <span className={styles.requiredLabel}>
-              <FileTextFillIcon className="text-primary me-1" />
+          <FormGroup>
+            <FormLabel
+              htmlFor="details"
+              required
+              icon={<FileTextFillIcon className="text-blue-600" />}
+            >
               トラブル詳細
-            </span>
-            <textarea
+            </FormLabel>
+            <FormTextarea
               id="details"
               value={formData.details}
               onChange={handleInputChange}
               rows={10}
               required
               placeholder={PLACEHOLDERS.TROUBLE_DETAIL}
-            ></textarea>
-            <small>
+            />
+            <FormHelperText>
               <strong>以下の情報をできるだけ詳しく記載してください：</strong>
-              <ul className="mb-0 mt-1">
+              <ul className="list-disc list-inside mt-1 space-y-1">
                 <li>発生日時・発覚の経緯</li>
                 <li>具体的な現象・症状</li>
                 <li>影響範囲（ユーザー数、システム範囲など）</li>
@@ -375,103 +399,116 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                 <li>過去の類似事例</li>
                 <li>その他気づいた点すべて</li>
               </ul>
-            </small>
-          </label>
+            </FormHelperText>
+          </FormGroup>
 
-          <hr />
+          <hr className="my-6 border-gray-200 dark:border-gray-700" />
 
           {/* 既存の添付ファイル（編集モード時） */}
           {formData.registeredDate &&
             selectedIncident &&
             selectedIncident.attachments &&
             selectedIncident.attachments.trim() && (
-              <div className="mb-3">
-                <label>
-                  <PaperclipIcon className="me-1" />
+              <FormGroup>
+                <FormLabel
+                  htmlFor=""
+                  icon={<PaperclipIcon className="text-blue-600" />}
+                >
                   既存の添付ファイル
-                </label>
-                <Article variant={ARTICLE_VARIANT.INFO} className="mb-4">
-                  <div className="small text-pre-wrap">
+                </FormLabel>
+                <Article variant={ARTICLE_VARIANT.INFO}>
+                  <div className="text-sm whitespace-pre-wrap">
                     {selectedIncident.attachments}
                   </div>
                   {selectedIncident.driveFolderUrl && (
-                    <div className="mt-2">
+                    <div className="mt-3">
                       <a
                         href={selectedIncident.driveFolderUrl}
                         target="_blank"
                         rel="noopener noreferrer"
+                        className="inline-flex items-center text-blue-600 hover:text-blue-700"
                       >
-                        <Folder2OpenIcon className="me-1" />
+                        <Folder2OpenIcon className="mr-1" />
                         Driveフォルダを開く
                       </a>
                     </div>
                   )}
                 </Article>
-              </div>
+              </FormGroup>
             )}
 
           {/* 関連ファイル */}
-          <label htmlFor="fileUpload">
-            <CloudUploadIcon className="me-1" />
-            <span>
+          <FormGroup>
+            <FormLabel
+              htmlFor="fileUpload"
+              icon={<CloudUploadIcon className="text-blue-600" />}
+            >
               {formData.registeredDate
                 ? '追加ファイルのアップロード'
                 : '関連ファイルのアップロード'}
-            </span>
-            <input
+            </FormLabel>
+            <FormInput
               type="file"
               id="fileUpload"
               onChange={handleFileUpload}
               multiple
             />
-            <small>
+            <FormHelperText>
               {formData.registeredDate
                 ? '新しくファイルを追加する場合は選択してください（複数選択可能）'
                 : 'メールのやり取り、契約書類、スクリーンショット、動画などをアップロードできます（複数選択可能）'}
-            </small>
-          </label>
+            </FormHelperText>
+          </FormGroup>
 
           {/* 選択されたファイルリスト */}
           {formData.fileDataList && formData.fileDataList.length > 0 && (
-            <div className="mt-2">
-              <small className="text-muted mb-1">選択されたファイル:</small>
-              <ul>
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                選択されたファイル:
+              </p>
+              <ul className="space-y-2">
                 {formData.fileDataList.map((file, index) => (
-                  <li key={index}>
-                    <span className="small">{file.name}</span>
-                    <button
+                  <li
+                    key={index}
+                    className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-2 rounded"
+                  >
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                      {file.name}
+                    </span>
+                    <Button
                       type="button"
-                      className="contrast outline"
+                      variant="outline"
                       onClick={() => removeFile(index)}
+                      className="!px-2 !py-1"
                     >
-                      <XIcon />
-                    </button>
+                      <XIcon className="w-4 h-4" />
+                    </Button>
                   </li>
                 ))}
               </ul>
             </div>
           )}
 
-          <hr />
+          <hr className="my-6 border-gray-200 dark:border-gray-700" />
 
           {/* 送信ボタン */}
-          <button type="submit" disabled={submitting}>
+          <Button type="submit" disabled={submitting} className="w-full">
             {submitting ? (
               <>
-                <ArrowClockwiseIcon className="me-2" />
+                <ArrowClockwiseIcon className="mr-2 animate-spin" />
                 <span>
                   {formData.registeredDate ? '更新中...' : '送信中...'}
                 </span>
               </>
             ) : (
               <>
-                <CheckCircleFillIcon className="me-2" />
+                <CheckCircleFillIcon className="mr-2" />
                 <span>{formData.registeredDate ? '更新する' : '登録する'}</span>
               </>
             )}
-          </button>
+          </Button>
         </form>
-      </article>
+      </Card>
 
       {showSuccessModal && submittedIncident && (
         <SuccessModal
