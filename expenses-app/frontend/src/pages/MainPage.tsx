@@ -10,6 +10,12 @@ import {
   createEmptyCommuteEntry,
   createEmptyExpenseEntry,
 } from '../utils/formUtils';
+import {
+  FileUploadField,
+  CommuteEntryCard,
+  ExpenseEntryCard,
+  FormSection,
+} from '../components';
 
 export default function MainPage() {
   const [formData, setFormData] = useState<FormData>({
@@ -30,7 +36,6 @@ export default function MainPage() {
 
   const [submitted, setSubmitted] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
-  const workScheduleInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -42,18 +47,11 @@ export default function MainPage() {
     }));
   };
 
-  const handleWorkScheduleFilesChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length > 0) {
-      setFormData(prev => ({
-        ...prev,
-        workScheduleFiles: [...prev.workScheduleFiles, ...files],
-      }));
-      // ファイル入力をリセットして同じファイルを再度選択できるようにする
-      if (workScheduleInputRef.current) {
-        workScheduleInputRef.current.value = '';
-      }
-    }
+  const handleWorkScheduleFilesChange = (files: File[]) => {
+    setFormData(prev => ({
+      ...prev,
+      workScheduleFiles: [...prev.workScheduleFiles, ...files],
+    }));
   };
 
   const removeWorkScheduleFile = (indexToRemove: number) => {
@@ -63,12 +61,6 @@ export default function MainPage() {
         (_, index) => index !== indexToRemove
       ),
     }));
-  };
-
-  const handleWorkScheduleButtonClick = () => {
-    if (workScheduleInputRef.current) {
-      workScheduleInputRef.current.click();
-    }
   };
 
   const handleCommuteEntryChange = (
@@ -359,61 +351,17 @@ export default function MainPage() {
             </fieldset>
 
             {/* 勤務表 */}
-            <fieldset>
-              <label htmlFor="workScheduleFile">勤務表</label>
-              <div className="work-schedule-input">
-                <input
-                  ref={workScheduleInputRef}
-                  type="file"
-                  id="workScheduleFile"
-                  onChange={handleWorkScheduleFilesChange}
-                  accept=".pdf,.xlsx,.xls,.jpg,.jpeg,.png"
-                  style={{ display: 'none' }}
-                  multiple
-                />
-                <button
-                  type="button"
-                  className="secondary"
-                  onClick={handleWorkScheduleButtonClick}
-                >
-                  勤務表を選択
-                </button>
-              </div>
-              {formData.workScheduleFiles.length > 0 && (
-                <div style={{ marginTop: '0.5rem' }}>
-                  {formData.workScheduleFiles.map((file, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        marginBottom: '0.3rem',
-                      }}
-                    >
-                      <span className="file-name" style={{ flex: 1 }}>
-                        {file.name}
-                      </span>
-                      <button
-                        type="button"
-                        className="secondary"
-                        onClick={() => removeWorkScheduleFile(index)}
-                        style={{
-                          padding: '0.2rem 0.6rem',
-                          fontSize: '0.8rem',
-                        }}
-                      >
-                        削除
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </fieldset>
+            <FileUploadField
+              label="勤務表"
+              files={formData.workScheduleFiles}
+              onFilesChange={handleWorkScheduleFilesChange}
+              onRemoveFile={removeWorkScheduleFile}
+              accept=".pdf,.xlsx,.xls,.jpg,.jpeg,.png"
+              multiple
+            />
 
             {/* 交通費 */}
-            <fieldset>
-              <legend>交通費</legend>
+            <FormSection title="交通費">
               <div className="commute-table-container">
                 <div className="commute-table-header">
                   <button
@@ -432,135 +380,14 @@ export default function MainPage() {
                 {hasCommuteEntries ? (
                   <div className="commute-cards-grid">
                     {formData.commuteEntries.map((entry, index) => (
-                      <div key={`commute-${index}`} className="commute-card">
-                        <div className="commute-card-field">
-                          <label
-                            className="commute-card-label"
-                            htmlFor={`commute-date-${index}`}
-                          >
-                            日付
-                          </label>
-                          <input
-                            type="date"
-                            id={`commute-date-${index}`}
-                            value={entry.date}
-                            onChange={e =>
-                              handleCommuteEntryChange(
-                                index,
-                                'date',
-                                e.target.value
-                              )
-                            }
-                          />
-                        </div>
-
-                        <div className="commute-card-field">
-                          <label
-                            className="commute-card-label"
-                            htmlFor={`commute-origin-${index}`}
-                          >
-                            最寄り駅
-                          </label>
-                          <input
-                            type="text"
-                            id={`commute-origin-${index}`}
-                            value={entry.origin}
-                            onChange={e =>
-                              handleCommuteEntryChange(
-                                index,
-                                'origin',
-                                e.target.value
-                              )
-                            }
-                            placeholder="例: 渋谷駅"
-                          />
-                        </div>
-
-                        <div className="commute-card-field">
-                          <label
-                            className="commute-card-label"
-                            htmlFor={`commute-destination-${index}`}
-                          >
-                            訪問先駅
-                          </label>
-                          <input
-                            type="text"
-                            id={`commute-destination-${index}`}
-                            value={entry.destination}
-                            onChange={e =>
-                              handleCommuteEntryChange(
-                                index,
-                                'destination',
-                                e.target.value
-                              )
-                            }
-                            placeholder="例: 新宿駅"
-                          />
-                        </div>
-
-                        <div className="commute-card-field">
-                          <label
-                            className="commute-card-label"
-                            htmlFor={`commute-tripType-${index}`}
-                          >
-                            区分
-                          </label>
-                          <select
-                            id={`commute-tripType-${index}`}
-                            value={entry.tripType}
-                            onChange={e =>
-                              handleCommuteEntryChange(
-                                index,
-                                'tripType',
-                                e.target.value
-                              )
-                            }
-                          >
-                            <option value="oneWay">片道</option>
-                            <option value="roundTrip">往復</option>
-                          </select>
-                        </div>
-
-                        <div className="commute-card-field">
-                          <label
-                            className="commute-card-label"
-                            htmlFor={`commute-amount-${index}`}
-                          >
-                            片道の金額
-                          </label>
-                          <input
-                            type="number"
-                            id={`commute-amount-${index}`}
-                            value={entry.amount}
-                            onChange={e =>
-                              handleCommuteEntryChange(
-                                index,
-                                'amount',
-                                e.target.value
-                              )
-                            }
-                            placeholder="例: 200"
-                            min="0"
-                          />
-                        </div>
-
-                        <div className="commute-card-actions">
-                          <button
-                            type="button"
-                            className="secondary"
-                            onClick={() => duplicateCommuteEntry(index)}
-                          >
-                            複製
-                          </button>
-                          <button
-                            type="button"
-                            className="secondary"
-                            onClick={() => removeCommuteEntry(index)}
-                          >
-                            削除
-                          </button>
-                        </div>
-                      </div>
+                      <CommuteEntryCard
+                        key={`commute-${index}`}
+                        entry={entry}
+                        index={index}
+                        onChange={handleCommuteEntryChange}
+                        onDuplicate={duplicateCommuteEntry}
+                        onRemove={removeCommuteEntry}
+                      />
                     ))}
                   </div>
                 ) : (
@@ -569,11 +396,10 @@ export default function MainPage() {
                   </p>
                 )}
               </div>
-            </fieldset>
+            </FormSection>
 
             {/* 経費 */}
-            <fieldset>
-              <legend>経費</legend>
+            <FormSection title="経費">
               <div className="expense-table-container">
                 <div className="expense-table-header">
                   <button
@@ -591,190 +417,17 @@ export default function MainPage() {
                 )}
                 {hasExpenseEntries ? (
                   <div className="expense-cards-grid">
-                    {formData.expenseEntries.map((entry, index) => {
-                      const category = entry.category || 'other';
-                      const isCertification = category === 'certification';
-                      return (
-                        <div key={`expense-${index}`} className="expense-card">
-                          <div className="expense-card-row">
-                            <div className="expense-card-field">
-                              <label
-                                className="expense-card-label"
-                                htmlFor={`expense-category-${index}`}
-                              >
-                                経費種別
-                              </label>
-                              <select
-                                id={`expense-category-${index}`}
-                                value={entry.category}
-                                onChange={e =>
-                                  handleExpenseEntryChange(
-                                    index,
-                                    'category',
-                                    e.target.value
-                                  )
-                                }
-                              >
-                                <option value="ebook">電子書籍</option>
-                                <option value="book">書籍</option>
-                                <option value="certification">資格受験</option>
-                                <option value="other">その他</option>
-                              </select>
-                            </div>
-
-                            <div className="expense-card-field">
-                              <label
-                                className="expense-card-label"
-                                htmlFor={`expense-date-${index}`}
-                              >
-                                日付
-                              </label>
-                              <input
-                                type="date"
-                                id={`expense-date-${index}`}
-                                value={entry.date}
-                                onChange={e =>
-                                  handleExpenseEntryChange(
-                                    index,
-                                    'date',
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </div>
-                          </div>
-
-                          <div className="expense-card-row">
-                            <div className="expense-card-field">
-                              <label
-                                className="expense-card-label"
-                                htmlFor={`expense-amount-${index}`}
-                              >
-                                金額（円）
-                              </label>
-                              <input
-                                type="number"
-                                id={`expense-amount-${index}`}
-                                value={entry.amount}
-                                onChange={e =>
-                                  handleExpenseEntryChange(
-                                    index,
-                                    'amount',
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="例: 3000"
-                                min="0"
-                              />
-                            </div>
-
-                            <div className="expense-card-field">
-                              <label
-                                className="expense-card-label"
-                                htmlFor={`expense-description-${index}`}
-                              >
-                                内容
-                              </label>
-                              <input
-                                type="text"
-                                id={`expense-description-${index}`}
-                                value={entry.description}
-                                onChange={e =>
-                                  handleExpenseEntryChange(
-                                    index,
-                                    'description',
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="例: TypeScript入門書"
-                              />
-                            </div>
-                          </div>
-
-                          <div
-                            className={
-                              isCertification
-                                ? 'expense-card-row'
-                                : 'expense-card-row-3'
-                            }
-                          >
-                            <div className="expense-card-field">
-                              <label
-                                className="expense-card-label"
-                                htmlFor={`expense-receipt-${index}`}
-                              >
-                                領収書
-                              </label>
-                              <input
-                                type="file"
-                                id={`expense-receipt-${index}`}
-                                onChange={e =>
-                                  handleExpenseReceiptChange(
-                                    index,
-                                    e.target.files?.[0] || null
-                                  )
-                                }
-                                accept=".pdf,.jpg,.jpeg,.png"
-                              />
-                              {entry.receiptFile && (
-                                <span
-                                  className="file-name"
-                                  style={{
-                                    fontSize: '0.7rem',
-                                    marginTop: '0.2rem',
-                                  }}
-                                >
-                                  {entry.receiptFile.name}
-                                </span>
-                              )}
-                            </div>
-
-                            {isCertification && (
-                              <div className="expense-card-field">
-                                <label
-                                  className="expense-card-label"
-                                  htmlFor={`expense-certificate-${index}`}
-                                >
-                                  合格通知書
-                                </label>
-                                <input
-                                  type="file"
-                                  id={`expense-certificate-${index}`}
-                                  onChange={e =>
-                                    handleExpenseCertificateChange(
-                                      index,
-                                      e.target.files?.[0] || null
-                                    )
-                                  }
-                                  accept=".pdf,.jpg,.jpeg,.png"
-                                />
-                                {entry.certificateFile && (
-                                  <span
-                                    className="file-name"
-                                    style={{
-                                      fontSize: '0.7rem',
-                                      marginTop: '0.2rem',
-                                    }}
-                                  >
-                                    {entry.certificateFile.name}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="expense-card-actions">
-                            <button
-                              type="button"
-                              className="secondary"
-                              onClick={() => removeExpenseEntry(index)}
-                            >
-                              削除
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {formData.expenseEntries.map((entry, index) => (
+                      <ExpenseEntryCard
+                        key={`expense-${index}`}
+                        entry={entry}
+                        index={index}
+                        onChange={handleExpenseEntryChange}
+                        onReceiptChange={handleExpenseReceiptChange}
+                        onCertificateChange={handleExpenseCertificateChange}
+                        onRemove={removeExpenseEntry}
+                      />
+                    ))}
                   </div>
                 ) : (
                   <p className="text-muted">
@@ -782,12 +435,10 @@ export default function MainPage() {
                   </p>
                 )}
               </div>
-            </fieldset>
+            </FormSection>
 
             {/* 現場勤務状況 */}
-            <fieldset>
-              <legend className="required-label">現場勤務状況</legend>
-
+            <FormSection title="現場勤務状況" required>
               <div className="grid">
                 <label htmlFor="workStartTime">
                   始業時間
@@ -829,11 +480,10 @@ export default function MainPage() {
                   <option value="weekly3to5">週3~5出社</option>
                 </select>
               </label>
-            </fieldset>
+            </FormSection>
 
             {/* 定期券購入 */}
-            <fieldset>
-              <legend className="required-label">定期券購入</legend>
+            <FormSection title="定期券購入" required>
               <label>
                 <input
                   type="radio"
@@ -854,13 +504,11 @@ export default function MainPage() {
                 />
                 無し
               </label>
-            </fieldset>
+            </FormSection>
 
             {/* 定期券詳細（条件付き表示） */}
             {formData.hasCommuterPass === 'yes' && (
-              <fieldset>
-                <legend className="required-label">定期券詳細</legend>
-
+              <FormSection title="定期券詳細" required>
                 <div className="grid">
                   <label htmlFor="nearestStation">
                     最寄り駅
@@ -902,7 +550,7 @@ export default function MainPage() {
                     placeholder="例: 15000"
                   />
                 </label>
-              </fieldset>
+              </FormSection>
             )}
 
             {/* 備考 */}
