@@ -1,5 +1,4 @@
 import React, { ReactNode, ComponentPropsWithoutRef } from 'react';
-import styles from './Article.module.css';
 
 export const ARTICLE_VARIANT = {
   DANGER: 'danger',
@@ -18,18 +17,28 @@ interface ArticleProps extends ComponentPropsWithoutRef<'article'> {
   children: ReactNode;
 }
 
+const variantClasses: Record<ArticleVariant, string> = {
+  danger: 'bg-red-50 border border-red-500',
+  warning: 'bg-orange-50 border border-orange-500',
+  info: 'bg-blue-50 border border-blue-500',
+  success: 'bg-green-50 border border-green-500',
+  primary: 'bg-blue-50 border border-blue-600',
+};
+
 const Article: React.FC<ArticleProps> = ({
   variant,
   className = '',
   children,
   ...rest
 }) => {
-  const variantClass = variant ? styles[variant] : '';
+  const baseClasses = 'p-6 rounded-lg';
+  const variantClass = variant ? variantClasses[variant] : '';
+  const finalClasses = [baseClasses, variantClass, className]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <article
-      className={`${styles.article} ${variantClass} ${className}`}
-      {...rest}
-    >
+    <article className={finalClasses} {...rest}>
       {children}
     </article>
   );
