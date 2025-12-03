@@ -1,3 +1,4 @@
+@import "tailwindcss";
 /* Text Utilities */
 .text-truncate-2 {
   display: -webkit-box;
