@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Incident } from '../types';
 import * as api from '../services/apiService';
-import { Badge } from '../components/common';
-import { Button, Card } from '../components/ui';
-import Article, { ARTICLE_VARIANT } from '../components/Article';
+import { Button, Card, Badge, Alert, ALERT_VARIANT } from '../components/ui';
 import {
   ArrowClockwiseIcon,
   ClockFillIcon,
@@ -88,20 +86,20 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
 
       {/* エラー表示 */}
       {error && !loading && (
-        <Article variant={ARTICLE_VARIANT.DANGER} className="flex items-center">
+        <Alert variant={ALERT_VARIANT.DANGER} className="flex items-center">
           <ExclamationCircleFillIcon className="mr-2" />
           <span>{error}</span>
-        </Article>
+        </Alert>
       )}
 
       {/* カード一覧 */}
       {!loading && !error && (
         <div>
           {incidents.length === 0 ? (
-            <Article variant={ARTICLE_VARIANT.INFO} className="text-center">
+            <Alert variant={ALERT_VARIANT.INFO} className="text-center">
               <InfoCircleIcon className="mr-2" />
               インシデントはまだ登録されていません
-            </Article>
+            </Alert>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {incidents.map(incident => (

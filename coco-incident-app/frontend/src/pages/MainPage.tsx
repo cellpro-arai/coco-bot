@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { Incident } from '../types';
-import Header from '../components/Header';
+import { Header, Container } from '../components/layouts';
 import IncidentListPage from './IncidentListPage';
 import IncidentFormPage from './IncidentFormPage';
 import useTheme from '../hooks/useTheme';
 import { useViewManager, VIEW_VARIANT } from '../hooks/useViewManager';
-import { Container } from '../components/ui';
 
 function MainPage() {
   const [incidents, setIncidents] = useState<Incident[]>([]);

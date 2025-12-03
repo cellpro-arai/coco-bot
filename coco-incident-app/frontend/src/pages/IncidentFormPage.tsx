@@ -7,11 +7,12 @@ import {
   PLACEHOLDERS,
 } from '../types';
 import * as api from '../services/apiService';
-import SuccessModal from '../components/SuccessModal';
-import Article, { ARTICLE_VARIANT } from '../components/Article';
+import { SuccessModal } from '../components/modals';
 import {
   Button,
   Card,
+  Alert,
+  ALERT_VARIANT,
   FormGroup,
   FormLabel,
   FormInput,
@@ -176,22 +177,18 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
       <Card>
         {/* エラー表示 */}
         {error && (
-          <Article
-            variant={ARTICLE_VARIANT.DANGER}
+          <Alert
+            variant={ALERT_VARIANT.DANGER}
             className="flex items-center mb-6"
             role="alert"
           >
             <ExclamationCircleFillIcon className="mr-2" />
             <span>{error}</span>
-          </Article>
+          </Alert>
         )}
 
         {/* 重要な注意事項 */}
-        <Article
-          variant={ARTICLE_VARIANT.WARNING}
-          className="mb-6"
-          role="alert"
-        >
+        <Alert variant={ALERT_VARIANT.WARNING} className="mb-6" role="alert">
           <h6 className="flex items-center mb-3">
             <InfoCircleFillIcon className="mr-2" />
             重要な注意事項
@@ -202,13 +199,13 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
             <li>情報の加工や省略は行わないでください</li>
             <li>わかる範囲ですべての関係者を記載してください</li>
           </ul>
-        </Article>
+        </Alert>
 
         {/* AI解析待ち表示（編集モード時のみ） */}
         {formData.registeredDate &&
           selectedIncident &&
           selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.PENDING && (
-            <Article variant={ARTICLE_VARIANT.WARNING} className="mb-6">
+            <Alert variant={ALERT_VARIANT.WARNING} className="mb-6">
               <h6 className="flex items-center text-base font-semibold mb-3">
                 <HourglassSplitIcon className="mr-2" />
                 AI解析待ち
@@ -228,7 +225,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                 <BoxArrowUpRightIcon className="mr-1" />
                 詳細スプレッドシートを開く
               </a>
-            </Article>
+            </Alert>
           )}
 
         {/* AI解析結果表示（編集モード時のみ） */}
@@ -236,7 +233,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
           selectedIncident &&
           selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.COMPLETED &&
           selectedIncident.aiAnalysis && (
-            <Article variant={ARTICLE_VARIANT.INFO} className="mb-6">
+            <Alert variant={ALERT_VARIANT.INFO} className="mb-6">
               <h6 className="flex items-center text-base font-semibold mb-3">
                 <RobotIcon className="mr-2" />
                 AI解析結果
@@ -244,7 +241,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
               <div className="whitespace-pre-wrap text-sm">
                 {selectedIncident.aiAnalysis}
               </div>
-            </Article>
+            </Alert>
           )}
 
         {/* フォーム */}
@@ -294,7 +291,6 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
               </FormHelperText>
             </FormGroup>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* ステータス */}
             <FormGroup>
@@ -341,7 +337,6 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
               </FormHelperText>
             </FormGroup>
           </div>
-
           {/* ステークホルダー */}
           <FormGroup>
             <FormLabel
@@ -370,7 +365,6 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
               些細な関わりでも、名前がわかる人は全員記載してください
             </FormHelperText>
           </FormGroup>
-
           {/* トラブル詳細 */}
           <FormGroup>
             <FormLabel
@@ -401,9 +395,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
               </ul>
             </FormHelperText>
           </FormGroup>
-
           <hr className="my-6 border-gray-200 dark:border-gray-700" />
-
           {/* 既存の添付ファイル（編集モード時） */}
           {formData.registeredDate &&
             selectedIncident &&
@@ -416,7 +408,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                 >
                   既存の添付ファイル
                 </FormLabel>
-                <Article variant={ARTICLE_VARIANT.INFO}>
+                <Alert variant={ALERT_VARIANT.INFO}>
                   <div className="text-sm whitespace-pre-wrap">
                     {selectedIncident.attachments}
                   </div>
@@ -433,10 +425,9 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                       </a>
                     </div>
                   )}
-                </Article>
+                </Alert>
               </FormGroup>
-            )}
-
+            )}{' '}
           {/* 関連ファイル */}
           <FormGroup>
             <FormLabel
@@ -459,7 +450,6 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                 : 'メールのやり取り、契約書類、スクリーンショット、動画などをアップロードできます（複数選択可能）'}
             </FormHelperText>
           </FormGroup>
-
           {/* 選択されたファイルリスト */}
           {formData.fileDataList && formData.fileDataList.length > 0 && (
             <div className="mb-4">
@@ -488,9 +478,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
               </ul>
             </div>
           )}
-
           <hr className="my-6 border-gray-200 dark:border-gray-700" />
-
           {/* 送信ボタン */}
           <Button type="submit" disabled={submitting} className="w-full">
             {submitting ? (

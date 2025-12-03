@@ -1,6 +1,10 @@
 export { default as Button } from './Button';
-export { default as Container } from './Container';
 export { default as Card } from './Card';
+export { default as Alert } from './Alert';
+export { ALERT_VARIANT } from './Alert';
+export type { AlertVariant } from './Alert';
+export { default as Badge } from './Badge';
+export type { BadgeVariant } from './Badge';
 export {
   FormLabel,
   FormInput,

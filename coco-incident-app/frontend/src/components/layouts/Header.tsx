@@ -1,7 +1,8 @@
 import React from 'react';
-import { Container, Button } from './ui';
-import MoonFillIcon from './icons/MoonFillIcon';
-import SunFillIcon from './icons/SunFillIcon';
+import { Button } from '../ui';
+import Container from './Container';
+import MoonFillIcon from '../icons/MoonFillIcon';
+import SunFillIcon from '../icons/SunFillIcon';
 
 interface HeaderProps {
   theme: string;

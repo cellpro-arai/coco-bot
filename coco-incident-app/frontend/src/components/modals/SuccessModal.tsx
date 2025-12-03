@@ -1,12 +1,12 @@
 import React from 'react';
-import { Incident } from '../types';
-import Article, { ARTICLE_VARIANT } from './Article';
+import { Incident } from '../../types';
+import { Alert, ALERT_VARIANT } from '../ui';
 import {
   ArrowLeftIcon,
   BoxArrowUpRightIcon,
   CheckCircleFillIcon,
   LightbulbFillIcon,
-} from './icons';
+} from '../icons';
 
 interface SuccessModalProps {
   submittedIncident: Incident;
@@ -46,7 +46,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
 
         <div className="p-6">
           {/* AI改善案の生成（手動） */}
-          <Article variant={ARTICLE_VARIANT.WARNING} className="mb-4">
+          <Alert variant={ALERT_VARIANT.WARNING} className="mb-4">
             <header className="mb-2">
               <h6 className="flex items-center text-base font-semibold mb-0 text-gray-900 dark:text-gray-100">
                 <LightbulbFillIcon className="mr-2" />
@@ -70,7 +70,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
               <BoxArrowUpRightIcon className="mr-1" />
               詳細スプレッドシートを開く
             </a>
-          </Article>
+          </Alert>
         </div>
 
         <div className="border-t border-gray-200 dark:border-gray-700 p-6">

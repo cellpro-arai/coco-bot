@@ -1,6 +1,6 @@
 import React, { ReactNode, ComponentPropsWithoutRef } from 'react';
 
-export const ARTICLE_VARIANT = {
+export const ALERT_VARIANT = {
   DANGER: 'danger',
   WARNING: 'warning',
   INFO: 'info',
@@ -8,16 +8,15 @@ export const ARTICLE_VARIANT = {
   PRIMARY: 'primary',
 } as const;
 
-export type ArticleVariant =
-  (typeof ARTICLE_VARIANT)[keyof typeof ARTICLE_VARIANT];
+export type AlertVariant = (typeof ALERT_VARIANT)[keyof typeof ALERT_VARIANT];
 
-interface ArticleProps extends ComponentPropsWithoutRef<'article'> {
-  variant?: ArticleVariant;
+interface AlertProps extends ComponentPropsWithoutRef<'div'> {
+  variant?: AlertVariant;
   className?: string;
   children: ReactNode;
 }
 
-const variantClasses: Record<ArticleVariant, string> = {
+const variantClasses: Record<AlertVariant, string> = {
   danger:
     'bg-red-50 dark:bg-red-900/20 border border-red-500 dark:border-red-700',
   warning:
@@ -29,7 +28,7 @@ const variantClasses: Record<ArticleVariant, string> = {
     'bg-blue-50 dark:bg-blue-900/20 border border-blue-600 dark:border-blue-700',
 };
 
-const Article: React.FC<ArticleProps> = ({
+const Alert: React.FC<AlertProps> = ({
   variant,
   className = '',
   children,
@@ -42,10 +41,10 @@ const Article: React.FC<ArticleProps> = ({
     .join(' ');
 
   return (
-    <article className={finalClasses} {...rest}>
+    <div className={finalClasses} {...rest}>
       {children}
-    </article>
+    </div>
   );
 };
 
-export default Article;
+export default Alert;
