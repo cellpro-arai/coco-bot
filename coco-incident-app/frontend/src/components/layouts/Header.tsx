@@ -11,7 +11,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
   return (
-    <header className="py-4 mb-8 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 relative">
+    <header className="py-4 mb-8 border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 relative">
       <Container>
         <div className="absolute top-2 right-6">
           <Button
