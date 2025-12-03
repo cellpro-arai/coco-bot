@@ -5,6 +5,7 @@ export { ALERT_VARIANT } from './Alert';
 export type { AlertVariant } from './Alert';
 export { default as Badge } from './Badge';
 export type { BadgeVariant } from './Badge';
+export { default as AppLink } from './AppLink';
 export {
   FormLabel,
   FormInput,

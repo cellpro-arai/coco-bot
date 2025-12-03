@@ -19,6 +19,7 @@ import {
   FormTextarea,
   FormSelect,
   FormHelperText,
+  AppLink,
 } from '../components/ui';
 import {
   ArrowLeftIcon,
@@ -216,15 +217,16 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
               <p className="mb-4 text-sm">
                 詳細スプレッドシートを開いて、セルB5のAI数式を手動で更新してください。
               </p>
-              <a
+              <AppLink
                 href={selectedIncident.incidentDetailUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-gray-100 font-medium"
+                underline={false}
+                className="inline-flex items-center"
               >
                 <BoxArrowUpRightIcon className="mr-1" />
                 詳細スプレッドシートを開く
-              </a>
+              </AppLink>
             </Alert>
           )}
 
@@ -414,15 +416,16 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                   </div>
                   {selectedIncident.driveFolderUrl && (
                     <div className="mt-3">
-                      <a
+                      <AppLink
                         href={selectedIncident.driveFolderUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center text-blue-600 hover:text-blue-700"
+                        underline={false}
+                        className="inline-flex items-center"
                       >
                         <Folder2OpenIcon className="mr-1" />
                         Driveフォルダを開く
-                      </a>
+                      </AppLink>
                     </div>
                   )}
                 </Alert>
