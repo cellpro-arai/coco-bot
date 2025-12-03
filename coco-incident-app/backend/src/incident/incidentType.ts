@@ -1,3 +1,5 @@
+const INCIDENT_SHEET_NAME = 'インシデント管理';
+
 /**
  * AI解析ステータスの定数
  */
@@ -7,7 +9,8 @@ const AI_ANALYSIS_STATUS = {
   NONE: 'none',
 } as const;
 
-type AiAnalysisStatus = typeof AI_ANALYSIS_STATUS[keyof typeof AI_ANALYSIS_STATUS];
+type AiAnalysisStatus =
+  (typeof AI_ANALYSIS_STATUS)[keyof typeof AI_ANALYSIS_STATUS];
 
 /**
  * ファイルデータの型定義
