@@ -1,114 +1,15 @@
 import { useState, useRef, FormEvent, ChangeEvent } from 'react';
-
-interface CommuteEntry {
-  date: string;
-  origin: string;
-  destination: string;
-  amount: string;
-  tripType: string;
-}
-
-interface ExpenseEntry {
-  date: string;
-  category: string;
-  description: string;
-  amount: string;
-  receiptFile: File | null;
-  certificateFile: File | null;
-}
-
-interface FormData {
-  name: string;
-  submissionMonth: string;
-  workScheduleFiles: File[];
-  workStartTime: string;
-  workEndTime: string;
-  officeFrequency: string;
-  hasCommuterPass: string;
-  nearestStation: string;
-  workStation: string;
-  monthlyFee: string;
-  remarks: string;
-  commuteEntries: CommuteEntry[];
-  expenseEntries: ExpenseEntry[];
-}
-
-interface FileData {
-  name: string;
-  mimeType: string;
-  data: string;
-}
-
-declare const google: any;
-
-const createEmptyCommuteEntry = (): CommuteEntry => ({
-  date: '',
-  origin: '',
-  destination: '',
-  amount: '',
-  tripType: 'oneWay',
-});
-
-const createEmptyExpenseEntry = (): ExpenseEntry => ({
-  date: '',
-  category: 'ebook',
-  description: '',
-  amount: '',
-  receiptFile: null,
-  certificateFile: null,
-});
-
-const getDefaultSubmissionMonth = (): string => {
-  const today = new Date();
-  const day = today.getDate();
-
-  // 7日以前の場合は先月を返す
-  if (day <= 7) {
-    today.setMonth(today.getMonth() - 1);
-  }
-
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  return `${year}-${month}`;
-};
-
-const getSubmissionMonthOptions = () => {
-  const today = new Date();
-  const options = [];
-
-  // 前月、当月、翌月の3つの選択肢を生成
-  for (let i = -1; i <= 1; i++) {
-    const date = new Date(today.getFullYear(), today.getMonth() + i, 1);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const value = `${year}-${month}`;
-    const label = `${year}年${month}月`;
-    options.push({ value, label });
-  }
-
-  return options;
-};
-
-const encodeFileToBase64 = (file: File | null): Promise<FileData | null> => {
-  return new Promise((resolve, reject) => {
-    if (!file) {
-      resolve(null);
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = (reader.result as string).split(',')[1];
-      resolve({
-        name: file.name,
-        mimeType: file.type,
-        data: base64,
-      });
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-};
+import { FormData, CommuteEntry, ExpenseEntry } from '../types';
+import { submitExpense } from '../services/apiService';
+import { encodeFileToBase64 } from '../utils/fileUtils';
+import {
+  getDefaultSubmissionMonth,
+  getSubmissionMonthOptions,
+} from '../utils/dateUtils';
+import {
+  createEmptyCommuteEntry,
+  createEmptyExpenseEntry,
+} from '../utils/formUtils';
 
 export default function MainPage() {
   const [formData, setFormData] = useState<FormData>({
@@ -369,35 +270,33 @@ export default function MainPage() {
       };
 
       // Google Apps Scriptのバックエンド関数を呼び出し
-      google.script.run
-        .withSuccessHandler((result: any) => {
-          alert(result.message);
-          // フォームをリセット
-          if (formRef.current) {
-            formRef.current.reset();
-          }
-          setFormData({
-            name: '',
-            submissionMonth: getDefaultSubmissionMonth(),
-            workScheduleFiles: [],
-            workStartTime: '09:00',
-            workEndTime: '18:00',
-            officeFrequency: 'fullRemote',
-            hasCommuterPass: 'no',
-            nearestStation: '',
-            workStation: '',
-            monthlyFee: '',
-            remarks: '',
-            commuteEntries: [],
-            expenseEntries: [],
-          });
-          setSubmitted(false);
-        })
-        .withFailureHandler((error: any) => {
-          alert('エラーが発生しました: ' + error.message);
-          setSubmitted(false);
-        })
-        .submitExpense(expenseData);
+      try {
+        const result = await submitExpense(expenseData);
+        alert(result.message);
+        // フォームをリセット
+        if (formRef.current) {
+          formRef.current.reset();
+        }
+        setFormData({
+          name: '',
+          submissionMonth: getDefaultSubmissionMonth(),
+          workScheduleFiles: [],
+          workStartTime: '09:00',
+          workEndTime: '18:00',
+          officeFrequency: 'fullRemote',
+          hasCommuterPass: 'no',
+          nearestStation: '',
+          workStation: '',
+          monthlyFee: '',
+          remarks: '',
+          commuteEntries: [],
+          expenseEntries: [],
+        });
+        setSubmitted(false);
+      } catch (error: any) {
+        alert('エラーが発生しました: ' + error.message);
+        setSubmitted(false);
+      }
     } catch (error: any) {
       alert('エラーが発生しました: ' + error.message);
       setSubmitted(false);
