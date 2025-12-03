@@ -17,49 +17,73 @@ import {
   FormSection,
 } from '../components';
 
-export default function MainPage() {
-  const [formData, setFormData] = useState<FormData>({
-    name: '',
-    submissionMonth: getDefaultSubmissionMonth(),
-    workScheduleFiles: [],
-    workStartTime: '09:00',
-    workEndTime: '18:00',
-    officeFrequency: 'fullRemote',
-    hasCommuterPass: 'no',
-    nearestStation: '',
-    workStation: '',
-    monthlyFee: '',
-    remarks: '',
-    commuteEntries: [],
-    expenseEntries: [],
-  });
+const ERROR_MESSAGES = {
+  COMMUTE_INCOMPLETE:
+    '交通費の各項目（日時・最寄り駅・訪問先駅・金額）を入力してください。',
+  EXPENSE_INCOMPLETE: '経費の日付、内容、金額を入力してください。',
+  RECEIPT_REQUIRED: '経費には領収書の添付が必須です。',
+  CERTIFICATE_REQUIRED: '資格受験の経費には合格通知書の添付が必須です。',
+  RECEIPT_ENCODE_FAILED: '領収書の変換に失敗しました。',
+  CERTIFICATE_ENCODE_FAILED: '合格通知書の変換に失敗しました。',
+  SUBMISSION_FAILED: 'エラーが発生しました: ',
+} as const;
 
+const INITIAL_FORM_DATA: FormData = {
+  name: '',
+  submissionMonth: getDefaultSubmissionMonth(),
+  workScheduleFiles: [],
+  workStartTime: '09:00',
+  workEndTime: '18:00',
+  officeFrequency: 'fullRemote',
+  hasCommuterPass: 'no',
+  nearestStation: '',
+  workStation: '',
+  monthlyFee: '',
+  remarks: '',
+  commuteEntries: [],
+  expenseEntries: [],
+};
+
+export default function MainPage() {
+  const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
   const [submitted, setSubmitted] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+
+  const updateFormField = <K extends keyof FormData>(
+    field: K,
+    value: FormData[K]
+  ) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
   const handleInputChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
+    updateFormField(name as keyof FormData, value);
   };
 
   const handleWorkScheduleFilesChange = (files: File[]) => {
-    setFormData(prev => ({
-      ...prev,
-      workScheduleFiles: [...prev.workScheduleFiles, ...files],
-    }));
+    updateFormField('workScheduleFiles', [
+      ...formData.workScheduleFiles,
+      ...files,
+    ]);
   };
 
   const removeWorkScheduleFile = (indexToRemove: number) => {
+    updateFormField(
+      'workScheduleFiles',
+      formData.workScheduleFiles.filter((_, index) => index !== indexToRemove)
+    );
+  };
+
+  const updateEntryArray = <T,>(
+    arrayKey: 'commuteEntries' | 'expenseEntries',
+    updater: (entries: T[]) => T[]
+  ) => {
     setFormData(prev => ({
       ...prev,
-      workScheduleFiles: prev.workScheduleFiles.filter(
-        (_, index) => index !== indexToRemove
-      ),
+      [arrayKey]: updater(prev[arrayKey] as T[]),
     }));
   };
 
@@ -68,38 +92,32 @@ export default function MainPage() {
     field: keyof CommuteEntry,
     value: string
   ) => {
-    setFormData(prev => {
-      const updated = prev.commuteEntries.map((entry, idx) => {
-        if (idx !== index) {
-          return entry;
-        }
-        return { ...entry, [field]: value };
-      });
-      return { ...prev, commuteEntries: updated };
-    });
+    updateEntryArray<CommuteEntry>('commuteEntries', entries =>
+      entries.map((entry, idx) =>
+        idx === index ? { ...entry, [field]: value } : entry
+      )
+    );
   };
 
   const addCommuteEntry = () => {
-    setFormData(prev => ({
-      ...prev,
-      commuteEntries: [...prev.commuteEntries, createEmptyCommuteEntry()],
-    }));
+    updateEntryArray<CommuteEntry>('commuteEntries', entries => [
+      ...entries,
+      createEmptyCommuteEntry(),
+    ]);
   };
 
   const removeCommuteEntry = (index: number) => {
-    setFormData(prev => {
-      const updated = prev.commuteEntries.filter((_, idx) => idx !== index);
-      return { ...prev, commuteEntries: updated };
-    });
+    updateEntryArray<CommuteEntry>('commuteEntries', entries =>
+      entries.filter((_, idx) => idx !== index)
+    );
   };
 
   const duplicateCommuteEntry = (index: number) => {
-    setFormData(prev => {
-      const target = prev.commuteEntries[index];
-      const cloned = { ...target, date: '' };
-      const updated = [...prev.commuteEntries];
+    updateEntryArray<CommuteEntry>('commuteEntries', entries => {
+      const cloned = { ...entries[index], date: '' };
+      const updated = [...entries];
       updated.splice(index + 1, 0, cloned);
-      return { ...prev, commuteEntries: updated };
+      return updated;
     });
   };
 
@@ -108,8 +126,8 @@ export default function MainPage() {
     field: keyof ExpenseEntry,
     value: string
   ) => {
-    setFormData(prev => {
-      const updated = prev.expenseEntries.map((entry, idx) => {
+    updateEntryArray<ExpenseEntry>('expenseEntries', entries =>
+      entries.map((entry, idx) => {
         if (idx !== index) return entry;
         const nextEntry = { ...entry, [field]: value };
         if (!nextEntry.description && !nextEntry.amount) {
@@ -120,115 +138,111 @@ export default function MainPage() {
           nextEntry.certificateFile = null;
         }
         return nextEntry;
-      });
-      return { ...prev, expenseEntries: updated };
-    });
+      })
+    );
   };
 
   const handleExpenseReceiptChange = (index: number, file: File | null) => {
-    setFormData(prev => {
-      const updated = prev.expenseEntries.map((entry, idx) =>
+    updateEntryArray<ExpenseEntry>('expenseEntries', entries =>
+      entries.map((entry, idx) =>
         idx === index ? { ...entry, receiptFile: file } : entry
-      );
-      return { ...prev, expenseEntries: updated };
-    });
+      )
+    );
   };
 
   const handleExpenseCertificateChange = (index: number, file: File | null) => {
-    setFormData(prev => {
-      const updated = prev.expenseEntries.map((entry, idx) =>
+    updateEntryArray<ExpenseEntry>('expenseEntries', entries =>
+      entries.map((entry, idx) =>
         idx === index ? { ...entry, certificateFile: file } : entry
-      );
-      return { ...prev, expenseEntries: updated };
-    });
+      )
+    );
   };
 
   const addExpenseEntry = () => {
-    setFormData(prev => ({
-      ...prev,
-      expenseEntries: [...prev.expenseEntries, createEmptyExpenseEntry()],
-    }));
+    updateEntryArray<ExpenseEntry>('expenseEntries', entries => [
+      ...entries,
+      createEmptyExpenseEntry(),
+    ]);
   };
 
   const removeExpenseEntry = (index: number) => {
-    setFormData(prev => {
-      const updated = prev.expenseEntries.filter((_, idx) => idx !== index);
-      return { ...prev, expenseEntries: updated };
-    });
+    updateEntryArray<ExpenseEntry>('expenseEntries', entries =>
+      entries.filter((_, idx) => idx !== index)
+    );
   };
 
   const collectCommuteEntries = () => {
-    const entries = [];
+    return formData.commuteEntries
+      .filter(
+        entry => entry.date || entry.origin || entry.destination || entry.amount
+      )
+      .map(entry => {
+        if (
+          !entry.date ||
+          !entry.origin ||
+          !entry.destination ||
+          !entry.amount
+        ) {
+          throw new Error(ERROR_MESSAGES.COMMUTE_INCOMPLETE);
+        }
+        return { ...entry, tripType: entry.tripType || 'oneWay' };
+      });
+  };
 
-    for (const entry of formData.commuteEntries) {
-      const hasValue =
-        entry.date || entry.origin || entry.destination || entry.amount;
-      if (!hasValue) {
-        continue;
-      }
+  const validateExpenseEntry = (entry: ExpenseEntry) => {
+    if (!entry.date || !entry.description || !entry.amount) {
+      throw new Error(ERROR_MESSAGES.EXPENSE_INCOMPLETE);
+    }
+    if (!entry.receiptFile) {
+      throw new Error(ERROR_MESSAGES.RECEIPT_REQUIRED);
+    }
+    const category = entry.category || 'other';
+    if (category === 'certification' && !entry.certificateFile) {
+      throw new Error(ERROR_MESSAGES.CERTIFICATE_REQUIRED);
+    }
+  };
 
-      const isComplete =
-        entry.date && entry.origin && entry.destination && entry.amount;
-      if (!isComplete) {
-        throw new Error(
-          '交通費の各項目（日時・最寄り駅・訪問先駅・金額）を入力してください。'
-        );
-      }
-
-      entries.push({ ...entry, tripType: entry.tripType || 'oneWay' });
+  const encodeExpenseFiles = async (entry: ExpenseEntry) => {
+    const receiptFileData = await encodeFileToBase64(entry.receiptFile!);
+    if (!receiptFileData) {
+      throw new Error(ERROR_MESSAGES.RECEIPT_ENCODE_FAILED);
     }
 
-    return entries;
+    const category = entry.category || 'other';
+    let certificateFileData = null;
+    if (category === 'certification' && entry.certificateFile) {
+      certificateFileData = await encodeFileToBase64(entry.certificateFile);
+      if (!certificateFileData) {
+        throw new Error(ERROR_MESSAGES.CERTIFICATE_ENCODE_FAILED);
+      }
+    }
+
+    return {
+      date: entry.date,
+      category,
+      description: entry.description,
+      amount: entry.amount,
+      receiptFile: receiptFileData,
+      certificateFile: certificateFileData,
+    };
   };
 
   const collectExpenseEntries = async () => {
-    const entries = [];
+    const filledEntries = formData.expenseEntries.filter(
+      entry => entry.date || entry.description || entry.amount
+    );
 
-    for (const entry of formData.expenseEntries) {
-      const hasValue = entry.date || entry.description || entry.amount;
-      if (!hasValue) {
-        continue;
-      }
+    filledEntries.forEach(validateExpenseEntry);
+    return Promise.all(filledEntries.map(encodeExpenseFiles));
+  };
 
-      if (!entry.date || !entry.description || !entry.amount) {
-        throw new Error('経費の日付、内容、金額を入力してください。');
-      }
-
-      if (!entry.receiptFile) {
-        throw new Error('経費には領収書の添付が必須です。');
-      }
-
-      const category = entry.category || 'other';
-
-      if (category === 'certification' && !entry.certificateFile) {
-        throw new Error('資格受験の経費には合格通知書の添付が必須です。');
-      }
-
-      const receiptFileData = await encodeFileToBase64(entry.receiptFile);
-
-      if (!receiptFileData) {
-        throw new Error('領収書の変換に失敗しました。');
-      }
-
-      let certificateFileData = null;
-      if (category === 'certification') {
-        certificateFileData = await encodeFileToBase64(entry.certificateFile);
-        if (!certificateFileData) {
-          throw new Error('合格通知書の変換に失敗しました。');
-        }
-      }
-
-      entries.push({
-        date: entry.date,
-        category,
-        description: entry.description,
-        amount: entry.amount,
-        receiptFile: receiptFileData,
-        certificateFile: certificateFileData,
-      });
-    }
-
-    return entries;
+  const resetForm = () => {
+    formRef.current?.reset();
+    setFormData({
+      ...INITIAL_FORM_DATA,
+      submissionMonth: getDefaultSubmissionMonth(),
+    });
+    setSubmitted(false);
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -265,32 +279,13 @@ export default function MainPage() {
       try {
         const result = await submitExpense(expenseData);
         alert(result.message);
-        // フォームをリセット
-        if (formRef.current) {
-          formRef.current.reset();
-        }
-        setFormData({
-          name: '',
-          submissionMonth: getDefaultSubmissionMonth(),
-          workScheduleFiles: [],
-          workStartTime: '09:00',
-          workEndTime: '18:00',
-          officeFrequency: 'fullRemote',
-          hasCommuterPass: 'no',
-          nearestStation: '',
-          workStation: '',
-          monthlyFee: '',
-          remarks: '',
-          commuteEntries: [],
-          expenseEntries: [],
-        });
-        setSubmitted(false);
+        resetForm();
       } catch (error: any) {
-        alert('エラーが発生しました: ' + error.message);
+        alert(ERROR_MESSAGES.SUBMISSION_FAILED + error.message);
         setSubmitted(false);
       }
     } catch (error: any) {
-      alert('エラーが発生しました: ' + error.message);
+      alert(ERROR_MESSAGES.SUBMISSION_FAILED + error.message);
       setSubmitted(false);
     }
   };
