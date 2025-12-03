@@ -10,7 +10,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
   return (
-    <header className="py-4 mb-8 border-b border-gray-200 bg-white relative">
+    <header className="py-4 mb-8 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 relative">
       <Container>
         <div className="absolute top-2 right-6">
           <Button
@@ -22,11 +22,11 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
           </Button>
         </div>
         <div className="mb-2">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-0">
+          <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-0">
             【セルプロ】インシデント管理システム
           </h1>
         </div>
-        <p className="text-gray-600 mb-0">
+        <p className="text-gray-600 dark:text-gray-400 mb-0">
           トラブル情報を詳細に記録し、適切な対応を行うための管理システムです
         </p>
       </Container>

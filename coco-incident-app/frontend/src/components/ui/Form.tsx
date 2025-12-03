@@ -21,7 +21,7 @@ export const FormLabel: React.FC<FormLabelProps> = ({
   return (
     <label htmlFor={htmlFor} className="block mb-2">
       <span
-        className={`flex items-center font-medium text-gray-700 ${required ? "after:content-['_*'] after:text-red-500" : ''}`}
+        className={`flex items-center font-medium text-gray-700 dark:text-gray-300 ${required ? "after:content-['_*'] after:text-red-500" : ''}`}
       >
         {icon && <span className="mr-1">{icon}</span>}
         {children}
@@ -39,7 +39,7 @@ export const FormInput: React.FC<FormInputProps> = ({
 }) => {
   return (
     <input
-      className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${className}`}
+      className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent ${className}`}
       {...props}
     />
   );
@@ -54,7 +54,7 @@ export const FormTextarea: React.FC<FormTextareaProps> = ({
 }) => {
   return (
     <textarea
-      className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y ${className}`}
+      className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent resize-y ${className}`}
       {...props}
     />
   );
@@ -72,7 +72,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
 }) => {
   return (
     <select
-      className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white ${className}`}
+      className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent ${className}`}
       {...props}
     >
       {children}
@@ -86,7 +86,9 @@ interface FormHelperTextProps {
 }
 
 export const FormHelperText: React.FC<FormHelperTextProps> = ({ children }) => {
-  return <p className="mt-1 text-sm text-gray-600">{children}</p>;
+  return (
+    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{children}</p>
+  );
 };
 
 // FormGroup

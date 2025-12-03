@@ -7,7 +7,7 @@ interface CardProps extends HTMLAttributes<HTMLElement> {
 
 const Card: React.FC<CardProps> = ({ children, className = '', ...props }) => {
   const baseClasses =
-    'p-6 border border-gray-200 rounded-lg bg-white shadow-sm';
+    'p-6 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm';
 
   return (
     <article className={`${baseClasses} ${className}`} {...props}>

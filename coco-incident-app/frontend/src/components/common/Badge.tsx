@@ -15,11 +15,11 @@ interface BadgeProps {
 }
 
 const variantClasses: Record<BadgeVariant, string> = {
-  primary: 'bg-blue-600 text-white',
-  warning: 'bg-orange-500 text-white',
-  secondary: 'bg-gray-600 text-white',
-  success: 'bg-green-600 text-white',
-  contrast: 'bg-gray-800 text-white',
+  primary: 'bg-blue-600 text-white dark:bg-blue-500',
+  warning: 'bg-orange-500 text-white dark:bg-orange-400',
+  secondary: 'bg-gray-600 text-white dark:bg-gray-500',
+  success: 'bg-green-600 text-white dark:bg-green-500',
+  contrast: 'bg-gray-800 text-white dark:bg-gray-300 dark:text-gray-900',
 };
 
 const Badge: React.FC<BadgeProps> = ({

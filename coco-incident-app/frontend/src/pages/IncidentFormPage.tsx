@@ -223,7 +223,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                 href={selectedIncident.incidentDetailUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center text-gray-800 hover:text-gray-900 font-medium"
+                className="inline-flex items-center text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-gray-100 font-medium"
               >
                 <BoxArrowUpRightIcon className="mr-1" />
                 詳細スプレッドシートを開く
@@ -402,7 +402,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
             </FormHelperText>
           </FormGroup>
 
-          <hr className="my-6 border-gray-200" />
+          <hr className="my-6 border-gray-200 dark:border-gray-700" />
 
           {/* 既存の添付ファイル（編集モード時） */}
           {formData.registeredDate &&
@@ -463,14 +463,18 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
           {/* 選択されたファイルリスト */}
           {formData.fileDataList && formData.fileDataList.length > 0 && (
             <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">選択されたファイル:</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                選択されたファイル:
+              </p>
               <ul className="space-y-2">
                 {formData.fileDataList.map((file, index) => (
                   <li
                     key={index}
-                    className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                    className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-2 rounded"
                   >
-                    <span className="text-sm text-gray-700">{file.name}</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                      {file.name}
+                    </span>
                     <Button
                       type="button"
                       variant="outline"
@@ -485,7 +489,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
             </div>
           )}
 
-          <hr className="my-6 border-gray-200" />
+          <hr className="my-6 border-gray-200 dark:border-gray-700" />
 
           {/* 送信ボタン */}
           <Button type="submit" disabled={submitting} className="w-full">

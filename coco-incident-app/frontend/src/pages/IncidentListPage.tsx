@@ -55,7 +55,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
     <div className="py-4">
       {/* ツールバー */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold text-gray-900 flex items-center mb-0">
+        <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 flex items-center mb-0">
           <ListUlIcon className="mr-2" />
           インシデント一覧
         </h2>
@@ -79,7 +79,9 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
       {loading && (
         <Card className="text-center py-12">
           <div className="animate-pulse">
-            <p className="text-gray-600">データを読み込んでいます...</p>
+            <p className="text-gray-600 dark:text-gray-400">
+              データを読み込んでいます...
+            </p>
           </div>
         </Card>
       )}
@@ -106,14 +108,14 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                 <Card
                   key={incident.registeredDate}
                   onClick={() => editIncident(incident)}
-                  className="h-full cursor-pointer transition-all duration-200 hover:border-blue-600 hover:shadow-lg hover:-translate-y-0.5 !p-4"
+                  className="h-full cursor-pointer transition-all duration-200 hover:border-blue-600 dark:hover:border-blue-400 hover:shadow-lg hover:-translate-y-0.5 !p-4"
                 >
                   <div className="flex justify-between items-start mb-3">
-                    <h5 className="text-lg font-semibold text-gray-900 mb-0">
+                    <h5 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-0">
                       {incident.caseName}
                     </h5>
                     {incident.updateDate && (
-                      <span className="text-xs text-gray-500 whitespace-nowrap ml-4 flex items-center">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-4 flex items-center">
                         <ClockFillIcon className="mr-1 w-3 h-3" />
                         {incident.updateDate}
                       </span>
@@ -143,7 +145,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                       {incident.status}
                     </Badge>
                   </div>
-                  <p className="line-clamp-2 text-sm text-gray-700 mb-0">
+                  <p className="line-clamp-2 text-sm text-gray-700 dark:text-gray-300 mb-0">
                     {incident.summary}
                   </p>
                 </Card>
