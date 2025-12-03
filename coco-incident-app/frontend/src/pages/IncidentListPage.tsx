@@ -106,7 +106,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                 <Card
                   key={incident.registeredDate}
                   onClick={() => editIncident(incident)}
-                  className="h-full cursor-pointer transition-all duration-200 hover:border-blue-600 dark:hover:border-blue-400 hover:shadow-lg hover:-translate-y-0.5 !p-4"
+                  className="h-full !p-4"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <h5 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-0">
