@@ -11,6 +11,14 @@ import {
   isAdmin as _isAdmin,
 } from './utils';
 import { sendSlack as _sendSlack } from './slack/sendSlack';
+import {
+  getAllPermissions as _getAllPermissions,
+  addUser as _addUser,
+  updateUser as _updateUser,
+  removeUser as _removeUser,
+  getUserPermission as _getUserPermission,
+  isUserAdmin as _isUserAdmin,
+} from './permissions/permissionManager';
 
 /**
  * WebアプリのGETリクエスト処理
@@ -39,4 +47,10 @@ if (typeof window !== 'undefined') {
   window.isAdmin = _isAdmin;
   window.uploadFileToDrive = _uploadFileToDrive;
   window.sendSlack = _sendSlack;
+  window.getAllPermissions = _getAllPermissions;
+  window.addUser = _addUser;
+  window.updateUser = _updateUser;
+  window.removeUser = _removeUser;
+  window.getUserPermission = _getUserPermission;
+  window.isUserAdmin = _isUserAdmin;
 }
