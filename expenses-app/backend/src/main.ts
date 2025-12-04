@@ -13,10 +13,15 @@
  * ========================================
  */
 
-type TripType = "oneWay" | "roundTrip";
-type ExpenseCategory = "ebook" | "udemy" | "seminar" | "certification" | "other";
-type OfficeFrequency = "fullRemote" | "weekly1to2" | "weekly3to5";
-type FolderType = "workSchedule" | "expenseReport" | "receipt";
+type TripType = 'oneWay' | 'roundTrip';
+type ExpenseCategory =
+  | 'ebook'
+  | 'udemy'
+  | 'seminar'
+  | 'certification'
+  | 'other';
+type OfficeFrequency = 'fullRemote' | 'weekly1to2' | 'weekly3to5';
+type FolderType = 'workSchedule' | 'expenseReport' | 'receipt';
 
 /**
  * ファイルデータ
@@ -109,12 +114,12 @@ function getScriptProperty(propertyName: string, errorMessage: string): string {
  */
 function getFolderPropertyKey(folderType: FolderType): string {
   switch (folderType) {
-    case "workSchedule":
-      return "WORK_SCHEDULE_FOLDER_ID";
-    case "expenseReport":
-      return "EXPENSE_REPORT_FOLDER_ID";
-    case "receipt":
-      return "RECEIPT_FOLDER_ID";
+    case 'workSchedule':
+      return 'WORK_SCHEDULE_FOLDER_ID';
+    case 'expenseReport':
+      return 'EXPENSE_REPORT_FOLDER_ID';
+    case 'receipt':
+      return 'RECEIPT_FOLDER_ID';
   }
 }
 
@@ -123,12 +128,12 @@ function getFolderPropertyKey(folderType: FolderType): string {
  */
 function getFolderDescription(folderType: FolderType): string {
   switch (folderType) {
-    case "workSchedule":
-      return "作業表フォルダ";
-    case "expenseReport":
-      return "経費精算書フォルダ";
-    case "receipt":
-      return "領収書フォルダ";
+    case 'workSchedule':
+      return '作業表フォルダ';
+    case 'expenseReport':
+      return '経費精算書フォルダ';
+    case 'receipt':
+      return '領収書フォルダ';
   }
 }
 
@@ -147,37 +152,43 @@ function uploadFileToDrive(fileData: FileData, folderType: FolderType): string {
   try {
     const folder = DriveApp.getFolderById(folderId);
     const decodedData = Utilities.base64Decode(fileData.data);
-    const blob = Utilities.newBlob(decodedData, fileData.mimeType, fileData.name);
+    const blob = Utilities.newBlob(
+      decodedData,
+      fileData.mimeType,
+      fileData.name
+    );
     const file = folder.createFile(blob);
 
     return file.getUrl();
   } catch (error) {
-    throw new Error(`${folderDescription}へのアップロードに失敗しました: ${(error as Error).message}`);
+    throw new Error(
+      `${folderDescription}へのアップロードに失敗しました: ${(error as Error).message}`
+    );
   }
 }
 
-const EXPENSE_SHEET_NAME = "経費精算";
+const EXPENSE_SHEET_NAME = '経費精算';
 const EXPENSE_SHEET_HEADERS = [
-  "提出日時",
-  "提出者",
-  "氏名",
-  "提出月",
-  "勤務表",
-  "経費精算書",
-  "領収書",
-  "開始時間",
-  "終了時間",
-  "出社頻度",
-  "定期券購入",
-  "定期区間",
-  "定期券金額",
-  "備考",
+  '提出日時',
+  '提出者',
+  '氏名',
+  '提出月',
+  '勤務表',
+  '経費精算書',
+  '領収書',
+  '開始時間',
+  '終了時間',
+  '出社頻度',
+  '定期券購入',
+  '定期区間',
+  '定期券金額',
+  '備考',
 ];
-const USER_SPREADSHEET_NAME_PREFIX = "経費精算書_";
-const MONTHLY_SHEET_NAME = "経費精算書";
+const USER_SPREADSHEET_NAME_PREFIX = '経費精算書_';
+const MONTHLY_SHEET_NAME = '経費精算書';
 
-const COLOR_PRIMARY = "#0070C0";
-const COLOR_WHITE = "white";
+const COLOR_PRIMARY = '#0070C0';
+const COLOR_WHITE = 'white';
 const BORDER_SOLID = SpreadsheetApp.BorderStyle.SOLID;
 const BORDER_MEDIUM = SpreadsheetApp.BorderStyle.SOLID_MEDIUM;
 
@@ -195,7 +206,7 @@ function getHeaderColumnPositions(
   const headerRow = sheet.getRange(1, 1, 1, lastColumn).getValues()[0];
   const positions = new Map<string, number>();
 
-  EXPENSE_SHEET_HEADERS.forEach((header) => {
+  EXPENSE_SHEET_HEADERS.forEach(header => {
     const index = headerRow.indexOf(header);
     if (index !== -1) {
       positions.set(header, index + 1); // 1-indexed
@@ -214,7 +225,7 @@ function addMissingHeaders(
 ): Map<string, number> {
   let nextColumn = sheet.getLastColumn() + 1;
 
-  EXPENSE_SHEET_HEADERS.forEach((header) => {
+  EXPENSE_SHEET_HEADERS.forEach(header => {
     if (!positions.has(header)) {
       // ヘッダーを右端に追加
       sheet.getRange(1, nextColumn).setValue(header);
@@ -238,15 +249,15 @@ function styleHeaderRow(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
   const headerRange = sheet.getRange(1, 1, 1, lastColumn);
 
   // Googleフォーム風の深い紫色（スクリーンショット参考）
-  const headerColor = "#673AB7";
+  const headerColor = '#673AB7';
 
   headerRange
     .setBackground(headerColor)
-    .setFontColor("white")
-    .setFontWeight("bold")
+    .setFontColor('white')
+    .setFontWeight('bold')
     .setFontSize(11)
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle')
     .setBorder(
       true,
       true,
@@ -254,7 +265,7 @@ function styleHeaderRow(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
       true,
       true,
       true,
-      "black",
+      'black',
       SpreadsheetApp.BorderStyle.SOLID
     );
 
@@ -363,13 +374,13 @@ function setMultipleHyperlinks(
   }
 
   // 1. 最初に全文を構築し、各リンクの位置を記録
-  let fullText = "";
+  let fullText = '';
   const linkPositions: Array<{ start: number; end: number; url: string }> = [];
   let currentIndex = 0;
 
   links.forEach((link, index) => {
     if (index > 0) {
-      fullText += ", ";
+      fullText += ', ';
       currentIndex += 2;
     }
 
@@ -388,13 +399,12 @@ function setMultipleHyperlinks(
   let richTextBuilder = SpreadsheetApp.newRichTextValue().setText(fullText);
 
   // 3. その後、各リンクにsetLinkUrlを呼び出す
-  linkPositions.forEach((pos) => {
+  linkPositions.forEach(pos => {
     richTextBuilder = richTextBuilder.setLinkUrl(pos.start, pos.end, pos.url);
   });
 
   sheet.getRange(row, column).setRichTextValue(richTextBuilder.build());
 }
-
 
 /**
  * 文字列の金額から数値のみ抽出して数値化する
@@ -404,11 +414,10 @@ function toNumberAmount(value?: string): number {
     return 0;
   }
 
-  const normalized = value.replace(/[^\d.-]/g, "");
+  const normalized = value.replace(/[^\d.-]/g, '');
   const parsed = Number(normalized);
   return isNaN(parsed) ? 0 : parsed;
 }
-
 
 /**
  * 経費の添付ファイルをアップロードしダウンロードURLを付与する
@@ -418,15 +427,15 @@ function uploadExpenseReceipts(entries: ExpenseEntry[]): ExpenseEntryRecord[] {
     return [];
   }
 
-  return entries.map((entry) => {
-    const category = entry.category || "other";
+  return entries.map(entry => {
+    const category = entry.category || 'other';
     const receiptUrl = entry.receiptFile
-      ? uploadFileToDrive(entry.receiptFile, "receipt")
-      : "";
+      ? uploadFileToDrive(entry.receiptFile, 'receipt')
+      : '';
     const certificateUrl =
-      category === "certification" && entry.certificateFile
-        ? uploadFileToDrive(entry.certificateFile, "receipt")
-        : "";
+      category === 'certification' && entry.certificateFile
+        ? uploadFileToDrive(entry.certificateFile, 'receipt')
+        : '';
 
     return {
       date: entry.date,
@@ -439,15 +448,11 @@ function uploadExpenseReceipts(entries: ExpenseEntry[]): ExpenseEntryRecord[] {
   });
 }
 
-
 /**
  * 定期区間の入力値を「最寄り駅-勤務先の駅」の形式に整形する
  */
-function formatCommuterRoute(
-  origin: string,
-  destination: string
-): string {
-  return [origin, destination].filter(Boolean).join("-");
+function formatCommuterRoute(origin: string, destination: string): string {
+  return [origin, destination].filter(Boolean).join('-');
 }
 
 /**
@@ -455,12 +460,12 @@ function formatCommuterRoute(
  */
 function formatOfficeFrequency(frequency: OfficeFrequency): string {
   switch (frequency) {
-    case "fullRemote":
-      return "フルリモート";
-    case "weekly1to2":
-      return "週1~2出社";
-    case "weekly3to5":
-      return "週3~5出社";
+    case 'fullRemote':
+      return 'フルリモート';
+    case 'weekly1to2':
+      return '週1~2出社';
+    case 'weekly3to5':
+      return '週3~5出社';
     default:
       return frequency;
   }
@@ -538,8 +543,9 @@ function addSpreadsheetToFolder(
     // 新しいフォルダに追加
     targetFolder.addFile(file);
 
-    Logger.log(`✔ ${folderDescription}への移動に成功: ${spreadsheet.getName()}`);
-
+    Logger.log(
+      `✔ ${folderDescription}への移動に成功: ${spreadsheet.getName()}`
+    );
   } catch (error) {
     const message = `${folderDescription}への移動に失敗しました: ${(error as Error).message}`;
     Logger.log(message);
@@ -561,8 +567,8 @@ function getOrCreateMonthlySpreadsheet(
   // 経費精算書フォルダ内で既存のスプレッドシートを検索
   try {
     const folderId = getScriptProperty(
-      "EXPENSE_REPORT_FOLDER_ID",
-      "経費精算書フォルダのIDが設定されていません。"
+      'EXPENSE_REPORT_FOLDER_ID',
+      '経費精算書フォルダのIDが設定されていません。'
     );
     const folder = DriveApp.getFolderById(folderId);
     const files = folder.getFilesByName(spreadsheetName);
@@ -593,7 +599,7 @@ function getOrCreateMonthlySpreadsheet(
   Utilities.sleep(2000);
 
   // 経費精算書フォルダに追加
-  addSpreadsheetToFolder(monthlySpreadsheet, "expenseReport");
+  addSpreadsheetToFolder(monthlySpreadsheet, 'expenseReport');
 
   return monthlySpreadsheet;
 }
@@ -606,80 +612,78 @@ function initializeMonthlyExpenseSheet(
   userName: string,
   date: Date
 ): void {
-
   // ========= 初期化 =========
   sheet.clear();
 
   // ========= タイトル =========
-  const titleRange = sheet.getRange("A2:D3");
+  const titleRange = sheet.getRange('A2:D3');
   titleRange
     .merge()
-    .setValue("経費精算書")
+    .setValue('経費精算書')
     .setFontSize(14)
-    .setFontWeight("bold")
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
+    .setFontWeight('bold')
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle')
     .setBackground(COLOR_PRIMARY)
     .setFontColor(COLOR_WHITE)
     .setBorder(true, true, true, true, false, false, null, BORDER_MEDIUM);
 
   // ========= 申請日 =========
-  const b5 = sheet.getRange("B5");
-  b5.setValue("申請日")
+  const b5 = sheet.getRange('B5');
+  b5.setValue('申請日')
     .setFontSize(12)
-    .setFontWeight("bold")
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
+    .setFontWeight('bold')
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle')
     .setBackground(COLOR_PRIMARY)
     .setFontColor(COLOR_WHITE)
     .setBorder(true, true, true, true, false, false, null, BORDER_MEDIUM);
 
-  const c5 = sheet.getRange("C5");
+  const c5 = sheet.getRange('C5');
   c5.setValue(getLastDayOfMonth(date))
-    .setNumberFormat("yyyy年mm月dd日")
+    .setNumberFormat('yyyy年mm月dd日')
     .setFontSize(14)
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle')
     .setBorder(true, true, true, true, false, false, null, BORDER_MEDIUM);
 
   // ========= 氏名 =========
-  const b6 = sheet.getRange("B6");
-  b6.setValue("氏名")
+  const b6 = sheet.getRange('B6');
+  b6.setValue('氏名')
     .setFontSize(12)
-    .setFontWeight("bold")
+    .setFontWeight('bold')
     .setBackground(COLOR_PRIMARY)
     .setFontColor(COLOR_WHITE)
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle')
     .setBorder(true, true, true, true, false, false, null, BORDER_MEDIUM);
 
-  const c6 = sheet.getRange("C6");
+  const c6 = sheet.getRange('C6');
   c6.setValue(userName)
     .setFontSize(14)
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle')
     .setBorder(true, true, true, true, false, false, null, BORDER_MEDIUM);
 
   // ========= 明細ヘッダー =========
-  const headerRange = sheet.getRange("A9:D9");
+  const headerRange = sheet.getRange('A9:D9');
   headerRange
-    .setValues([["番号", "日付", "内容", "金額"]])
-    .setFontWeight("bold")
+    .setValues([['番号', '日付', '内容', '金額']])
+    .setFontWeight('bold')
     .setFontSize(12)
     .setBackground(COLOR_PRIMARY)
     .setFontColor(COLOR_WHITE)
-    .setHorizontalAlignment("center")
-    .setVerticalAlignment("middle")
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle')
     .setBorder(true, true, true, true, true, true, null, BORDER_SOLID)
     .setBorder(true, null, null, true, null, null, null, BORDER_MEDIUM);
 
   // ========= 列幅調整 =========
-  sheet.setColumnWidth(1, 60);   // A列: 番号
-  sheet.setColumnWidth(2, 100);  // B列: 日付
-  sheet.setColumnWidth(3, 300);  // C列: 内容
-  sheet.setColumnWidth(4, 100);  // D列: 金額
+  sheet.setColumnWidth(1, 60); // A列: 番号
+  sheet.setColumnWidth(2, 100); // B列: 日付
+  sheet.setColumnWidth(3, 300); // C列: 内容
+  sheet.setColumnWidth(4, 100); // D列: 金額
 }
-
 
 /**
  * 交通費エントリーの表示用データ行を作成する
@@ -694,19 +698,20 @@ interface ExpenseRowData {
  * 交通費エントリーを表示用データに変換する
  */
 function convertCommuteToRowData(entry: CommuteEntry): ExpenseRowData {
-  const tripTypeLabel = entry.tripType === "roundTrip" ? "往復" : "片道";
+  const tripTypeLabel = entry.tripType === 'roundTrip' ? '往復' : '片道';
   const description = `${entry.origin}-${entry.destination} ${tripTypeLabel}`;
 
   // 片道の金額
   const oneWayAmount = toNumberAmount(entry.amount);
 
   // 往復の場合は2倍
-  const amount = entry.tripType === "roundTrip" ? oneWayAmount * 2 : oneWayAmount;
+  const amount =
+    entry.tripType === 'roundTrip' ? oneWayAmount * 2 : oneWayAmount;
 
   return {
     date: entry.date,
     description,
-    amount
+    amount,
   };
 }
 
@@ -717,7 +722,7 @@ function convertExpenseToRowData(entry: ExpenseEntryRecord): ExpenseRowData {
   return {
     date: entry.date,
     description: entry.description,
-    amount: toNumberAmount(entry.amount)
+    amount: toNumberAmount(entry.amount),
   };
 }
 
@@ -745,7 +750,8 @@ function addExpenseDataToMonthlySheet(
 
   // データを追加
   allRows.forEach((rowData, index) => {
-    const rowIndex = startRow + index + (lastRow >= startRow ? lastRow - startRow + 1 : 0);
+    const rowIndex =
+      startRow + index + (lastRow >= startRow ? lastRow - startRow + 1 : 0);
 
     // A列: 番号
     sheet.getRange(rowIndex, 1).setValue(currentRowNumber);
@@ -753,7 +759,7 @@ function addExpenseDataToMonthlySheet(
     // B列: 日付
     if (rowData.date) {
       sheet.getRange(rowIndex, 2).setValue(rowData.date);
-      sheet.getRange(rowIndex, 2).setNumberFormat("yyyy/mm/dd");
+      sheet.getRange(rowIndex, 2).setNumberFormat('yyyy/mm/dd');
     }
 
     // C列: 内容
@@ -761,29 +767,41 @@ function addExpenseDataToMonthlySheet(
 
     // D列: 金額
     sheet.getRange(rowIndex, 4).setValue(rowData.amount);
-    sheet.getRange(rowIndex, 4).setNumberFormat("¥#,##0");
+    sheet.getRange(rowIndex, 4).setNumberFormat('¥#,##0');
 
     currentRowNumber++;
   });
 
   // 追加したデータ範囲に罫線を引く
-  const dataStartRow = startRow + (lastRow >= startRow ? lastRow - startRow + 1 : 0);
+  const dataStartRow =
+    startRow + (lastRow >= startRow ? lastRow - startRow + 1 : 0);
   const dataRange = sheet.getRange(dataStartRow, 1, allRows.length, 4);
   const centerRange = sheet.getRange(dataStartRow, 1, allRows.length, 1);
-  centerRange.setHorizontalAlignment("center");
+  centerRange.setHorizontalAlignment('center');
   // データ行全体
-  dataRange.setBorder(
-    false, true, true, true, true, true,
-    null,
-    SpreadsheetApp.BorderStyle.SOLID
-  )
-  .setFontSize(11)
-  .setVerticalAlignment("middle");
+  dataRange
+    .setBorder(
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      null,
+      SpreadsheetApp.BorderStyle.SOLID
+    )
+    .setFontSize(11)
+    .setVerticalAlignment('middle');
 
   // 右側（D列）だけ太線にする
   const rightEdgeRange = sheet.getRange(dataStartRow, 4, allRows.length, 1);
   rightEdgeRange.setBorder(
-    null, null, null, true, null, null,
+    null,
+    null,
+    null,
+    true,
+    null,
+    null,
     null,
     SpreadsheetApp.BorderStyle.SOLID_MEDIUM
   );
@@ -795,25 +813,25 @@ function addExpenseDataToMonthlySheet(
   // A:C列に「合計金額」を結合して表示
   const totalLabelRange = sheet.getRange(totalRow, 1, 1, 3);
   totalLabelRange.merge();
-  totalLabelRange.setFontWeight("bold");
+  totalLabelRange.setFontWeight('bold');
   totalLabelRange.setFontSize(12);
-  totalLabelRange.setValue("合計金額");
-  totalLabelRange.setHorizontalAlignment("center");
-  totalLabelRange.setVerticalAlignment("middle");
-  totalLabelRange.setBackground("#0070C0");
-  totalLabelRange.setFontColor("white");
+  totalLabelRange.setValue('合計金額');
+  totalLabelRange.setHorizontalAlignment('center');
+  totalLabelRange.setVerticalAlignment('middle');
+  totalLabelRange.setBackground('#0070C0');
+  totalLabelRange.setFontColor('white');
 
   // D列に合計金額を表示
   sheet.getRange(totalRow, 4).setValue(totalAmount);
-  sheet.getRange(totalRow, 4).setNumberFormat("¥#,##0");
-  sheet.getRange(totalRow, 4).setFontWeight("bold");
+  sheet.getRange(totalRow, 4).setNumberFormat('¥#,##0');
+  sheet.getRange(totalRow, 4).setFontWeight('bold');
   sheet.getRange(totalRow, 4).setFontSize(14);
 
   // 合計金額行に罫線を引く
   const totalRowRange = sheet.getRange(totalRow, 1, 1, 4);
   totalRowRange
-  .setBorder(true, true, true, true, true, true, null, BORDER_SOLID)
-  .setBorder(null, true, true, true, null, null, null, BORDER_MEDIUM);
+    .setBorder(true, true, true, true, true, true, null, BORDER_SOLID)
+    .setBorder(null, true, true, true, null, null, null, BORDER_MEDIUM);
 }
 
 /**
@@ -822,8 +840,8 @@ function addExpenseDataToMonthlySheet(
 function submitExpense(expenseData: ExpenseData): ExpenseResult {
   try {
     const spreadsheetId = getScriptProperty(
-      "SPREADSHEET_ID",
-      "スプレッドシートIDが設定されていません。"
+      'SPREADSHEET_ID',
+      'スプレッドシートIDが設定されていません。'
     );
     const ss = SpreadsheetApp.openById(spreadsheetId);
     const userEmail = Session.getEffectiveUser().getEmail();
@@ -834,9 +852,12 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
     // ファイルアップロード処理（作業表フォルダへ）
     const workScheduleUrls: string[] = [];
 
-    if (expenseData.workScheduleFiles && expenseData.workScheduleFiles.length > 0) {
-      expenseData.workScheduleFiles.forEach((file) => {
-        const url = uploadFileToDrive(file, "workSchedule");
+    if (
+      expenseData.workScheduleFiles &&
+      expenseData.workScheduleFiles.length > 0
+    ) {
+      expenseData.workScheduleFiles.forEach(file => {
+        const url = uploadFileToDrive(file, 'workSchedule');
         workScheduleUrls.push(url);
       });
     }
@@ -858,14 +879,22 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
     const monthlySheet = monthlySpreadsheet.getSheetByName(MONTHLY_SHEET_NAME);
 
     if (!monthlySheet) {
-      throw new Error("月次経費精算書シートの取得に失敗しました。");
+      throw new Error('月次経費精算書シートの取得に失敗しました。');
     }
 
     // 既存のシートをクリアして新規フォーマットで再初期化
-    initializeMonthlyExpenseSheet(monthlySheet, expenseData.name, submittedDate);
+    initializeMonthlyExpenseSheet(
+      monthlySheet,
+      expenseData.name,
+      submittedDate
+    );
 
     // 月次シートに交通費・経費データを追加
-    addExpenseDataToMonthlySheet(monthlySheet, commuteEntries, expenseEntryRecords);
+    addExpenseDataToMonthlySheet(
+      monthlySheet,
+      commuteEntries,
+      expenseEntryRecords
+    );
 
     // 月次スプレッドシートのURLを取得
     const monthlySpreadsheetUrl = monthlySpreadsheet.getUrl();
@@ -890,58 +919,70 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
     // 提出がない場合のチェック
     const hasWorkSchedule = workScheduleUrls.length > 0;
     const hasReceipts = receiptLinks.length > 0;
-    const hasExpenseData = commuteEntries.length > 0 || expenseEntryRecords.length > 0;
+    const hasExpenseData =
+      commuteEntries.length > 0 || expenseEntryRecords.length > 0;
 
     // ヘッダー位置を検出
     const headerPositions = getHeaderColumnPositions(expenseSheet);
 
     // データマップを作成
     const dataMap = new Map<string, string | number | Date>();
-    dataMap.set("提出日時", submittedDate);
-    dataMap.set("提出者", userEmail);
-    dataMap.set("氏名", expenseData.name);
-    dataMap.set("提出月", expenseData.submissionMonth);
-    dataMap.set("勤務表", hasWorkSchedule ? "勤務表" : "提出なし");
-    dataMap.set("経費精算書", hasExpenseData ? "経費精算書" : "提出なし");
-    dataMap.set("領収書", hasReceipts ? "領収書" : "提出なし");
-    dataMap.set("開始時間", expenseData.workStartTime);
-    dataMap.set("終了時間", expenseData.workEndTime);
-    dataMap.set("出社頻度", formatOfficeFrequency(expenseData.officeFrequency));
-    dataMap.set("定期券購入", expenseData.hasCommuterPass === "yes" ? "有り" : "無し");
-    dataMap.set("定期区間", commuterRoute);
-    dataMap.set("定期券金額", expenseData.monthlyFee);
-    dataMap.set("備考", expenseData.remarks);
+    dataMap.set('提出日時', submittedDate);
+    dataMap.set('提出者', userEmail);
+    dataMap.set('氏名', expenseData.name);
+    dataMap.set('提出月', expenseData.submissionMonth);
+    dataMap.set('勤務表', hasWorkSchedule ? '勤務表' : '提出なし');
+    dataMap.set('経費精算書', hasExpenseData ? '経費精算書' : '提出なし');
+    dataMap.set('領収書', hasReceipts ? '領収書' : '提出なし');
+    dataMap.set('開始時間', expenseData.workStartTime);
+    dataMap.set('終了時間', expenseData.workEndTime);
+    dataMap.set('出社頻度', formatOfficeFrequency(expenseData.officeFrequency));
+    dataMap.set(
+      '定期券購入',
+      expenseData.hasCommuterPass === 'yes' ? '有り' : '無し'
+    );
+    dataMap.set('定期区間', commuterRoute);
+    dataMap.set('定期券金額', expenseData.monthlyFee);
+    dataMap.set('備考', expenseData.remarks);
 
     // 新規行を追加（スマート検出した列位置に基づいて）
-    const lastRow = appendRowWithHeaderPositions(expenseSheet, headerPositions, dataMap);
+    const lastRow = appendRowWithHeaderPositions(
+      expenseSheet,
+      headerPositions,
+      dataMap
+    );
 
     // 提出日時列に日時形式を設定
-    const submittedDateColumn = headerPositions.get("提出日時");
+    const submittedDateColumn = headerPositions.get('提出日時');
     if (submittedDateColumn) {
-      expenseSheet.getRange(lastRow, submittedDateColumn).setNumberFormat("yyyy/mm/dd hh:mm:ss");
+      expenseSheet
+        .getRange(lastRow, submittedDateColumn)
+        .setNumberFormat('yyyy/mm/dd hh:mm:ss');
     }
 
     // 勤務表列に複数のハイパーリンクを設定（提出がある場合のみ）
     if (hasWorkSchedule) {
-      const column = headerPositions.get("勤務表");
+      const column = headerPositions.get('勤務表');
       if (column) {
-        const workScheduleLinks = expenseData.workScheduleFiles.map((file, index) => ({
-          text: file.name || `勤務表${index + 1}`,
-          url: workScheduleUrls[index]
-        }));
+        const workScheduleLinks = expenseData.workScheduleFiles.map(
+          (file, index) => ({
+            text: file.name || `勤務表${index + 1}`,
+            url: workScheduleUrls[index],
+          })
+        );
         setMultipleHyperlinks(expenseSheet, lastRow, column, workScheduleLinks);
       }
     }
 
     // 経費精算書列にハイパーリンクを設定（データがある場合のみ）
     if (hasExpenseData) {
-      const column = headerPositions.get("経費精算書");
+      const column = headerPositions.get('経費精算書');
       if (column) {
         setFileHyperlink(
           expenseSheet,
           lastRow,
           column,
-          "経費精算書",
+          '経費精算書',
           monthlySpreadsheetUrl
         );
       }
@@ -949,7 +990,7 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
 
     // 領収書列に複数のハイパーリンクを設定（提出がある場合のみ）
     if (hasReceipts) {
-      const column = headerPositions.get("領収書");
+      const column = headerPositions.get('領収書');
       if (column) {
         setMultipleHyperlinks(expenseSheet, lastRow, column, receiptLinks);
       }
@@ -957,11 +998,11 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
 
     return {
       success: true,
-      message: "経費精算フォームを提出しました",
+      message: '経費精算フォームを提出しました',
       submittedDate: submittedDate.toISOString(),
     };
   } catch (error) {
-    console.error("submitExpense error:", error);
+    console.error('submitExpense error:', error);
     throw new Error(`登録処理エラー: ${(error as Error).message}`);
   }
 }
@@ -970,8 +1011,8 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
  * WebアプリのGETリクエスト処理
  */
 function doGet(): GoogleAppsScript.HTML.HtmlOutput {
-  return HtmlService.createHtmlOutputFromFile("index").setTitle(
-    "経費精算フォーム"
+  return HtmlService.createHtmlOutputFromFile('index').setTitle(
+    '経費精算フォーム'
   );
 }
 
@@ -990,17 +1031,17 @@ function doGet(): GoogleAppsScript.HTML.HtmlOutput {
 function setupAllProperties(): void {
   const properties = {
     // ここに実際のIDを設定してください
-    "SPREADSHEET_ID": "YOUR_SPREADSHEET_ID_HERE",
-    "WORK_SCHEDULE_FOLDER_ID": "YOUR_WORK_SCHEDULE_FOLDER_ID_HERE",
-    "EXPENSE_REPORT_FOLDER_ID": "YOUR_EXPENSE_REPORT_FOLDER_ID_HERE",
-    "RECEIPT_FOLDER_ID": "YOUR_RECEIPT_FOLDER_ID_HERE"
+    SPREADSHEET_ID: 'YOUR_SPREADSHEET_ID_HERE',
+    WORK_SCHEDULE_FOLDER_ID: 'YOUR_WORK_SCHEDULE_FOLDER_ID_HERE',
+    EXPENSE_REPORT_FOLDER_ID: 'YOUR_EXPENSE_REPORT_FOLDER_ID_HERE',
+    RECEIPT_FOLDER_ID: 'YOUR_RECEIPT_FOLDER_ID_HERE',
   };
 
   const scriptProperties = PropertiesService.getScriptProperties();
   scriptProperties.setProperties(properties);
 
-  Logger.log("✅ すべてのプロパティを設定しました");
-  Logger.log("設定内容:");
+  Logger.log('✅ すべてのプロパティを設定しました');
+  Logger.log('設定内容:');
   for (const [key, value] of Object.entries(properties)) {
     Logger.log(`  ${key}: ${value}`);
   }
@@ -1012,13 +1053,16 @@ function setupAllProperties(): void {
 function showCurrentSettings(): void {
   const scriptProperties = PropertiesService.getScriptProperties();
   const settings = {
-    "SPREADSHEET_ID": scriptProperties.getProperty("SPREADSHEET_ID") || "未設定",
-    "WORK_SCHEDULE_FOLDER_ID": scriptProperties.getProperty("WORK_SCHEDULE_FOLDER_ID") || "未設定",
-    "EXPENSE_REPORT_FOLDER_ID": scriptProperties.getProperty("EXPENSE_REPORT_FOLDER_ID") || "未設定",
-    "RECEIPT_FOLDER_ID": scriptProperties.getProperty("RECEIPT_FOLDER_ID") || "未設定"
+    SPREADSHEET_ID: scriptProperties.getProperty('SPREADSHEET_ID') || '未設定',
+    WORK_SCHEDULE_FOLDER_ID:
+      scriptProperties.getProperty('WORK_SCHEDULE_FOLDER_ID') || '未設定',
+    EXPENSE_REPORT_FOLDER_ID:
+      scriptProperties.getProperty('EXPENSE_REPORT_FOLDER_ID') || '未設定',
+    RECEIPT_FOLDER_ID:
+      scriptProperties.getProperty('RECEIPT_FOLDER_ID') || '未設定',
   };
 
-  Logger.log("📋 現在の設定:");
+  Logger.log('📋 現在の設定:');
   Logger.log(`  全体管理用スプレッドシートID: ${settings.SPREADSHEET_ID}`);
   Logger.log(`  作業表フォルダID: ${settings.WORK_SCHEDULE_FOLDER_ID}`);
   Logger.log(`  経費精算書フォルダID: ${settings.EXPENSE_REPORT_FOLDER_ID}`);
