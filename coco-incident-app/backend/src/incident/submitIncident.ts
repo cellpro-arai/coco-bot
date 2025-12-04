@@ -1,7 +1,19 @@
+import { IncidentData, IncidentResult, IncidentRecord } from './incidentType';
+import {
+  getScriptProperty,
+  extractSheetIdFromUrl,
+  extractFolderIdFromUrl,
+  getAdminEmails,
+} from '../utils';
+import { getOrCreateIncidentSheet } from './getOrCreateIncidentSheet';
+import { findIncidentRowByDate } from './findIncidentRowByDate';
+import { uploadFileToDrive } from '../drive';
+import { sendSlack } from '../slack/sendSlack';
+
 /**
  * インシデント情報をスプレッドシートに保存
  */
-function submitIncident(incidentData: IncidentData): IncidentResult {
+export function submitIncident(incidentData: IncidentData): IncidentResult {
   try {
     const spreadsheetId = getScriptProperty(
       'SPREADSHEET_ID',

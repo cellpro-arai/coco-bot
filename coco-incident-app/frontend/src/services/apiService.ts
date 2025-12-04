@@ -8,8 +8,6 @@ import {
   AI_ANALYSIS_STATUS,
 } from '../types';
 
-declare const google: any;
-
 const isDevelopment = typeof google === 'undefined';
 
 // 開発環境で権限エラーをテストする場合は localStorage に 'simulatePermissionError' を設定

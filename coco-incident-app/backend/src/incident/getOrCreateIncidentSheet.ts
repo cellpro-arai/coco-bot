@@ -1,7 +1,9 @@
+import { INCIDENT_SHEET_NAME } from './incidentType';
+
 /**
  * インシデント管理シートを取得または作成
  */
-function getOrCreateIncidentSheet(
+export function getOrCreateIncidentSheet(
   spreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet
 ): GoogleAppsScript.Spreadsheet.Sheet {
   let sheet = spreadsheet.getSheetByName(INCIDENT_SHEET_NAME);

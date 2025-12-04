@@ -1,7 +1,16 @@
+import {
+  INCIDENT_SHEET_NAME,
+  IncidentRecord,
+  AI_ANALYSIS_STATUS,
+} from './incidentType';
+import { getScriptProperty } from '../utils';
+import { extractSheetIdFromUrl } from '../utils';
+import { isAdmin } from '../utils';
+
 /**
  * インシデント一覧を取得
  */
-function getIncidentList(): IncidentRecord[] {
+export function getIncidentList(): IncidentRecord[] {
   try {
     const spreadsheetId = getScriptProperty(
       'SPREADSHEET_ID',

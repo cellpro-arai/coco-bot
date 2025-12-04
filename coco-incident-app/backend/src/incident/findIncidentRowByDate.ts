@@ -1,7 +1,7 @@
 /**
  * 登録日時から既存レコードの行番号を検索
  */
-function findIncidentRowByDate(
+export function findIncidentRowByDate(
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
   registeredDate: string
 ): number {

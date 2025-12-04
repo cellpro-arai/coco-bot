@@ -1,4 +1,4 @@
-type SlackAccount = {
+export type SlackAccount = {
   id: string;
   name: string;
   realName: string;
@@ -10,7 +10,7 @@ type SlackAccount = {
  * @param email {string} Slackのメールアドレス
  * @return { id: string; name: string; realName: string; email: string } | null ユーザー情報またはnull
  */
-function getSlackAccountByEmail(email: string): SlackAccount | null {
+export function getSlackAccountByEmail(email: string): SlackAccount | null {
   try {
     const token =
       PropertiesService.getScriptProperties().getProperty('SLACK_BOT_TOKEN');
@@ -57,7 +57,7 @@ function getSlackAccountByEmail(email: string): SlackAccount | null {
  * 管理者ユーザーのSlackアカウント一覧を取得する
  * @returns {SlackAccount[]} 管理者ユーザーのSlackアカウント一覧
  */
-function getAdminAccounts(): SlackAccount[] {
+export function getAdminAccounts(): SlackAccount[] {
   const adminEmailsCsv =
     PropertiesService.getScriptProperties().getProperty('ADMIN_EMAILS');
   if (!adminEmailsCsv) {

@@ -1,21 +1,21 @@
-const INCIDENT_SHEET_NAME = 'インシデント管理';
+export const INCIDENT_SHEET_NAME = 'インシデント管理';
 
 /**
  * AI解析ステータスの定数
  */
-const AI_ANALYSIS_STATUS = {
+export const AI_ANALYSIS_STATUS = {
   PENDING: 'pending',
   COMPLETED: 'completed',
   NONE: 'none',
 } as const;
 
-type AiAnalysisStatus =
+export type AiAnalysisStatus =
   (typeof AI_ANALYSIS_STATUS)[keyof typeof AI_ANALYSIS_STATUS];
 
 /**
  * ファイルデータの型定義
  */
-interface FileData {
+export interface FileData {
   name: string;
   mimeType: string;
   data: string; // Base64 encoded
@@ -24,7 +24,7 @@ interface FileData {
 /**
  * インシデントデータの型定義
  */
-interface IncidentData {
+export interface IncidentData {
   registeredDate?: string;
   caseName: string;
   assignee: string;
@@ -38,7 +38,7 @@ interface IncidentData {
 /**
  * インシデント登録結果の型定義
  */
-interface IncidentResult {
+export interface IncidentResult {
   success: boolean;
   message: string;
   incidentDate: string;
@@ -48,7 +48,7 @@ interface IncidentResult {
 /**
  * インシデント一覧取得用の型定義
  */
-interface IncidentRecord {
+export interface IncidentRecord {
   registeredDate: string;
   registeredUser: string;
   caseName: string;

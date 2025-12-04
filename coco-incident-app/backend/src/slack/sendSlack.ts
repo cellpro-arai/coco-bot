@@ -1,8 +1,14 @@
+import {
+  getAdminAccounts,
+  getSlackAccountByEmail,
+  SlackAccount,
+} from './getSlackUser';
+
 /**
  * Slackにインシデントのステータス変更を通知する
  * @param param0
  */
-function sendSlack({
+export function sendSlack({
   caseName,
   assignee,
   oldStatus,
