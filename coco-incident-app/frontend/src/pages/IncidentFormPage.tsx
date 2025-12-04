@@ -5,6 +5,7 @@ import {
   FileData,
   AI_ANALYSIS_STATUS,
   PLACEHOLDERS,
+  INCIDENT_STATUS,
 } from '../types';
 import * as api from '../services/apiService';
 import { SuccessModal } from '../components/modals';
@@ -57,7 +58,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
     registeredDate: selectedIncident?.registeredDate || '',
     caseName: selectedIncident?.caseName || '',
     assignee: selectedIncident?.assignee || '',
-    status: selectedIncident?.status || '対応中',
+    status: selectedIncident?.status || INCIDENT_STATUS.REPORTED,
     summary: selectedIncident?.summary || '',
     stakeholders: selectedIncident?.stakeholders || '',
     details: selectedIncident?.details || '',
@@ -309,10 +310,21 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                 onChange={handleInputChange}
                 required
               >
-                <option value="対応中">対応中</option>
-                <option value="保留">保留</option>
-                <option value="解決済み">解決済み</option>
-                <option value="クローズ">クローズ</option>
+                <option value={INCIDENT_STATUS.REPORTED}>
+                  {INCIDENT_STATUS.REPORTED}
+                </option>
+                <option value={INCIDENT_STATUS.REVIEW_REQUESTED}>
+                  {INCIDENT_STATUS.REVIEW_REQUESTED}
+                </option>
+                <option value={INCIDENT_STATUS.REJECTED}>
+                  {INCIDENT_STATUS.REJECTED}
+                </option>
+                <option value={INCIDENT_STATUS.IN_PROGRESS}>
+                  {INCIDENT_STATUS.IN_PROGRESS}
+                </option>
+                <option value={INCIDENT_STATUS.CLOSED}>
+                  {INCIDENT_STATUS.CLOSED}
+                </option>
               </FormSelect>
               <FormHelperText>現在の対応状況を選択してください</FormHelperText>
             </FormGroup>

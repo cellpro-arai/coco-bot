@@ -3,6 +3,7 @@ import {
   getSlackAccountByEmail,
   SlackAccount,
 } from './getSlackUser';
+import { INCIDENT_STATUS } from '../types/constants';
 
 /**
  * Slackにインシデントのステータス変更を通知する
@@ -27,24 +28,40 @@ export function sendSlack({
 }) {
   try {
     let accounts: SlackAccount[] = [];
+
     if (isNewIncident) {
-      accounts = getAdminAccounts();
+      // 新規登録時：起票で管理者に通知
+      if (newStatus === INCIDENT_STATUS.REPORTED) {
+        accounts = getAdminAccounts();
+      }
     } else {
-      // 編集の場合はステータス変更時のみ通知
+      // 編集時：ステータス変更時のみ通知
       if (oldStatus === newStatus) {
         return;
       }
 
-      // originalUserEmailが現在のGoogleアカウントemailと同じ場合
-      const currentUserEmail = Session.getActiveUser().getEmail();
-      if (originalUserEmail === currentUserEmail) {
+      // ステータス変更の対象者を決定
+      if (
+        newStatus === INCIDENT_STATUS.REPORTED ||
+        newStatus === INCIDENT_STATUS.REVIEW_REQUESTED
+      ) {
+        // 管理者に通知
         accounts = getAdminAccounts();
-      } else {
+      } else if (newStatus === INCIDENT_STATUS.REJECTED) {
+        // 担当者に通知（ただし管理者のみ差し戻し可能）
         const account = getSlackAccountByEmail(originalUserEmail);
-        if (!account) {
-          throw new Error(`ユーザー情報が見つかりません: ${originalUserEmail}`);
+        if (account) {
+          accounts.push(account);
         }
-        accounts.push(account);
+      } else if (
+        newStatus === INCIDENT_STATUS.IN_PROGRESS ||
+        newStatus === INCIDENT_STATUS.CLOSED
+      ) {
+        // 担当者に通知
+        const account = getSlackAccountByEmail(originalUserEmail);
+        if (account) {
+          accounts.push(account);
+        }
       }
     }
 
@@ -78,6 +95,29 @@ type NotifyStatusChangedArgs = {
 };
 
 /**
+ * ステータスに応じた絵文字とカラーを取得する
+ */
+function getStatusEmojiAndColor(status: string): {
+  emoji: string;
+  statusColor: string;
+} {
+  switch (status) {
+    case INCIDENT_STATUS.REPORTED:
+      return { emoji: '📝', statusColor: '#0099FF' }; // 青
+    case INCIDENT_STATUS.REVIEW_REQUESTED:
+      return { emoji: '🔍', statusColor: '#0099FF' }; // 青
+    case INCIDENT_STATUS.REJECTED:
+      return { emoji: '❌', statusColor: '#E01E5A' }; // 赤
+    case INCIDENT_STATUS.IN_PROGRESS:
+      return { emoji: '🔧', statusColor: '#FFA500' }; // オレンジ
+    case INCIDENT_STATUS.CLOSED:
+      return { emoji: '✅', statusColor: '#36A64F' }; // 緑
+    default:
+      return { emoji: '🔄', statusColor: '#3AA3E3' }; // グレーブルー
+  }
+}
+
+/**
  * Slackに通知する
  * @param param0
  * @returns
@@ -100,23 +140,8 @@ function notifySlack({
       return;
     }
 
-    // ステータスに応じた絵文字とメッセージ
-    let emoji = '🔄';
-    let statusColor = '#3AA3E3'; // デフォルトは青
-
-    if (newStatus.includes('完了') || newStatus.includes('解決')) {
-      emoji = '✅';
-      statusColor = '#36A64F'; // 緑
-    } else if (newStatus.includes('対応中') || newStatus.includes('調査中')) {
-      emoji = '🔧';
-      statusColor = '#FFA500'; // オレンジ
-    } else if (newStatus.includes('保留') || newStatus.includes('待機')) {
-      emoji = '⏸️';
-      statusColor = '#CCCCCC'; // グレー
-    } else if (newStatus.includes('緊急') || newStatus.includes('重大')) {
-      emoji = '🚨';
-      statusColor = '#E01E5A'; // 赤
-    }
+    // ステータスに応じた絵文字とカラーを取得
+    const { emoji, statusColor } = getStatusEmojiAndColor(newStatus);
 
     const statusText =
       oldStatus === ''
