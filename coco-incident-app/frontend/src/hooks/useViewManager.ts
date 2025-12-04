@@ -4,6 +4,7 @@ import { Incident } from '../types';
 export const VIEW_VARIANT = {
   LIST: 'list',
   FORM: 'form',
+  PERMISSION: 'permission',
 } as const;
 
 export type ViewVariant = (typeof VIEW_VARIANT)[keyof typeof VIEW_VARIANT];
@@ -31,11 +32,16 @@ export function useViewManager() {
     setSelectedIncident(null);
   };
 
+  const showPermissionManagement = () => {
+    setCurrentView(VIEW_VARIANT.PERMISSION);
+  };
+
   return {
     currentView,
     selectedIncident,
     showForm,
     editIncident,
     backToList,
+    showPermissionManagement,
   };
 }

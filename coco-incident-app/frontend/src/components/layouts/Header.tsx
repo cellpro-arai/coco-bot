@@ -6,13 +6,27 @@ import { MoonIcon, SunIcon } from '../icons';
 interface HeaderProps {
   theme: string;
   toggleTheme: () => void;
+  showPermissionManagement?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
+const Header: React.FC<HeaderProps> = ({
+  theme,
+  toggleTheme,
+  showPermissionManagement,
+}) => {
   return (
     <header className="py-4 mb-8 border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 relative">
       <Container>
-        <div className="absolute top-2 right-6">
+        <div className="absolute top-2 right-6 space-x-2">
+          {showPermissionManagement && (
+            <Button
+              variant="secondary"
+              onClick={showPermissionManagement}
+              className="!px-3 !py-1.5"
+            >
+              権限管理
+            </Button>
+          )}
           <Button
             variant="contrast"
             onClick={toggleTheme}

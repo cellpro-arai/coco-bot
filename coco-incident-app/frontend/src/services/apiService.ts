@@ -6,6 +6,7 @@ import {
   IncidentFormData,
   IncidentResult,
   AI_ANALYSIS_STATUS,
+  UserPermission,
 } from '../types';
 
 const isDevelopment = typeof google === 'undefined';
@@ -131,6 +132,147 @@ export function submitIncident(
           reject(new Error(`送信に失敗しました: ${error.message}`))
         )
         .submitIncident(data);
+    }
+  });
+}
+
+/**
+ * すべてのユーザー権限を取得します。
+ * @returns {Promise<UserPermission[]>} ユーザー権限のリスト
+ */
+export function getAllPermissions(): Promise<UserPermission[]> {
+  return new Promise((resolve, reject) => {
+    if (isDevelopment) {
+      // 開発環境用のモックデータ
+      setTimeout(() => {
+        resolve([
+          {
+            email: 'admin@example.com',
+            role: 'admin',
+            slackUserId: 'U123456789',
+          },
+          {
+            email: 'user1@example.com',
+            role: 'user',
+            slackUserId: 'U987654321',
+          },
+          {
+            email: 'user2@example.com',
+            role: 'user',
+            slackUserId: 'U111111111',
+          },
+        ]);
+      }, 300);
+    } else {
+      google.script.run
+        .withSuccessHandler((result: UserPermission[]) => resolve(result))
+        .withFailureHandler((error: Error) =>
+          reject(new Error(`権限情報の取得に失敗しました: ${error.message}`))
+        )
+        .getAllPermissions();
+    }
+  });
+}
+
+/**
+ * ユーザーを追加します。
+ * @param {string} email メールアドレス
+ * @param {string} role ロール (admin | user)
+ * @returns {Promise<UserPermission>} 追加されたユーザー情報
+ */
+export function addUser(
+  email: string,
+  role: 'admin' | 'user'
+): Promise<UserPermission> {
+  return new Promise((resolve, reject) => {
+    if (isDevelopment) {
+      // 開発環境用のモック
+      setTimeout(() => {
+        const newUser: UserPermission = {
+          email,
+          role,
+          slackUserId: `U${Math.random().toString().substring(2, 11)}`,
+        };
+        console.log('[開発モード] ユーザー追加:', newUser);
+        resolve(newUser);
+      }, 500);
+    } else {
+      google.script.run
+        .withSuccessHandler((result: UserPermission) => resolve(result))
+        .withFailureHandler((error: Error) =>
+          reject(new Error(`ユーザー追加に失敗しました: ${error.message}`))
+        )
+        .addUser(email, role);
+    }
+  });
+}
+
+/**
+ * ユーザーを削除します。
+ * @param {string} email メールアドレス
+ * @returns {Promise<void>}
+ */
+export function removeUser(email: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (isDevelopment) {
+      // 開発環境用のモック
+      setTimeout(() => {
+        console.log('[開発モード] ユーザー削除:', email);
+        resolve();
+      }, 500);
+    } else {
+      google.script.run
+        .withSuccessHandler(() => resolve())
+        .withFailureHandler((error: Error) =>
+          reject(new Error(`ユーザー削除に失敗しました: ${error.message}`))
+        )
+        .removeUser(email);
+    }
+  });
+}
+
+/**
+ * 現在のユーザーが管理者かどうかを確認します。
+ * @returns {Promise<boolean>} 管理者ならtrue
+ */
+export function isCurrentUserAdmin(): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    if (isDevelopment) {
+      // 開発環境用のモック
+      setTimeout(() => {
+        resolve(true); // 開発環境では常に管理者として扱う
+      }, 100);
+    } else {
+      google.script.run
+        .withSuccessHandler((result: boolean) => resolve(result))
+        .withFailureHandler((error: Error) =>
+          reject(new Error(`権限確認に失敗しました: ${error.message}`))
+        )
+        .isUserAdmin(Session.getActiveUser().getEmail());
+    }
+  });
+}
+
+/**
+ * 現在のユーザーのメールアドレスを取得します。
+ * @returns {Promise<string>} メールアドレス
+ */
+export function getCurrentUserEmail(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (isDevelopment) {
+      // 開発環境用のモック
+      setTimeout(() => {
+        resolve('admin@example.com');
+      }, 100);
+    } else {
+      google.script.run
+        .withSuccessHandler((email: string) => resolve(email))
+        .withFailureHandler((error: Error) => {
+          reject(
+            new Error(`ユーザー情報の取得に失敗しました: ${error.message}`)
+          );
+        })
+        .getActiveUserEmail?.();
     }
   });
 }

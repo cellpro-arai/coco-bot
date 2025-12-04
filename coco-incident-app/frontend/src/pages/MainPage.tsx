@@ -1,20 +1,71 @@
-import { useState } from 'react';
-import { Incident } from '../types';
+import { useState, useEffect } from 'react';
+import { Incident, UserPermission } from '../types';
 import { Header, Container } from '../components/layouts';
 import IncidentListPage from './IncidentListPage';
 import IncidentFormPage from './IncidentFormPage';
+import PermissionManagementPage from './PermissionManagementPage';
 import useTheme from '../hooks/useTheme';
 import { useViewManager, VIEW_VARIANT } from '../hooks/useViewManager';
+import { getAllPermissions, getCurrentUserEmail } from '../services/apiService';
 
 function MainPage() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [permissions, setPermissions] = useState<UserPermission[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loadingPermissions, setLoadingPermissions] = useState(true);
   const { theme, toggleTheme } = useTheme();
-  const { currentView, selectedIncident, showForm, editIncident, backToList } =
-    useViewManager();
+  const {
+    currentView,
+    selectedIncident,
+    showForm,
+    editIncident,
+    backToList,
+    showPermissionManagement,
+  } = useViewManager();
+
+  // 初期化時に権限情報と管理者フラグを取得
+  useEffect(() => {
+    const initializePermissions = async () => {
+      try {
+        // すべての権限一覧を取得
+        const perms = await getAllPermissions();
+        setPermissions(perms);
+
+        // 現在のユーザーのメールアドレスを取得
+        const currentUserEmail = await getCurrentUserEmail();
+
+        // 管理者かどうかを判定
+        const isUserAdmin = perms.some(
+          p => p.email === currentUserEmail && p.role === 'admin'
+        );
+        setIsAdmin(isUserAdmin);
+      } catch (error) {
+        console.error('権限情報の初期化に失敗:', error);
+      } finally {
+        setLoadingPermissions(false);
+      }
+    };
+
+    initializePermissions();
+  }, []);
+
+  const handleAddUser = (newUser: UserPermission) => {
+    setPermissions([...permissions, newUser]);
+  };
+
+  const handleRemoveUser = (email: string) => {
+    setPermissions(permissions.filter(p => p.email !== email));
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-200 dark:bg-gray-900">
-      <Header theme={theme} toggleTheme={toggleTheme} />
+      <Header
+        theme={theme}
+        toggleTheme={toggleTheme}
+        showPermissionManagement={
+          isAdmin ? showPermissionManagement : undefined
+        }
+      />
 
       <main className="flex-1">
         <Container>
@@ -32,6 +83,15 @@ function MainPage() {
               selectedIncident={selectedIncident}
               setIncidents={setIncidents}
               backToList={backToList}
+            />
+          )}
+
+          {currentView === VIEW_VARIANT.PERMISSION && (
+            <PermissionManagementPage
+              permissions={permissions}
+              onAddUser={handleAddUser}
+              onRemoveUser={handleRemoveUser}
+              loading={loadingPermissions}
             />
           )}
         </Container>
