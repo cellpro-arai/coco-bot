@@ -19,9 +19,9 @@ export const FormLabel: React.FC<FormLabelProps> = ({
   children,
 }) => {
   return (
-    <label htmlFor={htmlFor} className="block mb-2">
+    <label htmlFor={htmlFor} className="block mb-1 sm:mb-2">
       <span
-        className={`flex items-center font-medium text-gray-700 dark:text-gray-300 ${required ? "after:content-['_*'] after:text-red-500" : ''}`}
+        className={`flex items-center font-medium text-xs sm:text-sm text-gray-700 dark:text-gray-300 ${required ? "after:content-['_*'] after:text-red-500" : ''}`}
       >
         {icon && <span className="mr-1">{icon}</span>}
         {children}
@@ -87,7 +87,7 @@ interface FormHelperTextProps {
 
 export const FormHelperText: React.FC<FormHelperTextProps> = ({ children }) => {
   return (
-    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{children}</p>
+    <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400">{children}</p>
   );
 };
 
@@ -101,5 +101,5 @@ export const FormGroup: React.FC<FormGroupProps> = ({
   children,
   className = '',
 }) => {
-  return <div className={`mb-4 ${className}`}>{children}</div>;
+  return <div className={`mb-3 sm:mb-4 ${className}`}>{children}</div>;
 };

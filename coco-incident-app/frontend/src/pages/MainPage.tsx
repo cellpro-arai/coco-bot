@@ -68,7 +68,7 @@ function MainPage() {
       />
 
       <main className="flex-1">
-        <Container>
+        <Container fluid>
           {currentView === VIEW_VARIANT.LIST && (
             <IncidentListPage
               incidents={incidents}
@@ -97,9 +97,9 @@ function MainPage() {
         </Container>
       </main>
 
-      <footer className="mt-auto py-4 border-t border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
-        <Container>
-          <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+      <footer className="mt-auto py-3 sm:py-4 border-t border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
+        <Container fluid>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center">
             &copy; 2025 Cell Promote Inc. (Coco Incident). All rights reserved.
           </p>
         </Container>

@@ -24,9 +24,9 @@ import {
  * WebアプリのGETリクエスト処理
  */
 function doGet(): GoogleAppsScript.HTML.HtmlOutput {
-  return HtmlService.createHtmlOutputFromFile('index').setTitle(
-    '【セルプロ】インシデント管理'
-  );
+  return HtmlService.createHtmlOutputFromFile('index')
+    .setTitle('【セルプロ】インシデント管理')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
 // ============================================================

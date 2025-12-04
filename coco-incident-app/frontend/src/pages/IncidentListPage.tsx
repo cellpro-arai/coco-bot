@@ -50,24 +50,28 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
   };
 
   return (
-    <div className="py-4">
+    <div className="py-2 sm:py-4">
       {/* ツールバー */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 flex items-center mb-0">
-          <ListBulletIcon className="mr-2 w-10 h-10" />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100 flex items-center mb-0">
+          <ListBulletIcon className="mr-2 w-6 sm:w-10 h-6 sm:h-10 flex-shrink-0" />
           インシデント一覧
         </h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button
             variant="secondary"
             onClick={loadIncidents}
             disabled={loading}
+            className="text-xs sm:text-base !px-3 sm:!px-4 !py-2 sm:!py-2.5 min-h-9 sm:min-h-10"
           >
-            <ArrowPathIcon className="mr-2 w-4 h-4" />
+            <ArrowPathIcon className="mr-1 sm:mr-2 w-4 h-4 sm:w-4 sm:h-4" />
             更新
           </Button>
-          <Button onClick={showForm}>
-            <PlusCircleIcon className="mr-2 w-4 h-4" />
+          <Button
+            onClick={showForm}
+            className="text-xs sm:text-base !px-3 sm:!px-4 !py-2 sm:!py-2.5 min-h-9 sm:min-h-10"
+          >
+            <PlusCircleIcon className="mr-1 sm:mr-2 w-4 h-4 sm:w-4 sm:h-4" />
             新規起票
           </Button>
         </div>
@@ -101,30 +105,30 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
               インシデントはまだ登録されていません
             </Alert>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
               {incidents.map(incident => (
                 <Card
                   key={incident.registeredDate}
                   onClick={() => editIncident(incident)}
-                  className="h-full !p-4"
+                  className="h-full !p-3 sm:!p-4"
                 >
-                  <div className="flex justify-between items-start mb-3">
-                    <h5 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-0">
+                  <div className="flex justify-between items-start mb-2 sm:mb-3 gap-2">
+                    <h5 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-0 line-clamp-2">
                       {incident.caseName}
                     </h5>
                     {incident.updateDate && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-4 flex items-center">
-                        <ClockIcon className="mr-1 w-3 h-3" />
+                      <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap flex-shrink-0 flex items-center">
+                        <ClockIcon className="mr-0.5 w-3 h-3" />
                         {incident.updateDate}
                       </span>
                     )}
                   </div>
-                  <div className="flex flex-wrap gap-2 mb-3">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-3">
                     <Badge
                       variant="primary"
-                      icon={<UserIcon className="mr-1 w-4 h-4" />}
+                      icon={<UserIcon className="mr-1 w-3 sm:w-4 h-3 sm:h-4" />}
                     >
-                      {incident.assignee}
+                      <span className="text-xs sm:text-sm">{incident.assignee}</span>
                     </Badge>
                     <Badge
                       variant={
@@ -138,12 +142,12 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                                 ? 'contrast'
                                 : undefined
                       }
-                      icon={<FlagIcon className="mr-1 w-4 h-4" />}
+                      icon={<FlagIcon className="mr-1 w-3 sm:w-4 h-3 sm:h-4" />}
                     >
-                      {incident.status}
+                      <span className="text-xs sm:text-sm">{incident.status}</span>
                     </Badge>
                   </div>
-                  <p className="line-clamp-2 text-sm text-gray-700 dark:text-gray-300 mb-0">
+                  <p className="line-clamp-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 mb-0">
                     {incident.summary}
                   </p>
                 </Card>

@@ -11,7 +11,7 @@ const Container: React.FC<ContainerProps> = ({
   fluid = false,
   className = '',
 }) => {
-  const baseClasses = fluid ? 'w-full px-4' : 'w-full max-w-7xl mx-auto px-4';
+  const baseClasses = fluid ? 'w-full px-3 sm:px-4' : 'w-full max-w-7xl mx-auto px-3 sm:px-4';
 
   return <div className={`${baseClasses} ${className}`}>{children}</div>;
 };
