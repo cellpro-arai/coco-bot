@@ -23,23 +23,23 @@ import {
 } from '../components/ui';
 import {
   ArrowLeftIcon,
-  ExclamationCircleFillIcon,
-  InfoCircleFillIcon,
-  HourglassSplitIcon,
-  BoxArrowUpRightIcon,
-  RobotIcon,
-  FolderFillIcon,
-  PersonFillIcon,
-  FlagFillIcon,
-  CardTextIcon,
-  PeopleFillIcon,
-  FileTextFillIcon,
-  PaperclipIcon,
-  Folder2OpenIcon,
-  CloudUploadIcon,
-  XIcon,
-  ArrowClockwiseIcon,
-  CheckCircleFillIcon,
+  ExclamationCircleIcon,
+  InformationCircleIcon,
+  ClockIconOutline,
+  ArrowTopRightOnSquareIcon,
+  CpuChipIcon,
+  FolderIcon,
+  UserIcon,
+  FlagIcon,
+  PencilSquareIcon,
+  UsersIcon,
+  DocumentTextIcon,
+  PaperClipIcon,
+  FolderOpenIcon,
+  CloudArrowUpIcon,
+  XMarkIcon,
+  ArrowPathIcon,
+  CheckCircleIcon,
 } from '../components/icons';
 
 interface IncidentFormPageProps {
@@ -170,7 +170,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
     <div className="py-4">
       {/* 戻るボタン */}
       <Button variant="secondary" onClick={backToList} className="mb-4">
-        <ArrowLeftIcon className="mr-2" />
+        <ArrowLeftIcon className="mr-2 w-5 h-5" />
         一覧へ戻る
       </Button>
 
@@ -183,7 +183,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
             className="flex items-center mb-6"
             role="alert"
           >
-            <ExclamationCircleFillIcon className="mr-2" />
+            <ExclamationCircleIcon className="mr-2 w-5 h-5" />
             <span>{error}</span>
           </Alert>
         )}
@@ -191,7 +191,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
         {/* 重要な注意事項 */}
         <Alert variant={ALERT_VARIANT.WARNING} className="mb-6" role="alert">
           <h6 className="flex items-center mb-3">
-            <InfoCircleFillIcon className="mr-2" />
+            <InformationCircleIcon className="mr-2 w-5 h-5" />
             重要な注意事項
           </h6>
           <ul className="mb-0">
@@ -208,7 +208,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
           selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.PENDING && (
             <Alert variant={ALERT_VARIANT.WARNING} className="mb-6">
               <h6 className="flex items-center text-base font-semibold mb-3">
-                <HourglassSplitIcon className="mr-2" />
+                <ClockIconOutline className="mr-2 w-5 h-5" />
                 AI解析待ち
               </h6>
               <p className="mb-2 text-sm">
@@ -224,7 +224,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                 underline={false}
                 className="inline-flex items-center"
               >
-                <BoxArrowUpRightIcon className="mr-1" />
+                <ArrowTopRightOnSquareIcon className="mr-1 w-4 h-4" />
                 詳細スプレッドシートを開く
               </AppLink>
             </Alert>
@@ -237,7 +237,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
           selectedIncident.aiAnalysis && (
             <Alert variant={ALERT_VARIANT.INFO} className="mb-6">
               <h6 className="flex items-center text-base font-semibold mb-3">
-                <RobotIcon className="mr-2" />
+                <CpuChipIcon className="mr-2 w-5 h-5" />
                 AI解析結果
               </h6>
               <div className="whitespace-pre-wrap text-sm">
@@ -254,7 +254,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
               <FormLabel
                 htmlFor="caseName"
                 required
-                icon={<FolderFillIcon className="text-blue-600" />}
+                icon={<FolderIcon className="text-blue-600 w-4 h-4" />}
               >
                 案件名
               </FormLabel>
@@ -276,7 +276,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
               <FormLabel
                 htmlFor="assignee"
                 required
-                icon={<PersonFillIcon className="text-blue-600" />}
+                icon={<UserIcon className="text-blue-600 w-4 h-4" />}
               >
                 担当者
               </FormLabel>
@@ -299,7 +299,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
               <FormLabel
                 htmlFor="status"
                 required
-                icon={<FlagFillIcon className="text-blue-600" />}
+                icon={<FlagIcon className="text-blue-600 w-4 h-4" />}
               >
                 ステータス
               </FormLabel>
@@ -322,7 +322,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
               <FormLabel
                 htmlFor="summary"
                 required
-                icon={<CardTextIcon className="text-blue-600" />}
+                icon={<PencilSquareIcon className="text-blue-600 w-4 h-4" />}
               >
                 トラブル概要
               </FormLabel>
@@ -344,7 +344,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
             <FormLabel
               htmlFor="stakeholders"
               required
-              icon={<PeopleFillIcon className="text-blue-600" />}
+              icon={<UsersIcon className="text-blue-600 w-4 h-4" />}
             >
               ステークホルダー
             </FormLabel>
@@ -372,7 +372,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
             <FormLabel
               htmlFor="details"
               required
-              icon={<FileTextFillIcon className="text-blue-600" />}
+              icon={<DocumentTextIcon className="text-blue-600 w-4 h-4" />}
             >
               トラブル詳細
             </FormLabel>
@@ -406,7 +406,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
               <FormGroup>
                 <FormLabel
                   htmlFor=""
-                  icon={<PaperclipIcon className="text-blue-600" />}
+                  icon={<PaperClipIcon className="text-blue-600 w-4 h-4" />}
                 >
                   既存の添付ファイル
                 </FormLabel>
@@ -423,7 +423,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                         underline={false}
                         className="inline-flex items-center"
                       >
-                        <Folder2OpenIcon className="mr-1" />
+                        <FolderOpenIcon className="mr-1 w-4 h-4" />
                         Driveフォルダを開く
                       </AppLink>
                     </div>
@@ -435,7 +435,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
           <FormGroup>
             <FormLabel
               htmlFor="fileUpload"
-              icon={<CloudUploadIcon className="text-blue-600" />}
+              icon={<CloudArrowUpIcon className="text-blue-600 w-4 h-4" />}
             >
               {formData.registeredDate
                 ? '追加ファイルのアップロード'
@@ -474,7 +474,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                       onClick={() => removeFile(index)}
                       className="!px-2 !py-1"
                     >
-                      <XIcon className="w-4 h-4" />
+                      <XMarkIcon className="w-4 h-4" />
                     </Button>
                   </li>
                 ))}
@@ -486,14 +486,14 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
           <Button type="submit" disabled={submitting} className="w-full">
             {submitting ? (
               <>
-                <ArrowClockwiseIcon className="mr-2 animate-spin" />
+                <ArrowPathIcon className="mr-2 animate-spin w-4 h-4" />
                 <span>
                   {formData.registeredDate ? '更新中...' : '送信中...'}
                 </span>
               </>
             ) : (
               <>
-                <CheckCircleFillIcon className="mr-2" />
+                <CheckCircleIcon className="mr-2 w-4 h-4" />
                 <span>{formData.registeredDate ? '更新する' : '登録する'}</span>
               </>
             )}

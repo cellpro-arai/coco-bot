@@ -1,25 +1,32 @@
-export { default as ArrowClockwiseIcon } from './ArrowClockwiseIcon';
-export { default as ArrowLeftIcon } from './ArrowLeftIcon';
-export { default as BoxArrowUpRightIcon } from './BoxArrowUpRightIcon';
-export { default as CardTextIcon } from './CardTextIcon';
-export { default as CheckCircleFillIcon } from './CheckCircleFillIcon';
-export { default as ClockFillIcon } from './ClockFillIcon';
-export { default as CloudUploadIcon } from './CloudUploadIcon';
-export { default as ExclamationCircleFillIcon } from './ExclamationCircleFillIcon';
-export { default as FileTextFillIcon } from './FileTextFillIcon';
-export { default as FlagFillIcon } from './FlagFillIcon';
-export { default as FolderFillIcon } from './FolderFillIcon';
-export { default as Folder2OpenIcon } from './Folder2OpenIcon';
-export { default as HourglassSplitIcon } from './HourglassSplitIcon';
-export { default as InfoCircleIcon } from './InfoCircleIcon';
-export { default as InfoCircleFillIcon } from './InfoCircleFillIcon';
-export { default as LightbulbFillIcon } from './LightbulbFillIcon';
-export { default as ListUlIcon } from './ListUlIcon';
-export { default as MoonFillIcon } from './MoonFillIcon';
-export { default as PaperclipIcon } from './PaperclipIcon';
-export { default as PeopleFillIcon } from './PeopleFillIcon';
-export { default as PersonFillIcon } from './PersonFillIcon';
-export { default as PlusCircleIcon } from './PlusCircleIcon';
-export { default as RobotIcon } from './RobotIcon';
-export { default as SunFillIcon } from './SunFillIcon';
-export { default as XIcon } from './XIcon';
+// from solid
+export {
+  ArrowPathIcon,
+  ArrowLeftIcon,
+  ArrowTopRightOnSquareIcon,
+  PencilSquareIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  CloudArrowUpIcon,
+  ExclamationCircleIcon,
+  DocumentTextIcon,
+  FlagIcon,
+  FolderIcon,
+  FolderOpenIcon,
+  InformationCircleIcon,
+  LightBulbIcon,
+  ListBulletIcon,
+  MoonIcon,
+  PaperClipIcon,
+  UsersIcon,
+  UserIcon,
+  PlusCircleIcon,
+  CpuChipIcon,
+  SunIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/solid';
+
+// from outline
+export {
+  InformationCircleIcon as InformationCircleIconOutline,
+  ClockIcon as ClockIconOutline,
+} from '@heroicons/react/24/outline';

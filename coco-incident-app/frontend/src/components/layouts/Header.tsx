@@ -1,8 +1,7 @@
 import React from 'react';
 import { Button } from '../ui';
 import Container from './Container';
-import MoonFillIcon from '../icons/MoonFillIcon';
-import SunFillIcon from '../icons/SunFillIcon';
+import { MoonIcon, SunIcon } from '../icons';
 
 interface HeaderProps {
   theme: string;
@@ -19,7 +18,11 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
             onClick={toggleTheme}
             className="!px-2 !py-1.5"
           >
-            {theme === 'light' ? <MoonFillIcon /> : <SunFillIcon />}
+            {theme === 'light' ? (
+              <MoonIcon className="w-5 h-5" />
+            ) : (
+              <SunIcon className="w-5 h-5" />
+            )}
           </Button>
         </div>
         <div className="mb-2">

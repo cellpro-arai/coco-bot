@@ -3,13 +3,13 @@ import { Incident } from '../types';
 import * as api from '../services/apiService';
 import { Button, Card, Badge, Alert, ALERT_VARIANT } from '../components/ui';
 import {
-  ArrowClockwiseIcon,
-  ClockFillIcon,
-  ExclamationCircleFillIcon,
-  FlagFillIcon,
-  InfoCircleIcon,
-  ListUlIcon,
-  PersonFillIcon,
+  ArrowPathIcon,
+  ClockIcon,
+  ExclamationCircleIcon,
+  FlagIcon,
+  InformationCircleIconOutline,
+  ListBulletIcon,
+  UserIcon,
   PlusCircleIcon,
 } from '../components/icons';
 
@@ -54,7 +54,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
       {/* ツールバー */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 flex items-center mb-0">
-          <ListUlIcon className="mr-2" />
+          <ListBulletIcon className="mr-2 w-10 h-10" />
           インシデント一覧
         </h2>
         <div className="flex gap-2">
@@ -63,11 +63,11 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
             onClick={loadIncidents}
             disabled={loading}
           >
-            <ArrowClockwiseIcon className="mr-2" />
+            <ArrowPathIcon className="mr-2 w-4 h-4" />
             更新
           </Button>
           <Button onClick={showForm}>
-            <PlusCircleIcon className="mr-2" />
+            <PlusCircleIcon className="mr-2 w-4 h-4" />
             新規起票
           </Button>
         </div>
@@ -87,7 +87,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
       {/* エラー表示 */}
       {error && !loading && (
         <Alert variant={ALERT_VARIANT.DANGER} className="flex items-center">
-          <ExclamationCircleFillIcon className="mr-2" />
+          <ExclamationCircleIcon className="mr-2 w-5 h-5" />
           <span>{error}</span>
         </Alert>
       )}
@@ -97,7 +97,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
         <div>
           {incidents.length === 0 ? (
             <Alert variant={ALERT_VARIANT.INFO} className="text-center">
-              <InfoCircleIcon className="mr-2" />
+              <InformationCircleIconOutline className="mr-2 w-5 h-5" />
               インシデントはまだ登録されていません
             </Alert>
           ) : (
@@ -114,7 +114,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                     </h5>
                     {incident.updateDate && (
                       <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-4 flex items-center">
-                        <ClockFillIcon className="mr-1 w-3 h-3" />
+                        <ClockIcon className="mr-1 w-3 h-3" />
                         {incident.updateDate}
                       </span>
                     )}
@@ -122,7 +122,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                   <div className="flex flex-wrap gap-2 mb-3">
                     <Badge
                       variant="primary"
-                      icon={<PersonFillIcon className="mr-1 w-4 h-4" />}
+                      icon={<UserIcon className="mr-1 w-4 h-4" />}
                     >
                       {incident.assignee}
                     </Badge>
@@ -138,7 +138,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                                 ? 'contrast'
                                 : undefined
                       }
-                      icon={<FlagFillIcon className="mr-1 w-4 h-4" />}
+                      icon={<FlagIcon className="mr-1 w-4 h-4" />}
                     >
                       {incident.status}
                     </Badge>

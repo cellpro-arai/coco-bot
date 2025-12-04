@@ -3,9 +3,9 @@ import { Incident } from '../../types';
 import { Alert, ALERT_VARIANT } from '../ui';
 import {
   ArrowLeftIcon,
-  BoxArrowUpRightIcon,
-  CheckCircleFillIcon,
-  LightbulbFillIcon,
+  ArrowTopRightOnSquareIcon,
+  CheckCircleIcon,
+  LightBulbIcon,
 } from '../icons';
 
 interface SuccessModalProps {
@@ -33,7 +33,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
           </button>
           <div>
             <h3 className="flex items-center text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
-              <CheckCircleFillIcon className="mr-2" />
+              <CheckCircleIcon className="mr-2 w-5 h-5" />
               <span>
                 インシデント情報の{isUpdate ? '更新' : '登録'}が完了しました！
               </span>
@@ -49,7 +49,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
           <Alert variant={ALERT_VARIANT.WARNING} className="mb-4">
             <header className="mb-2">
               <h6 className="flex items-center text-base font-semibold mb-0 text-gray-900 dark:text-gray-100">
-                <LightbulbFillIcon className="mr-2" />
+                <LightBulbIcon className="mr-2 w-5 h-5" />
                 AI改善案を生成しましょう
               </h6>
             </header>
@@ -67,7 +67,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
               className="inline-flex items-center px-4 py-2 bg-gray-700 dark:bg-gray-600 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
               role="button"
             >
-              <BoxArrowUpRightIcon className="mr-1" />
+              <ArrowTopRightOnSquareIcon className="mr-1 w-4 h-4" />
               詳細スプレッドシートを開く
             </a>
           </Alert>
@@ -78,7 +78,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             onClick={closeSuccessModal}
           >
-            <ArrowLeftIcon className="mr-2" />
+            <ArrowLeftIcon className="mr-2 w-4 h-4" />
             一覧へ戻る
           </button>
         </div>
