@@ -1,8 +1,6 @@
-import {
-  getAdminAccounts,
-  getSlackAccountByEmail,
-  SlackAccount,
-} from './getSlackUser';
+import { getSlackAccountByEmail, SlackAccount } from './getSlackUser';
+import { getCurrentUserAndAll } from '../permissions/permissionManager';
+import { getSlackBotToken } from '../properties';
 import { INCIDENT_STATUS } from '../types/constants';
 
 /**
@@ -29,10 +27,19 @@ export function sendSlack({
   try {
     let accounts: SlackAccount[] = [];
 
+    // 管理者ユーザーを取得
+    const { users } = getCurrentUserAndAll();
+    const adminUsers = users.filter(u => u.role === 'admin');
+
     if (isNewIncident) {
       // 新規登録時：起票で管理者に通知
       if (newStatus === INCIDENT_STATUS.REPORTED) {
-        accounts = getAdminAccounts();
+        for (const adminUser of adminUsers) {
+          const account = getSlackAccountByEmail(adminUser.email);
+          if (account) {
+            accounts.push(account);
+          }
+        }
       }
     } else {
       // 編集時：ステータス変更時のみ通知
@@ -46,7 +53,12 @@ export function sendSlack({
         newStatus === INCIDENT_STATUS.REVIEW_REQUESTED
       ) {
         // 管理者に通知
-        accounts = getAdminAccounts();
+        for (const adminUser of adminUsers) {
+          const account = getSlackAccountByEmail(adminUser.email);
+          if (account) {
+            accounts.push(account);
+          }
+        }
       } else if (newStatus === INCIDENT_STATUS.REJECTED) {
         // 担当者に通知（ただし管理者のみ差し戻し可能）
         const account = getSlackAccountByEmail(originalUserEmail);
@@ -132,13 +144,7 @@ function notifySlack({
   message,
 }: NotifyStatusChangedArgs): void {
   try {
-    const token =
-      PropertiesService.getScriptProperties().getProperty('SLACK_BOT_TOKEN');
-
-    if (!token) {
-      console.warn('SLACK_BOT_TOKEN が設定されていません');
-      return;
-    }
+    const token = getSlackBotToken();
 
     // ステータスに応じた絵文字とカラーを取得
     const { emoji, statusColor } = getStatusEmojiAndColor(newStatus);

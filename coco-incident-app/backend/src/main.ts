@@ -7,17 +7,13 @@ import {
   getScriptProperty as _getScriptProperty,
   extractSheetIdFromUrl as _extractSheetIdFromUrl,
   extractFolderIdFromUrl as _extractFolderIdFromUrl,
-  getAdminEmails as _getAdminEmails,
-  isAdmin as _isAdmin,
 } from './utils';
 import { sendSlack as _sendSlack } from './slack/sendSlack';
 import {
   getAllPermissions as _getAllPermissions,
+  getCurrentUserAndAll as _getCurrentUserAndAll,
   addUser as _addUser,
-  updateUser as _updateUser,
   removeUser as _removeUser,
-  getUserPermission as _getUserPermission,
-  isUserAdmin as _isUserAdmin,
 } from './permissions/permissionManager';
 
 /**
@@ -43,14 +39,10 @@ if (typeof window !== 'undefined') {
   window.getScriptProperty = _getScriptProperty;
   window.extractSheetIdFromUrl = _extractSheetIdFromUrl;
   window.extractFolderIdFromUrl = _extractFolderIdFromUrl;
-  window.getAdminEmails = _getAdminEmails;
-  window.isAdmin = _isAdmin;
   window.uploadFileToDrive = _uploadFileToDrive;
   window.sendSlack = _sendSlack;
   window.getAllPermissions = _getAllPermissions;
+  window.getCurrentUserAndAll = _getCurrentUserAndAll;
   window.addUser = _addUser;
-  window.updateUser = _updateUser;
   window.removeUser = _removeUser;
-  window.getUserPermission = _getUserPermission;
-  window.isUserAdmin = _isUserAdmin;
 }

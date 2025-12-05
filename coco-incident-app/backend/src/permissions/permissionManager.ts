@@ -1,6 +1,10 @@
-import { getScriptProperty } from '../utils';
 import { getSlackAccountByEmail } from '../slack/getSlackUser';
-import { UserPermission } from './permissionTypes';
+import { UserPermission, CurrentUserAndAllUsers } from './permissionTypes';
+import {
+  getPermissionsCsvFileId,
+  getSpreadSheetId,
+  getUploadFolderId,
+} from '../properties';
 
 /**
  * グローバルキャッシュキー
@@ -8,14 +12,53 @@ import { UserPermission } from './permissionTypes';
 const PERMISSIONS_CACHE_KEY = 'permissions_cache';
 
 /**
- * CSVファイルからすべてのユーザー権限を取得
+ * 現在のユーザーと全ユーザーの情報を取得
+ */
+export function getCurrentUserAndAll(): CurrentUserAndAllUsers {
+  try {
+    const currentUserEmail = Session.getEffectiveUser().getEmail();
+
+    // すべてのユーザー権限を取得（キャッシュを利用）
+    const permissions = getAllPermissions();
+
+    // 現在のユーザー情報を取得
+    const currentUser = permissions.find(p => p.email === currentUserEmail);
+
+    if (!currentUser) {
+      throw new Error(
+        `現在のユーザーが権限管理に登録されていません: ${currentUserEmail}`
+      );
+    }
+
+    return {
+      current_user: currentUserEmail,
+      role: currentUser.role,
+      users: permissions,
+    };
+  } catch (error) {
+    console.error('getCurrentUserAndAll error:', error);
+    throw new Error(
+      `ユーザー情報の取得に失敗しました: ${(error as Error).message}`
+    );
+  }
+}
+
+/**
+ * CSVファイルからすべてのユーザー権限を取得（キャッシュを使用）
  */
 export function getAllPermissions(): UserPermission[] {
   try {
-    const csvFileId = getScriptProperty(
-      'PERMISSIONS_CSV_FILE_ID',
-      '権限管理CSVファイルIDが設定されていません。'
-    );
+    // キャッシュから取得を試みる
+    const cache = CacheService.getScriptCache();
+    const cached = cache.get(PERMISSIONS_CACHE_KEY);
+
+    // キャッシュが存在し、空でない場合はそれを使用
+    if (cached && cached.trim() !== '') {
+      return JSON.parse(cached) as UserPermission[];
+    }
+
+    // キャッシュが空または存在しない場合はCSVから取得
+    const csvFileId = getPermissionsCsvFileId();
 
     const file = DriveApp.getFileById(csvFileId);
     const csvContent = file.getBlob().getDataAsString();
@@ -23,8 +66,7 @@ export function getAllPermissions(): UserPermission[] {
     const permissions: UserPermission[] = [];
     const lines = csvContent.split('\n');
 
-    // ヘッダー行をスキップして処理
-    for (let i = 1; i < lines.length; i++) {
+    for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
 
@@ -40,7 +82,6 @@ export function getAllPermissions(): UserPermission[] {
     }
 
     // キャッシュに保存
-    const cache = CacheService.getScriptCache();
     cache.put(PERMISSIONS_CACHE_KEY, JSON.stringify(permissions), 21600); // 6時間
 
     return permissions;
@@ -49,24 +90,6 @@ export function getAllPermissions(): UserPermission[] {
     throw new Error(
       `権限情報の取得に失敗しました: ${(error as Error).message}`
     );
-  }
-}
-
-/**
- * キャッシュから権限情報を取得
- */
-export function getPermissionsFromCache(): UserPermission[] | null {
-  try {
-    const cache = CacheService.getScriptCache();
-    const cached = cache.get(PERMISSIONS_CACHE_KEY);
-
-    if (cached) {
-      return JSON.parse(cached) as UserPermission[];
-    }
-    return null;
-  } catch (error) {
-    console.error('getPermissionsFromCache error:', error);
-    return null;
   }
 }
 
@@ -130,64 +153,6 @@ export function addUser(email: string, role: 'admin' | 'user'): UserPermission {
 }
 
 /**
- * ユーザーを更新
- */
-export function updateUser(
-  email: string,
-  role: 'admin' | 'user'
-): UserPermission {
-  try {
-    if (!email || !role) {
-      throw new Error('メールアドレスとロールが必須です。');
-    }
-
-    // 既存のすべての権限を取得
-    const permissions = getAllPermissions();
-
-    // 更新対象を探す
-    const userIndex = permissions.findIndex(p => p.email === email);
-    if (userIndex === -1) {
-      throw new Error(`ユーザーが見つかりません: ${email}`);
-    }
-
-    // 前のロールを保存
-    const oldRole = permissions[userIndex].role;
-
-    // ロール変更がない場合はスキップ
-    if (oldRole === role) {
-      return permissions[userIndex];
-    }
-
-    // ロールを更新
-    permissions[userIndex].role = role;
-
-    // CSVとキャッシュを更新
-    updatePermissionsFile(permissions);
-
-    // CSVアクセス権限を更新
-    try {
-      revokeCSVAccess(email);
-      grantCSVAccess(email, role);
-      console.log(
-        `${email} のロールを${oldRole}から${role}に変更し、CSVアクセス権限を更新しました。`
-      );
-    } catch (accessError) {
-      console.error(
-        `CSVアクセス権限の更新に失敗しました: ${(accessError as Error).message}`
-      );
-      throw new Error(
-        `ユーザーのロール更新は完了しましたが、CSVアクセス権限の更新に失敗しました: ${(accessError as Error).message}`
-      );
-    }
-
-    return permissions[userIndex];
-  } catch (error) {
-    console.error('updateUser error:', error);
-    throw new Error(`ユーザー更新に失敗しました: ${(error as Error).message}`);
-  }
-}
-
-/**
  * ユーザーを削除
  */
 export function removeUser(email: string): void {
@@ -232,33 +197,6 @@ export function removeUser(email: string): void {
 }
 
 /**
- * 指定されたメールアドレスのユーザー権限を取得
- */
-export function getUserPermission(email: string): UserPermission | null {
-  try {
-    // キャッシュから取得を試みる
-    let permissions = getPermissionsFromCache();
-
-    if (!permissions) {
-      permissions = getAllPermissions();
-    }
-
-    return permissions.find(p => p.email === email) || null;
-  } catch (error) {
-    console.error('getUserPermission error:', error);
-    return null;
-  }
-}
-
-/**
- * メールアドレスがadminかどうかを判定
- */
-export function isUserAdmin(email: string): boolean {
-  const permission = getUserPermission(email);
-  return permission?.role === 'admin';
-}
-
-/**
  * 権限情報をCSVファイルとキャッシュに保存
  */
 function updatePermissionsFile(permissions: UserPermission[]): void {
@@ -270,10 +208,7 @@ function updatePermissionsFile(permissions: UserPermission[]): void {
     });
 
     // ファイルを更新
-    const csvFileId = getScriptProperty(
-      'PERMISSIONS_CSV_FILE_ID',
-      '権限管理CSVファイルIDが設定されていません。'
-    );
+    const csvFileId = getPermissionsCsvFileId();
 
     const file = DriveApp.getFileById(csvFileId);
     file.setContent(csvContent);
@@ -294,10 +229,7 @@ function updatePermissionsFile(permissions: UserPermission[]): void {
  */
 export function grantSpreadsheetAccess(email: string): void {
   try {
-    const spreadsheetId = getScriptProperty(
-      'SPREADSHEET_ID',
-      'メインスプレッドシートIDが設定されていません。'
-    );
+    const spreadsheetId = getSpreadSheetId();
 
     const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
     spreadsheet.addEditor(email);
@@ -316,10 +248,7 @@ export function grantSpreadsheetAccess(email: string): void {
  */
 export function grantFolderAccess(email: string): void {
   try {
-    const uploadFolderId = getScriptProperty(
-      'UPLOAD_FOLDER_ID',
-      'アップロードフォルダIDが設定されていません。'
-    );
+    const uploadFolderId = getUploadFolderId();
 
     const folder = DriveApp.getFolderById(uploadFolderId);
     folder.addEditor(email);
@@ -338,10 +267,7 @@ export function grantFolderAccess(email: string): void {
  */
 export function grantCSVAccess(email: string, role: 'admin' | 'user'): void {
   try {
-    const csvFileId = getScriptProperty(
-      'PERMISSIONS_CSV_FILE_ID',
-      '権限管理CSVファイルIDが設定されていません。'
-    );
+    const csvFileId = getPermissionsCsvFileId();
 
     const file = DriveApp.getFileById(csvFileId);
 
@@ -365,10 +291,7 @@ export function grantCSVAccess(email: string, role: 'admin' | 'user'): void {
  */
 export function revokeSpreadsheetAccess(email: string): void {
   try {
-    const spreadsheetId = getScriptProperty(
-      'SPREADSHEET_ID',
-      'メインスプレッドシートIDが設定されていません。'
-    );
+    const spreadsheetId = getSpreadSheetId();
 
     const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
     spreadsheet.removeEditor(email);
@@ -387,10 +310,7 @@ export function revokeSpreadsheetAccess(email: string): void {
  */
 export function revokeFolderAccess(email: string): void {
   try {
-    const uploadFolderId = getScriptProperty(
-      'UPLOAD_FOLDER_ID',
-      'アップロードフォルダIDが設定されていません。'
-    );
+    const uploadFolderId = getUploadFolderId();
 
     const folder = DriveApp.getFolderById(uploadFolderId);
     folder.removeEditor(email);
@@ -409,10 +329,7 @@ export function revokeFolderAccess(email: string): void {
  */
 export function revokeCSVAccess(email: string): void {
   try {
-    const csvFileId = getScriptProperty(
-      'PERMISSIONS_CSV_FILE_ID',
-      '権限管理CSVファイルIDが設定されていません。'
-    );
+    const csvFileId = getPermissionsCsvFileId();
 
     const file = DriveApp.getFileById(csvFileId);
     file.removeEditor(email);

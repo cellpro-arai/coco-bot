@@ -1,3 +1,5 @@
+import { getSlackBotToken } from '../properties';
+
 export type SlackAccount = {
   id: string;
   name: string;
@@ -12,13 +14,7 @@ export type SlackAccount = {
  */
 export function getSlackAccountByEmail(email: string): SlackAccount | null {
   try {
-    const token =
-      PropertiesService.getScriptProperties().getProperty('SLACK_BOT_TOKEN');
-
-    if (!token) {
-      console.warn('SLACK_BOT_TOKEN が設定されていません');
-      return null;
-    }
+    const token = getSlackBotToken();
 
     const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
       method: 'get',
@@ -51,34 +47,4 @@ export function getSlackAccountByEmail(email: string): SlackAccount | null {
     console.error('getAccountByEmail error:', error);
     return null;
   }
-}
-
-/**
- * 管理者ユーザーのSlackアカウント一覧を取得する
- * @returns {SlackAccount[]} 管理者ユーザーのSlackアカウント一覧
- */
-export function getAdminAccounts(): SlackAccount[] {
-  const adminEmailsCsv =
-    PropertiesService.getScriptProperties().getProperty('ADMIN_EMAILS');
-  if (!adminEmailsCsv) {
-    console.warn('ADMIN_EMAILSプロパティが設定されていません。');
-    return [];
-  }
-
-  const adminEmails = adminEmailsCsv
-    .split(',')
-    .map(email => email.trim())
-    .filter(email => email.length > 0);
-  const adminAccounts: SlackAccount[] = [];
-
-  for (const email of adminEmails) {
-    const account = getSlackAccountByEmail(email);
-    if (account) {
-      adminAccounts.push(account);
-    } else {
-      console.warn(`管理者ユーザーが見つかりませんでした: ${email}`);
-    }
-  }
-
-  return adminAccounts;
 }

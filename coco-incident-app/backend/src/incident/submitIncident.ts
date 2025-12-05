@@ -1,24 +1,22 @@
 import { IncidentData, IncidentResult, IncidentRecord } from './incidentType';
-import {
-  getScriptProperty,
-  extractSheetIdFromUrl,
-  extractFolderIdFromUrl,
-  getAdminEmails,
-} from '../utils';
+import { extractSheetIdFromUrl, extractFolderIdFromUrl } from '../utils';
 import { getOrCreateIncidentSheet } from './getOrCreateIncidentSheet';
 import { findIncidentRowByDate } from './findIncidentRowByDate';
 import { uploadFileToDrive } from '../drive';
 import { sendSlack } from '../slack/sendSlack';
+import { getAllPermissions } from '../permissions/permissionManager';
+import {
+  getUploadFolderId,
+  getSpreadSheetId,
+  getTemplateSheetId,
+} from '../properties';
 
 /**
  * インシデント情報をスプレッドシートに保存
  */
 export function submitIncident(incidentData: IncidentData): IncidentResult {
   try {
-    const spreadsheetId = getScriptProperty(
-      'SPREADSHEET_ID',
-      'スプレッドシートIDが設定されていません。'
-    );
+    const spreadsheetId = getSpreadSheetId();
     const ss = SpreadsheetApp.openById(spreadsheetId);
     const userEmail = Session.getEffectiveUser().getEmail();
 
@@ -55,10 +53,7 @@ export function submitIncident(incidentData: IncidentData): IncidentResult {
     } else {
       incidentDate = new Date();
 
-      const parentFolderId = getScriptProperty(
-        'UPLOAD_FOLDER_ID',
-        'アップロード先のフォルダIDが設定されていません。'
-      );
+      const parentFolderId = getUploadFolderId();
       const parentFolder = DriveApp.getFolderById(parentFolderId);
       const folderName = `${
         incidentData.caseName
@@ -71,15 +66,14 @@ export function submitIncident(incidentData: IncidentData): IncidentResult {
       const newFolder = parentFolder.createFolder(folderName);
       driveFolderUrl = newFolder.getUrl();
 
-      const adminEmails = getAdminEmails();
-      adminEmails.forEach(admin => {
-        newFolder.addEditor(admin);
+      const adminUsers = getAllPermissions().filter(
+        user => user.role === 'admin'
+      );
+      adminUsers.forEach(admin => {
+        newFolder.addEditor(admin.email);
       });
 
-      const templateSheetId = getScriptProperty(
-        'TEMPLATE_SHEET_ID',
-        'テンプレートスプレッドシートIDが設定されていません。'
-      );
+      const templateSheetId = getTemplateSheetId();
       const templateFile = DriveApp.getFileById(templateSheetId);
       const newSheet = templateFile.makeCopy(
         `${incidentData.caseName}_詳細`,

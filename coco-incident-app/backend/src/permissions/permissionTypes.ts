@@ -15,3 +15,12 @@ export type PermissionRecord = {
   role: string;
   slackUserId: string;
 };
+
+/**
+ * 現在のユーザーと全ユーザーの情報
+ */
+export type CurrentUserAndAllUsers = {
+  current_user: string;
+  role: 'admin' | 'user';
+  users: UserPermission[];
+};

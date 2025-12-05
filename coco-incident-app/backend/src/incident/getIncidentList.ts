@@ -3,23 +3,20 @@ import {
   IncidentRecord,
   AI_ANALYSIS_STATUS,
 } from './incidentType';
-import { getScriptProperty } from '../utils';
 import { extractSheetIdFromUrl } from '../utils';
-import { isAdmin } from '../utils';
+import { getCurrentUserAndAll } from '../permissions/permissionManager';
+import { getSpreadSheetId } from '../properties';
 
 /**
  * インシデント一覧を取得
  */
 export function getIncidentList(): IncidentRecord[] {
   try {
-    const spreadsheetId = getScriptProperty(
-      'SPREADSHEET_ID',
-      'スプレッドシートIDが設定されていません。'
-    );
+    const spreadsheetId = getSpreadSheetId();
     const ss = SpreadsheetApp.openById(spreadsheetId);
 
-    const userEmail = Session.getEffectiveUser().getEmail();
-    const userIsAdmin = isAdmin(userEmail);
+    const userInfo = getCurrentUserAndAll();
+    const userIsAdmin = userInfo.role === 'admin';
 
     const incidentSheet = ss.getSheetByName(INCIDENT_SHEET_NAME);
     if (!incidentSheet) {
@@ -35,7 +32,7 @@ export function getIncidentList(): IncidentRecord[] {
 
     // 管理者は全件表示、一般ユーザーは自分が登録したもののみ表示
     if (!userIsAdmin) {
-      values = values.filter(row => row[1] === userEmail);
+      values = values.filter(row => row[1] === userInfo.current_user);
     }
 
     const records: IncidentRecord[] = [];
