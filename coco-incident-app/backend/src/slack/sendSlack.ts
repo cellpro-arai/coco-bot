@@ -1,5 +1,5 @@
 import { getCurrentUserAndAll } from '../permissions/permissionManager';
-import { getSlackBotToken } from '../properties';
+import { getSlackBotToken, getDeployUrl } from '../properties';
 import { INCIDENT_STATUS, USER_ROLE } from '../types/constants';
 
 /**
@@ -11,7 +11,6 @@ export function sendSlack({
   assignee,
   oldStatus,
   newStatus,
-  incidentDetailUrl,
   originalUserEmail,
   isNewIncident,
 }: {
@@ -19,7 +18,6 @@ export function sendSlack({
   assignee: string;
   oldStatus: string;
   newStatus: string;
-  incidentDetailUrl: string;
   originalUserEmail: string;
   isNewIncident: boolean;
 }) {
@@ -75,7 +73,6 @@ export function sendSlack({
         assignee: assignee,
         oldStatus: oldStatus,
         newStatus: newStatus,
-        incidentDetailUrl: incidentDetailUrl,
         userId: userId,
         message: isNewIncident
           ? '新しいインシデントが登録されました'
@@ -93,7 +90,6 @@ type NotifyStatusChangedArgs = {
   assignee: string;
   oldStatus: string;
   newStatus: string;
-  incidentDetailUrl: string;
   userId: string;
   message: string;
 };
@@ -131,12 +127,12 @@ function notifySlack({
   assignee,
   oldStatus,
   newStatus,
-  incidentDetailUrl,
   userId,
   message,
 }: NotifyStatusChangedArgs): void {
   try {
     const token = getSlackBotToken();
+    const deployUrl = getDeployUrl();
 
     // ステータスに応じた絵文字とカラーを取得
     const { emoji, statusColor } = getStatusEmojiAndColor(newStatus);
@@ -167,10 +163,10 @@ function notifySlack({
                   type: 'button',
                   text: {
                     type: 'plain_text',
-                    text: 'インシデント詳細を見る',
+                    text: 'インシデント管理画面へ',
                     emoji: true,
                   },
-                  url: incidentDetailUrl,
+                  url: deployUrl,
                 },
               ],
             },

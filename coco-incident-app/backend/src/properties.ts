@@ -38,3 +38,6 @@ export const getPermissionsCsvFileId = () =>
 
 export const getSlackBotToken = () =>
   getScriptProperty('SLACK_BOT_TOKEN', 'SLACK_BOT_TOKENが設定されていません。');
+
+export const getDeployUrl = () =>
+  getScriptProperty('DEPLOY_URL', 'DEPLOY_URLが設定されていません。');

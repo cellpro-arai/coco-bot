@@ -189,7 +189,6 @@ export function submitIncident(incidentData: IncidentData): IncidentResult {
       assignee: incidentData.assignee,
       oldStatus: oldStatus,
       newStatus: incidentData.status,
-      incidentDetailUrl: incidentDetailUrl,
       originalUserEmail: originalUserEmail,
       isNewIncident: !isEditMode,
     });
