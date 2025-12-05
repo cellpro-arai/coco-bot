@@ -92,6 +92,7 @@ function MainPage() {
               }
               onRefresh={handleRefresh}
               isRefreshing={isRefreshing}
+              isAdmin={isAdmin}
             />
           )}
 

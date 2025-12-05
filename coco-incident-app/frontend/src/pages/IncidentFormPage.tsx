@@ -38,6 +38,7 @@ import {
   ArrowPathIcon,
   CheckCircleIcon,
 } from '../components/icons';
+import { isStatusDisabled, getAllStatuses } from '../utils';
 
 interface IncidentFormPageProps {
   selectedIncident: Incident | null;
@@ -115,34 +116,9 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
   };
 
   // ステータスが非活性かどうかを判定
-  const isStatusDisabled = (status: string) => {
-    if (!selectedIncident) {
-      // 新規起票時は「起票」のみ有効
-      return status !== INCIDENT_STATUS.REPORTED;
-    }
-
-    // 更新時は「起票」を非活性
-    if (status === INCIDENT_STATUS.REPORTED) {
-      return true;
-    }
-
-    if (isAdmin) {
-      // 管理者は全て有効（起票以外）
-      return false;
-    } else {
-      // ユーザーロールは「確認依頼」のみ有効
-      return status !== INCIDENT_STATUS.REVIEW_REQUESTED;
-    }
+  const handleStatusDisabled = (status: string) => {
+    return isStatusDisabled(status, selectedIncident, isAdmin);
   };
-
-  // 全ステータスを表示用に取得
-  const getAllStatuses = () => [
-    INCIDENT_STATUS.REPORTED,
-    INCIDENT_STATUS.REVIEW_REQUESTED,
-    INCIDENT_STATUS.REJECTED,
-    INCIDENT_STATUS.IN_PROGRESS,
-    INCIDENT_STATUS.CLOSED,
-  ];
 
   const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -309,7 +285,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                   <option
                     key={status}
                     value={status}
-                    disabled={isStatusDisabled(status)}
+                    disabled={handleStatusDisabled(status)}
                   >
                     {status}
                   </option>

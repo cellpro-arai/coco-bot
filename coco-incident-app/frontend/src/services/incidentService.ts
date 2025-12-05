@@ -63,3 +63,39 @@ export function submitIncident(
     }
   });
 }
+
+/**
+ * インシデントのステータスを更新します。
+ * @param {string} registeredDate インシデント登録日時
+ * @param {string} newStatus 新しいステータス
+ * @returns {Promise<IncidentResult>} 更新結果
+ */
+export function updateIncidentStatus(
+  registeredDate: string,
+  newStatus: string
+): Promise<IncidentResult> {
+  return new Promise((resolve, reject) => {
+    if (import.meta.env.DEV) {
+      // 開発環境用のモック
+      setTimeout(() => {
+        console.log(
+          `[開発モード] ステータス更新: ${registeredDate} -> ${newStatus}`
+        );
+
+        resolve({
+          success: true,
+          message: 'ステータスを更新しました',
+          incidentDate: new Date().toISOString(),
+          record: undefined,
+        });
+      }, 500);
+    } else {
+      google.script.run
+        .withSuccessHandler((result: IncidentResult) => resolve(result))
+        .withFailureHandler((error: Error) =>
+          reject(new Error(`ステータス更新に失敗しました: ${error.message}`))
+        )
+        .updateIncidentStatus(registeredDate, newStatus);
+    }
+  });
+}

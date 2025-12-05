@@ -14,6 +14,8 @@ import {
 } from '../components/icons';
 import { ConfirmEditIncidentModal } from '../components/modals';
 import { INCIDENT_STATUS } from '../types/constants';
+import { updateIncidentStatus } from '../services/incidentService';
+import { canChangeStatus, getAllStatuses } from '../utils';
 
 interface IncidentListPageProps {
   incidents: Incident[];
@@ -23,6 +25,7 @@ interface IncidentListPageProps {
   showPermissionManagement?: () => void;
   onRefresh?: () => void;
   isRefreshing?: boolean;
+  isAdmin?: boolean;
 }
 
 const IncidentListPage: React.FC<IncidentListPageProps> = ({
@@ -33,6 +36,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
   showPermissionManagement,
   onRefresh,
   isRefreshing = false,
+  isAdmin = false,
 }) => {
   // uploadFolderUrl が空の場合はローディング状態
   const isLoading = !uploadFolderUrl;
@@ -41,6 +45,11 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
   const [isConfirmOpen, setIsConfirmOpen] = React.useState(false);
   const [selectedIncident, setSelectedIncident] =
     React.useState<Incident | null>(null);
+
+  // ステータス変更UI関連の状態
+  const [statusChangeIncident, setStatusChangeIncident] =
+    React.useState<Incident | null>(null);
+  const [isStatusUpdating, setIsStatusUpdating] = React.useState(false);
 
   // カードクリック時の処理
   const handleCardClick = (incident: Incident) => {
@@ -69,6 +78,32 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
   const handleCloseModal = () => {
     setIsConfirmOpen(false);
     setSelectedIncident(null);
+  };
+
+  // ステータス変更処理
+  const handleStatusChange = async (newStatus: string) => {
+    if (!statusChangeIncident) return;
+
+    try {
+      setIsStatusUpdating(true);
+      await updateIncidentStatus(
+        statusChangeIncident.registeredDate,
+        newStatus
+      );
+
+      // ステータス変更後、インシデント一覧を更新する
+      // 実装例：onRefresh()を呼ぶか、状態を直接更新
+      if (onRefresh) {
+        onRefresh();
+      }
+
+      setStatusChangeIncident(null);
+    } catch (error) {
+      console.error('ステータス変更に失敗しました:', error);
+      // エラーハンドリング（トーストなど）が必要に応じて追加
+    } finally {
+      setIsStatusUpdating(false);
+    }
   };
 
   return (
@@ -144,8 +179,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
               {incidents.map(incident => (
                 <Card
                   key={incident.registeredDate}
-                  onClick={() => handleCardClick(incident)}
-                  className="relative cursor-pointer transition-transform hover:scale-105"
+                  className="relative cursor-default transition-none"
                 >
                   <div className="flex justify-between items-start mb-3 gap-2">
                     <h5 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-0 line-clamp-2">
@@ -163,7 +197,6 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                           href={incident.driveFolderUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          onClick={e => e.stopPropagation()}
                           className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
                           title="Driveフォルダを開く"
                         >
@@ -198,9 +231,61 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                       <span className="text-sm">{incident.status}</span>
                     </Badge>
                   </div>
-                  <p className="line-clamp-2 text-sm text-gray-700 dark:text-gray-300 mb-0">
+                  <p className="line-clamp-2 text-sm text-gray-700 dark:text-gray-300 mb-4">
                     {incident.summary}
                   </p>
+
+                  {statusChangeIncident?.registeredDate ===
+                  incident.registeredDate ? (
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+                      <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        ステータスを変更
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        {getAllStatuses().map(status => {
+                          const isDisabled =
+                            isStatusUpdating ||
+                            !canChangeStatus(incident.status, status, isAdmin);
+                          return (
+                            <button
+                              key={status}
+                              onClick={() => handleStatusChange(status)}
+                              disabled={isDisabled}
+                              className={`px-3 py-1.5 text-sm rounded transition-colors ${
+                                isDisabled
+                                  ? 'bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed'
+                                  : 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-800'
+                              }`}
+                            >
+                              {status}
+                            </button>
+                          );
+                        })}
+                        <button
+                          onClick={() => setStatusChangeIncident(null)}
+                          disabled={isStatusUpdating}
+                          className="px-3 py-1.5 text-sm rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          キャンセル
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleCardClick(incident)}
+                        className="flex-1 px-3 py-2 text-sm rounded bg-gray-400 text-white hover:bg-gray-500 dark:bg-gray-600 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        編集
+                      </button>
+                      <button
+                        onClick={() => setStatusChangeIncident(incident)}
+                        className="flex-1 px-3 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors"
+                      >
+                        ステータス変更
+                      </button>
+                    </div>
+                  )}
                 </Card>
               ))}
             </div>

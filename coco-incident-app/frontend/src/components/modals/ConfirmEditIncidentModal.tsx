@@ -33,17 +33,17 @@ const ConfirmEditIncidentModal: React.FC<ConfirmEditIncidentModalProps> = ({
       size="sm"
       footer={
         <div className="flex justify-center gap-3">
+          <Button variant="secondary" onClick={onConfirm} disabled={isLoading}>
+            {isLoading ? '...' : 'そのまま開く'}
+          </Button>
           <Button
-            variant="secondary"
+            variant="primary"
             onClick={onEditSpreadsheet}
             disabled={isLoading}
-            className="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white"
+            className="flex items-center gap-3 text-white"
           >
             <ArrowTopRightOnSquareIcon className="w-4 h-4" />
             シートへ
-          </Button>
-          <Button variant="primary" onClick={onConfirm} disabled={isLoading}>
-            {isLoading ? '開く中...' : 'そのまま開く'}
           </Button>
         </div>
       }
