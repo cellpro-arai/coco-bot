@@ -356,9 +356,7 @@ export function grantCSVAccess(email: string, role: 'admin' | 'user'): void {
     }
   } catch (error) {
     console.error('grantCSVAccess error:', error);
-    throw new Error(
-      `CSV権限付与に失敗しました: ${(error as Error).message}`
-    );
+    throw new Error(`CSV権限付与に失敗しました: ${(error as Error).message}`);
   }
 }
 
@@ -423,8 +421,6 @@ export function revokeCSVAccess(email: string): void {
     console.log(`${email} のCSVファイルアクセス権限を剥奪しました。`);
   } catch (error) {
     console.error('revokeCSVAccess error:', error);
-    throw new Error(
-      `CSV権限剥奪に失敗しました: ${(error as Error).message}`
-    );
+    throw new Error(`CSV権限剥奪に失敗しました: ${(error as Error).message}`);
   }
 }

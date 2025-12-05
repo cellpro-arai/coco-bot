@@ -255,7 +255,9 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
               <FormLabel
                 htmlFor="caseName"
                 required
-                icon={<FolderIcon className="text-blue-600 w-3 sm:w-4 h-3 sm:h-4" />}
+                icon={
+                  <FolderIcon className="text-blue-600 w-3 sm:w-4 h-3 sm:h-4" />
+                }
               >
                 案件名
               </FormLabel>
@@ -278,7 +280,9 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
               <FormLabel
                 htmlFor="assignee"
                 required
-                icon={<UserIcon className="text-blue-600 w-3 sm:w-4 h-3 sm:h-4" />}
+                icon={
+                  <UserIcon className="text-blue-600 w-3 sm:w-4 h-3 sm:h-4" />
+                }
               >
                 担当者
               </FormLabel>

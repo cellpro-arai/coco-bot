@@ -219,7 +219,9 @@ function PermissionManagementPage({
                           variant="outline"
                           onClick={() => handleDelete(permission.email)}
                           disabled={
-                            deleting === permission.email || loading || submitting
+                            deleting === permission.email ||
+                            loading ||
+                            submitting
                           }
                           className="text-red-600 dark:text-red-400 border-red-300 dark:border-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs sm:text-base"
                         >

@@ -87,7 +87,9 @@ interface FormHelperTextProps {
 
 export const FormHelperText: React.FC<FormHelperTextProps> = ({ children }) => {
   return (
-    <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400">{children}</p>
+    <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+      {children}
+    </p>
   );
 };
 

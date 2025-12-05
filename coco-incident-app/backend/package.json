@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Google Apps Script backend",
   "scripts": {
-    "build": "npm run remove-dist && vite build && npm run copy-manifest",
+    "build": "npm run remove-dist && tsc --noEmit && vite build && npm run copy-manifest",
     "copy-manifest": "cp ../appsscript.json ../dist/",
     "remove-dist": "rm -rf ../dist",
     "format": "prettier --write ."

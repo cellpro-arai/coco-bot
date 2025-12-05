@@ -25,7 +25,7 @@ import {
  */
 function doGet(): GoogleAppsScript.HTML.HtmlOutput {
   return HtmlService.createHtmlOutputFromFile('index')
-    .setTitle('【セルプロ】インシデント管理')
+    .setTitle('coco-incident-app')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 

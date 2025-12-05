@@ -128,7 +128,9 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                       variant="primary"
                       icon={<UserIcon className="mr-1 w-3 sm:w-4 h-3 sm:h-4" />}
                     >
-                      <span className="text-xs sm:text-sm">{incident.assignee}</span>
+                      <span className="text-xs sm:text-sm">
+                        {incident.assignee}
+                      </span>
                     </Badge>
                     <Badge
                       variant={
@@ -144,7 +146,9 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                       }
                       icon={<FlagIcon className="mr-1 w-3 sm:w-4 h-3 sm:h-4" />}
                     >
-                      <span className="text-xs sm:text-sm">{incident.status}</span>
+                      <span className="text-xs sm:text-sm">
+                        {incident.status}
+                      </span>
                     </Badge>
                   </div>
                   <p className="line-clamp-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 mb-0">
