@@ -113,8 +113,8 @@ const StatusChangeModal: React.FC<StatusChangeModalProps> = ({
                 disabled={isLoading}
                 className={`group relative p-4 text-left rounded-lg border-2 transition-all duration-200 ${
                   selectedStatus === status
-                    ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-blue-100/50 dark:from-blue-900/30 dark:to-blue-900/10 shadow-md'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-sm'
+                    ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/50 dark:to-blue-900/30 shadow-md'
+                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-sm'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <div className="flex items-start gap-3">
