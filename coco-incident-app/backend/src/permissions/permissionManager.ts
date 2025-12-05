@@ -1,5 +1,6 @@
 import { getSlackAccountByEmail } from '../slack/getSlackUser';
 import { UserPermission, CurrentUserAndAllUsers } from './permissionTypes';
+import { USER_ROLE, UserRole } from '../types/constants';
 import {
   getPermissionsCsvFileId,
   getSpreadSheetId,
@@ -75,7 +76,7 @@ export function getAllPermissions(): UserPermission[] {
       if (email && role && slackUserId) {
         permissions.push({
           email,
-          role: role as 'admin' | 'user',
+          role: role as UserRole,
           slackUserId,
         });
       }
@@ -96,7 +97,7 @@ export function getAllPermissions(): UserPermission[] {
 /**
  * ユーザーを追加
  */
-export function addUser(email: string, role: 'admin' | 'user'): UserPermission {
+export function addUser(email: string, role: UserRole): UserPermission {
   try {
     if (!email || !role) {
       throw new Error('メールアドレスとロールが必須です。');
@@ -265,13 +266,13 @@ export function grantFolderAccess(email: string): void {
 /**
  * CSVファイルのアクセス権限を付与（管理者は書き込み、ユーザーは読み取り）
  */
-export function grantCSVAccess(email: string, role: 'admin' | 'user'): void {
+export function grantCSVAccess(email: string, role: UserRole): void {
   try {
     const csvFileId = getPermissionsCsvFileId();
 
     const file = DriveApp.getFileById(csvFileId);
 
-    if (role === 'admin') {
+    if (role === USER_ROLE.ADMIN) {
       // 管理者には編集権限を付与
       file.addEditor(email);
       console.log(`${email} にCSVファイル編集権限を付与しました。`);

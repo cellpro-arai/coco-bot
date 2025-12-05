@@ -1,7 +1,6 @@
-import { getSlackAccountByEmail, SlackAccount } from './getSlackUser';
 import { getCurrentUserAndAll } from '../permissions/permissionManager';
 import { getSlackBotToken } from '../properties';
-import { INCIDENT_STATUS } from '../types/constants';
+import { INCIDENT_STATUS, USER_ROLE } from '../types/constants';
 
 /**
  * Slackにインシデントのステータス変更を通知する
@@ -25,19 +24,18 @@ export function sendSlack({
   isNewIncident: boolean;
 }) {
   try {
-    let accounts: SlackAccount[] = [];
+    let slackUserIds: string[] = [];
 
     // 管理者ユーザーを取得
     const { users } = getCurrentUserAndAll();
-    const adminUsers = users.filter(u => u.role === 'admin');
+    const adminUsers = users.filter(u => u.role === USER_ROLE.ADMIN);
 
     if (isNewIncident) {
       // 新規登録時：起票で管理者に通知
       if (newStatus === INCIDENT_STATUS.REPORTED) {
         for (const adminUser of adminUsers) {
-          const account = getSlackAccountByEmail(adminUser.email);
-          if (account) {
-            accounts.push(account);
+          if (adminUser.slackUserId) {
+            slackUserIds.push(adminUser.slackUserId);
           }
         }
       }
@@ -54,37 +52,31 @@ export function sendSlack({
       ) {
         // 管理者に通知
         for (const adminUser of adminUsers) {
-          const account = getSlackAccountByEmail(adminUser.email);
-          if (account) {
-            accounts.push(account);
+          if (adminUser.slackUserId) {
+            slackUserIds.push(adminUser.slackUserId);
           }
         }
-      } else if (newStatus === INCIDENT_STATUS.REJECTED) {
-        // 担当者に通知（ただし管理者のみ差し戻し可能）
-        const account = getSlackAccountByEmail(originalUserEmail);
-        if (account) {
-          accounts.push(account);
-        }
       } else if (
+        newStatus === INCIDENT_STATUS.REJECTED ||
         newStatus === INCIDENT_STATUS.IN_PROGRESS ||
         newStatus === INCIDENT_STATUS.CLOSED
       ) {
         // 担当者に通知
-        const account = getSlackAccountByEmail(originalUserEmail);
-        if (account) {
-          accounts.push(account);
+        const targetUser = users.find(u => u.email === originalUserEmail);
+        if (targetUser?.slackUserId) {
+          slackUserIds.push(targetUser.slackUserId);
         }
       }
     }
 
-    accounts.forEach(account => {
+    slackUserIds.forEach(userId => {
       notifySlack({
         caseName: caseName,
         assignee: assignee,
         oldStatus: oldStatus,
         newStatus: newStatus,
         incidentDetailUrl: incidentDetailUrl,
-        userId: account.id,
+        userId: userId,
         message: isNewIncident
           ? '新しいインシデントが登録されました'
           : 'インシデントのステータスが変更されました',

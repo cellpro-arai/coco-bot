@@ -11,3 +11,13 @@ export const INCIDENT_STATUS = {
 
 export type IncidentStatus =
   (typeof INCIDENT_STATUS)[keyof typeof INCIDENT_STATUS];
+
+/**
+ * ユーザーロールの定数
+ */
+export const USER_ROLE = {
+  ADMIN: 'admin',
+  USER: 'user',
+} as const;
+
+export type UserRole = (typeof USER_ROLE)[keyof typeof USER_ROLE];

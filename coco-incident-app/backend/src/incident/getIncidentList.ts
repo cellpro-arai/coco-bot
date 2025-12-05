@@ -5,6 +5,7 @@ import {
 } from './incidentType';
 import { extractSheetIdFromUrl } from '../utils';
 import { getCurrentUserAndAll } from '../permissions/permissionManager';
+import { USER_ROLE } from '../types/constants';
 import { getSpreadSheetId } from '../properties';
 
 /**
@@ -16,7 +17,7 @@ export function getIncidentList(): IncidentRecord[] {
     const ss = SpreadsheetApp.openById(spreadsheetId);
 
     const userInfo = getCurrentUserAndAll();
-    const userIsAdmin = userInfo.role === 'admin';
+    const userIsAdmin = userInfo.role === USER_ROLE.ADMIN;
 
     const incidentSheet = ss.getSheetByName(INCIDENT_SHEET_NAME);
     if (!incidentSheet) {

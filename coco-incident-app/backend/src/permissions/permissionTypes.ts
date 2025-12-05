@@ -1,9 +1,11 @@
+import { UserRole } from '../types/constants';
+
 /**
  * ユーザーの権限情報
  */
 export type UserPermission = {
   email: string;
-  role: 'admin' | 'user';
+  role: UserRole;
   slackUserId: string;
 };
 
@@ -21,6 +23,6 @@ export type PermissionRecord = {
  */
 export type CurrentUserAndAllUsers = {
   current_user: string;
-  role: 'admin' | 'user';
+  role: UserRole;
   users: UserPermission[];
 };

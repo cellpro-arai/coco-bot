@@ -5,6 +5,7 @@ import { findIncidentRowByDate } from './findIncidentRowByDate';
 import { uploadFileToDrive } from '../drive';
 import { sendSlack } from '../slack/sendSlack';
 import { getAllPermissions } from '../permissions/permissionManager';
+import { USER_ROLE } from '../types/constants';
 import {
   getUploadFolderId,
   getSpreadSheetId,
@@ -67,7 +68,7 @@ export function submitIncident(incidentData: IncidentData): IncidentResult {
       driveFolderUrl = newFolder.getUrl();
 
       const adminUsers = getAllPermissions().filter(
-        user => user.role === 'admin'
+        user => user.role === USER_ROLE.ADMIN
       );
       adminUsers.forEach(admin => {
         newFolder.addEditor(admin.email);
