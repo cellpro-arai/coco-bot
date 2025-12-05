@@ -1,7 +1,6 @@
 /**
  * インシデント一覧表示用型
  */
-
 export interface Incident {
   registeredDate: string;
   registeredUser: string;

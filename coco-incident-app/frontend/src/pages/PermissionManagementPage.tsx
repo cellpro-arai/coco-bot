@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UserPermission } from '../types';
+import { USER_ROLE, UserPermission, UserRole } from '../types';
 import {
   Button,
   Alert,
@@ -22,7 +22,7 @@ import {
 
 interface FormState {
   email: string;
-  role: 'admin' | 'user';
+  role: UserRole;
 }
 
 interface PermissionManagementPageProps {
@@ -43,7 +43,7 @@ function PermissionManagementPage({
   const [error, setError] = useState<string | null>(null);
   const [formState, setFormState] = useState<FormState>({
     email: '',
-    role: 'user',
+    role: USER_ROLE.USER,
   });
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -78,7 +78,7 @@ function PermissionManagementPage({
       onAddUser(newUser);
 
       // フォームをリセット
-      setFormState({ email: '', role: 'user' });
+      setFormState({ email: '', role: USER_ROLE.USER });
 
       // Toast を表示
       setToastMessage('ユーザーを追加しました。');
@@ -178,7 +178,7 @@ function PermissionManagementPage({
                 onChange={e =>
                   setFormState({
                     ...formState,
-                    role: e.target.value as 'admin' | 'user',
+                    role: e.target.value as UserRole,
                   })
                 }
               >
@@ -252,13 +252,13 @@ function PermissionManagementPage({
                         <td className="px-6 py-4">
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1 ${
-                              permission.role === 'admin'
+                              permission.role === USER_ROLE.ADMIN
                                 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                                 : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
                             }`}
                           >
                             <ShieldCheckIcon className="w-3 h-3" />
-                            {permission.role === 'admin'
+                            {permission.role === USER_ROLE.ADMIN
                               ? '管理者'
                               : 'ユーザー'}
                           </span>
@@ -312,13 +312,15 @@ function PermissionManagementPage({
                         </p>
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1 ${
-                            permission.role === 'admin'
+                            permission.role === USER_ROLE.ADMIN
                               ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                               : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
                           }`}
                         >
                           <ShieldCheckIcon className="w-3 h-3" />
-                          {permission.role === 'admin' ? '管理者' : 'ユーザー'}
+                          {permission.role === USER_ROLE.ADMIN
+                            ? '管理者'
+                            : 'ユーザー'}
                         </span>
                       </div>
                       <div>

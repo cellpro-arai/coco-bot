@@ -1,7 +1,12 @@
 /**
  * @fileoverview 権限管理に関する Google Apps Script との通信
  */
-import { UserPermission, CurrentUserAndAllUsers } from '../types';
+import {
+  UserPermission,
+  CurrentUserAndAllUsers,
+  USER_ROLE,
+  UserRole,
+} from '../types';
 
 /**
  * 現在のユーザーと全ユーザーの権限情報を取得します。
@@ -14,21 +19,21 @@ export function getCurrentUserAndAllPermissions(): Promise<CurrentUserAndAllUser
       setTimeout(() => {
         resolve({
           current_user: 'admin@example.com',
-          role: 'admin',
+          role: USER_ROLE.ADMIN,
           users: [
             {
               email: 'admin@example.com',
-              role: 'admin',
+              role: USER_ROLE.ADMIN,
               slackUserId: 'U123456789',
             },
             {
               email: 'user1@example.com',
-              role: 'user',
+              role: USER_ROLE.USER,
               slackUserId: 'U987654321',
             },
             {
               email: 'user2@example.com',
-              role: 'user',
+              role: USER_ROLE.USER,
               slackUserId: 'U111111111',
             },
           ],
@@ -53,7 +58,7 @@ export function getCurrentUserAndAllPermissions(): Promise<CurrentUserAndAllUser
  */
 export function addUser(
   email: string,
-  role: 'admin' | 'user'
+  role: UserRole
 ): Promise<UserPermission> {
   return new Promise((resolve, reject) => {
     if (import.meta.env.DEV) {

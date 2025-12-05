@@ -1,9 +1,19 @@
 /**
+ * ユーザーロールの定数
+ */
+export const USER_ROLE = {
+  ADMIN: 'admin',
+  USER: 'user',
+} as const;
+
+export type UserRole = (typeof USER_ROLE)[keyof typeof USER_ROLE];
+
+/**
  * ユーザーの権限情報
  */
 export interface UserPermission {
   email: string;
-  role: 'admin' | 'user';
+  role: UserRole;
   slackUserId: string;
 }
 
@@ -12,15 +22,6 @@ export interface UserPermission {
  */
 export interface CurrentUserAndAllUsers {
   current_user: string;
-  role: 'admin' | 'user';
+  role: UserRole;
   users: UserPermission[];
-}
-
-/**
- * 権限追加/削除時の結果
- */
-export interface PermissionResult {
-  success: boolean;
-  message: string;
-  data?: UserPermission;
 }

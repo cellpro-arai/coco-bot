@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Incident, UserPermission } from '../types';
+import { Incident, USER_ROLE, UserPermission } from '../types';
 import { Header, Container } from '../components/layouts';
 import IncidentListPage from './IncidentListPage';
 import IncidentFormPage from './IncidentFormPage';
@@ -35,7 +35,7 @@ function MainPage() {
         setPermissions(userAndPerms.users);
 
         // バックエンドから返される role で管理者かどうかを判定
-        setIsAdmin(userAndPerms.role === 'admin');
+        setIsAdmin(userAndPerms.role === USER_ROLE.ADMIN);
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : '不明なエラーが発生しました';
