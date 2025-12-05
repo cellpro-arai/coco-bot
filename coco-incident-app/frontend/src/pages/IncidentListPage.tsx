@@ -4,6 +4,7 @@ import * as api from '../services/incidentService';
 import { Button, Card, Badge, Alert, ALERT_VARIANT } from '../components/ui';
 import {
   ArrowPathIcon,
+  ArrowTopRightOnSquareIcon,
   ClockIcon,
   ExclamationCircleIcon,
   FlagIcon,
@@ -115,17 +116,32 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                 <Card
                   key={incident.registeredDate}
                   onClick={() => editIncident(incident)}
+                  className="relative"
                 >
                   <div className="flex justify-between items-start mb-3 gap-2">
                     <h5 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-0 line-clamp-2">
                       {incident.caseName}
                     </h5>
-                    {incident.updateDate && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap flex-shrink-0 flex items-center">
-                        <ClockIcon className="mr-0.5 w-3 h-3" />
-                        {incident.updateDate}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {incident.updateDate && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap flex items-center mr-2">
+                          <ClockIcon className="mr-0.5 w-3 h-3" />
+                          {incident.updateDate}
+                        </span>
+                      )}
+                      {incident.driveFolderUrl && (
+                        <a
+                          href={incident.driveFolderUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                          title="Driveフォルダを開く"
+                        >
+                          <ArrowTopRightOnSquareIcon className="w-5 h-5" />
+                        </a>
+                      )}
+                    </div>
                   </div>
                   <div className="flex flex-wrap gap-2 mb-3">
                     <Badge
