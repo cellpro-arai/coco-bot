@@ -187,7 +187,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
               {incidents.map(incident => (
                 <Card
                   key={incident.registeredDate}
-                  className="relative cursor-default transition-none"
+                  className="relative cursor-default transition-none flex flex-col h-full"
                 >
                   <div className="flex justify-between items-start mb-3 gap-2">
                     <h5 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-0 line-clamp-2">
@@ -239,11 +239,11 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                       <span className="text-sm">{incident.status}</span>
                     </Badge>
                   </div>
-                  <p className="line-clamp-2 text-sm text-gray-700 dark:text-gray-300 mb-4">
+                  <p className="line-clamp-2 text-sm text-gray-700 dark:text-gray-300 mb-4 flex-grow">
                     {incident.summary}
                   </p>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 mt-auto">
                     <button
                       onClick={() => handleCardClick(incident)}
                       className="flex-1 px-3 py-2 text-sm rounded bg-gray-400 text-white hover:bg-gray-500 dark:bg-gray-600 dark:hover:bg-gray-700 transition-colors"
