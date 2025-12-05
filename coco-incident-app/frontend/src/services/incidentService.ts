@@ -8,11 +8,8 @@ import {
   AI_ANALYSIS_STATUS,
 } from '../types';
 
-const isDevelopment = typeof google === 'undefined';
-
-// 開発環境で権限エラーをテストする場合は localStorage に 'simulatePermissionError' を設定
 const shouldSimulatePermissionError =
-  isDevelopment && localStorage.getItem('simulatePermissionError') === 'true';
+  localStorage.getItem('simulatePermissionError') === 'true';
 
 /**
  * インシデント一覧を取得します。
@@ -20,7 +17,7 @@ const shouldSimulatePermissionError =
  */
 export function getIncidentList(): Promise<Incident[]> {
   return new Promise((resolve, reject) => {
-    if (isDevelopment) {
+    if (import.meta.env.DEV) {
       // 開発環境用のモックデータ
       setTimeout(() => {
         if (shouldSimulatePermissionError) {
@@ -84,7 +81,7 @@ export function submitIncident(
   data: IncidentFormData
 ): Promise<IncidentResult> {
   return new Promise((resolve, reject) => {
-    if (isDevelopment) {
+    if (import.meta.env.DEV) {
       // 開発環境用のモック
       setTimeout(() => {
         if (shouldSimulatePermissionError) {

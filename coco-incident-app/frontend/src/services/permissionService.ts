@@ -3,15 +3,13 @@
  */
 import { UserPermission, CurrentUserAndAllUsers } from '../types';
 
-const isDevelopment = typeof google === 'undefined';
-
 /**
  * 現在のユーザーと全ユーザーの権限情報を取得します。
  * @returns {Promise<CurrentUserAndAllUsers>} 現在のユーザーと全ユーザーの権限情報
  */
 export function getCurrentUserAndAllPermissions(): Promise<CurrentUserAndAllUsers> {
   return new Promise((resolve, reject) => {
-    if (isDevelopment) {
+    if (import.meta.env.DEV) {
       // 開発環境用のモックデータ
       setTimeout(() => {
         resolve({
@@ -58,7 +56,7 @@ export function addUser(
   role: 'admin' | 'user'
 ): Promise<UserPermission> {
   return new Promise((resolve, reject) => {
-    if (isDevelopment) {
+    if (import.meta.env.DEV) {
       // 開発環境用のモック
       setTimeout(() => {
         const newUser: UserPermission = {
@@ -87,7 +85,7 @@ export function addUser(
  */
 export function removeUser(email: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (isDevelopment) {
+    if (import.meta.env.DEV) {
       // 開発環境用のモック
       setTimeout(() => {
         console.log('[開発モード] ユーザー削除:', email);
