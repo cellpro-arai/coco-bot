@@ -4,10 +4,13 @@ import {
   Button,
   Alert,
   ALERT_VARIANT,
+  Toast,
+  TOAST_VARIANT,
   FormLabel,
   FormEmailInput,
   FormSelect,
 } from '../components/ui';
+import { ConfirmDeleteModal } from '../components/modals';
 import { addUser, removeUser } from '../services/apiService';
 import {
   ArrowLeftIcon,
@@ -38,13 +41,18 @@ function PermissionManagementPage({
   loading = false,
 }: PermissionManagementPageProps) {
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [formState, setFormState] = useState<FormState>({
     email: '',
     role: 'user',
   });
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastVariant, setToastVariant] = useState<'success' | 'error'>(
+    'success'
+  );
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -57,7 +65,6 @@ function PermissionManagementPage({
     try {
       setSubmitting(true);
       setError(null);
-      setSuccess(null);
 
       // メールアドレスに@がない場合は@以下を追加
       const finalEmail = formState.email.includes('@')
@@ -73,8 +80,9 @@ function PermissionManagementPage({
       // フォームをリセット
       setFormState({ email: '', role: 'user' });
 
-      setSuccess('ユーザーを追加しました。');
-      setTimeout(() => setSuccess(null), 3000);
+      // Toast を表示
+      setToastMessage('ユーザーを追加しました。');
+      setToastVariant('success');
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -83,27 +91,32 @@ function PermissionManagementPage({
   };
 
   const handleDelete = async (email: string) => {
-    if (!window.confirm(`${email} を削除しますか？`)) {
-      return;
-    }
+    setDeleteTarget(email);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
 
     try {
-      setDeleting(email);
+      setDeleting(deleteTarget);
       setError(null);
-      setSuccess(null);
 
       // ユーザーを削除
-      await removeUser(email);
+      await removeUser(deleteTarget);
 
       // 状態を更新（再取得しない）
-      onRemoveUser(email);
+      onRemoveUser(deleteTarget);
 
-      setSuccess('ユーザーを削除しました。');
-      setTimeout(() => setSuccess(null), 3000);
+      // Toast を表示
+      setToastMessage('ユーザーを削除しました。');
+      setToastVariant('success');
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setDeleting(null);
+      setDeleteModalOpen(false);
+      setDeleteTarget(null);
     }
   };
 
@@ -122,7 +135,6 @@ function PermissionManagementPage({
 
       <div className="space-y-6">
         {error && <Alert variant={ALERT_VARIANT.DANGER}>{error}</Alert>}
-        {success && <Alert variant={ALERT_VARIANT.SUCCESS}>{success}</Alert>}
 
         {/* 新規ユーザー登録フォーム */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
@@ -336,6 +348,31 @@ function PermissionManagementPage({
           )}
         </div>
       </div>
+
+      <ConfirmDeleteModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setDeleteTarget(null);
+        }}
+        onConfirm={confirmDelete}
+        title="ユーザーを削除しますか？"
+        message={`${deleteTarget} を削除すると、このユーザーはインシデント管理システムにアクセスできなくなります。`}
+        isLoading={deleting === deleteTarget}
+      />
+
+      {toastMessage && (
+        <Toast
+          message={toastMessage}
+          variant={
+            toastVariant === 'success'
+              ? TOAST_VARIANT.SUCCESS
+              : TOAST_VARIANT.ERROR
+          }
+          duration={3000}
+          onClose={() => setToastMessage(null)}
+        />
+      )}
     </div>
   );
 }
