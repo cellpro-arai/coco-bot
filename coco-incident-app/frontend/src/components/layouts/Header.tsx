@@ -28,7 +28,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
             )}
           </Button>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-gray-600 dark:text-gray-400">
           トラブル情報を詳細に記録し、適切な対応を行うための管理システムです
         </p>
       </Container>

@@ -7,6 +7,7 @@ export {
   CheckCircleIcon,
   ClockIcon,
   CloudArrowUpIcon,
+  EnvelopeIcon,
   ExclamationCircleIcon,
   DocumentTextIcon,
   FlagIcon,
@@ -23,6 +24,7 @@ export {
   CpuChipIcon,
   SunIcon,
   XMarkIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/solid';
 
 // from outline

@@ -88,6 +88,7 @@ function MainPage() {
               permissions={permissions}
               onAddUser={handleAddUser}
               onRemoveUser={handleRemoveUser}
+              backToList={backToList}
               loading={loadingPermissions}
             />
           )}

@@ -5,7 +5,9 @@ export type BadgeVariant =
   | 'warning'
   | 'secondary'
   | 'success'
-  | 'contrast';
+  | 'contrast'
+  | 'info'
+  | 'danger';
 
 interface BadgeProps {
   variant?: BadgeVariant;
@@ -20,6 +22,8 @@ const variantClasses: Record<BadgeVariant, string> = {
   secondary: 'bg-gray-600 text-white dark:bg-gray-500',
   success: 'bg-green-600 text-white dark:bg-green-500',
   contrast: 'bg-gray-800 text-white dark:bg-gray-300 dark:text-gray-900',
+  info: 'bg-cyan-600 text-white dark:bg-cyan-500',
+  danger: 'bg-red-600 text-white dark:bg-red-500',
 };
 
 const Badge: React.FC<BadgeProps> = ({

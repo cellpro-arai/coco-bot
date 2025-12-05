@@ -169,11 +169,17 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
 
   return (
     <div className="py-4">
-      {/* 戻るボタン */}
-      <Button variant="secondary" onClick={backToList} className="mb-4">
-        <ArrowLeftIcon className="mr-2 w-5 h-5" />
-        一覧へ戻る
-      </Button>
+      {/* ページヘッダー */}
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+          <PencilSquareIcon className="mr-2 w-8 h-8 flex-shrink-0" />
+          {selectedIncident ? 'インシデント編集' : 'インシデント登録'}
+        </h1>
+        <Button variant="secondary" onClick={backToList}>
+          <ArrowLeftIcon className="mr-2 w-4 h-4" />
+          一覧に戻る
+        </Button>
+      </div>
 
       {/* フォームカード */}
       <Card>
@@ -196,10 +202,16 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
             重要な注意事項
           </h6>
           <ul className="mb-0">
-            <li>すべての情報をできるだけ詳細に記入してください</li>
-            <li>些細な情報でも省略せず、すべて記載してください</li>
-            <li>情報の加工や省略は行わないでください</li>
-            <li>わかる範囲ですべての関係者を記載してください</li>
+            <li className="text-sm">
+              すべての情報をできるだけ詳細に記入してください
+            </li>
+            <li className="text-sm">
+              些細な情報でも省略せず、すべて記載してください
+            </li>
+            <li className="text-sm">情報の加工や省略は行わないでください</li>
+            <li className="text-sm">
+              わかる範囲ですべての関係者を記載してください
+            </li>
           </ul>
         </Alert>
 
@@ -208,7 +220,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
           selectedIncident &&
           selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.PENDING && (
             <Alert variant={ALERT_VARIANT.WARNING} className="mb-6">
-              <h6 className="flex items-center text-base font-semibold mb-3">
+              <h6 className="flex items-center mb-3">
                 <ClockIconOutline className="mr-2 w-5 h-5 flex-shrink-0" />
                 AI解析待ち
               </h6>
@@ -237,7 +249,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
           selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.COMPLETED &&
           selectedIncident.aiAnalysis && (
             <Alert variant={ALERT_VARIANT.INFO} className="mb-6">
-              <h6 className="flex items-center text-base font-semibold mb-3">
+              <h6 className="flex items-center mb-3">
                 <CpuChipIcon className="mr-2 w-5 h-5 flex-shrink-0" />
                 AI解析結果
               </h6>
@@ -266,7 +278,6 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                 onChange={handleInputChange}
                 required
                 placeholder="例: 〇〇システム障害"
-                className="text-sm"
               />
               <FormHelperText>
                 案件を識別できる名前を記入してください
@@ -289,7 +300,6 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                 onChange={handleInputChange}
                 required
                 placeholder="例: 山田太郎"
-                className="text-sm"
               />
               <FormHelperText>
                 このインシデントを担当する方の名前を1名記入してください

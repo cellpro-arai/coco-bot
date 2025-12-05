@@ -9,6 +9,7 @@ export { default as AppLink } from './AppLink';
 export {
   FormLabel,
   FormInput,
+  FormEmailInput,
   FormTextarea,
   FormSelect,
   FormHelperText,

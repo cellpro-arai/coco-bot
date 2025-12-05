@@ -19,9 +19,9 @@ export const FormLabel: React.FC<FormLabelProps> = ({
   children,
 }) => {
   return (
-    <label htmlFor={htmlFor} className="block mb-2">
+    <label htmlFor={htmlFor} className="block">
       <span
-        className={`flex items-center font-medium text-sm text-gray-700 dark:text-gray-300 ${required ? "after:content-['_*'] after:text-red-500" : ''}`}
+        className={`flex items-center font-medium text-gray-700 dark:text-gray-300 ${required ? "after:content-['_*'] after:text-red-500" : ''}`}
       >
         {icon && <span className="mr-1">{icon}</span>}
         {children}
@@ -42,6 +42,42 @@ export const FormInput: React.FC<FormInputProps> = ({
       className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent ${className}`}
       {...props}
     />
+  );
+};
+
+// FormEmailInput - メールアドレス入力欄（補完機能付き）
+interface FormEmailInputProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'type'
+> {
+  domain?: string;
+}
+
+export const FormEmailInput: React.FC<FormEmailInputProps> = ({
+  className = '',
+  domain = 'cellpromote.biz',
+  value = '',
+  ...props
+}) => {
+  const inputValue = String(value);
+  const hasAt = inputValue.includes('@');
+  const suggestion = !hasAt && inputValue ? `@${domain}` : '';
+
+  return (
+    <div className="relative">
+      <input
+        type="text"
+        className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent ${className}`}
+        value={inputValue}
+        {...props}
+      />
+      {suggestion && (
+        <span className="absolute left-3 top-2 pointer-events-none text-gray-900 dark:text-gray-100">
+          <span className="opacity-0">{inputValue}</span>
+          <span className="text-gray-400 dark:text-gray-500">{suggestion}</span>
+        </span>
+      )}
+    </div>
   );
 };
 

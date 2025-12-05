@@ -12,6 +12,7 @@ import {
   UserIcon,
   PlusCircleIcon,
 } from '../components/icons';
+import { INCIDENT_STATUS } from '../types/constants';
 
 interface IncidentListPageProps {
   incidents: Incident[];
@@ -116,7 +117,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                   onClick={() => editIncident(incident)}
                 >
                   <div className="flex justify-between items-start mb-3 gap-2">
-                    <h5 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-0 line-clamp-2">
+                    <h5 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-0 line-clamp-2">
                       {incident.caseName}
                     </h5>
                     {incident.updateDate && (
@@ -135,15 +136,17 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                     </Badge>
                     <Badge
                       variant={
-                        incident.status === '対応中'
+                        incident.status === INCIDENT_STATUS.IN_PROGRESS
                           ? 'warning'
-                          : incident.status === '保留'
+                          : incident.status === INCIDENT_STATUS.REVIEW_REQUESTED
                             ? 'secondary'
-                            : incident.status === '解決済み'
-                              ? 'success'
-                              : incident.status === 'クローズ'
+                            : incident.status === INCIDENT_STATUS.REPORTED
+                              ? 'info'
+                              : incident.status === INCIDENT_STATUS.CLOSED
                                 ? 'contrast'
-                                : undefined
+                                : incident.status === INCIDENT_STATUS.REJECTED
+                                  ? 'danger'
+                                  : undefined
                       }
                       icon={<FlagIcon className="mr-1 w-4 h-4" />}
                     >
