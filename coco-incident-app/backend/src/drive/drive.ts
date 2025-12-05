@@ -1,11 +1,4 @@
-/**
- * ファイルデータの型定義
- */
-interface FileData {
-  name: string;
-  mimeType: string;
-  data: string; // Base64 encoded
-}
+import { FileData } from './types';
 
 /**
  * ファイルをGoogle Driveにアップロード

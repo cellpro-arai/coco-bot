@@ -1,6 +1,7 @@
 import { getCurrentUserAndAll } from '../permissions/permissionManager';
 import { getSlackBotToken, getDeployUrl } from '../properties';
-import { INCIDENT_STATUS, USER_ROLE } from '../types/constants';
+import { USER_ROLE } from '../permissions/constants';
+import { INCIDENT_STATUS } from './constants';
 
 /**
  * Slackにインシデントのステータス変更を通知する

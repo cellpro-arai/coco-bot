@@ -3,7 +3,6 @@ import {
   Incident,
   IncidentFormData,
   FileData,
-  AI_ANALYSIS_STATUS,
   PLACEHOLDERS,
   INCIDENT_STATUS,
 } from '../types';
@@ -26,9 +25,6 @@ import {
   ArrowLeftIcon,
   ExclamationCircleIcon,
   InformationCircleIcon,
-  ClockIconOutline,
-  ArrowTopRightOnSquareIcon,
-  CpuChipIcon,
   FolderIcon,
   UserIcon,
   FlagIcon,
@@ -138,7 +134,6 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
         summary: formData.summary,
         stakeholders: formData.stakeholders,
         details: formData.details,
-        improvementSuggestions: result.improvementSuggestions || '',
       };
 
       if (isUpdate) {
@@ -214,50 +209,6 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
             </li>
           </ul>
         </Alert>
-
-        {/* AI解析待ち表示（編集モード時のみ） */}
-        {formData.registeredDate &&
-          selectedIncident &&
-          selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.PENDING && (
-            <Alert variant={ALERT_VARIANT.WARNING} className="mb-6">
-              <h6 className="flex items-center mb-3">
-                <ClockIconOutline className="mr-2 w-5 h-5 flex-shrink-0" />
-                AI解析待ち
-              </h6>
-              <p className="mb-2 text-sm">
-                このインシデントはAI解析がまだ完了していません。
-              </p>
-              <p className="mb-4 text-sm">
-                詳細スプレッドシートを開いて、セルB5のAI数式を手動で更新してください。
-              </p>
-              <AppLink
-                href={selectedIncident.incidentDetailUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                underline={false}
-                className="inline-flex items-center text-sm"
-              >
-                <ArrowTopRightOnSquareIcon className="mr-1 w-4 h-4 flex-shrink-0" />
-                詳細スプレッドシートを開く
-              </AppLink>
-            </Alert>
-          )}
-
-        {/* AI解析結果表示（編集モード時のみ） */}
-        {formData.registeredDate &&
-          selectedIncident &&
-          selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.COMPLETED &&
-          selectedIncident.aiAnalysis && (
-            <Alert variant={ALERT_VARIANT.INFO} className="mb-6">
-              <h6 className="flex items-center mb-3">
-                <CpuChipIcon className="mr-2 w-5 h-5 flex-shrink-0" />
-                AI解析結果
-              </h6>
-              <div className="whitespace-pre-wrap text-sm overflow-auto max-h-96">
-                {selectedIncident.aiAnalysis}
-              </div>
-            </Alert>
-          )}
 
         {/* フォーム */}
         <form onSubmit={submitForm}>

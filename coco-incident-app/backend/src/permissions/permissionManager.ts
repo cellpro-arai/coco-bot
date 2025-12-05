@@ -1,6 +1,5 @@
 import { getSlackAccountByEmail } from '../slack/getSlackUser';
-import { UserPermission, CurrentUserAndAllUsers } from './permissionTypes';
-import { USER_ROLE, UserRole } from '../types/constants';
+import { USER_ROLE, UserRole } from './constants';
 import {
   getPermissionsCsvFileId,
   getSpreadSheetId,
@@ -11,6 +10,24 @@ import {
  * グローバルキャッシュキー
  */
 const PERMISSIONS_CACHE_KEY = 'permissions_cache';
+
+/**
+ * ユーザーの権限情報
+ */
+type UserPermission = {
+  email: string;
+  role: UserRole;
+  slackUserId: string;
+};
+
+/**
+ * 現在のユーザーと全ユーザーの情報
+ */
+type CurrentUserAndAllUsers = {
+  current_user: string;
+  role: UserRole;
+  users: UserPermission[];
+};
 
 /**
  * 現在のユーザーと全ユーザーの情報を取得

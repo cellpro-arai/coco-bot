@@ -1,21 +1,4 @@
 /**
- * スクリプトプロパティを取得する共通関数
- */
-export function getScriptProperty(
-  propertyName: string,
-  errorMessage: string
-): string {
-  const scriptProperties = PropertiesService.getScriptProperties();
-  const value = scriptProperties.getProperty(propertyName);
-
-  if (!value) {
-    throw new Error(errorMessage);
-  }
-
-  return value;
-}
-
-/**
  * GoogleスプレッドシートのURLからIDを抽出
  */
 export function extractSheetIdFromUrl(url: string): string {

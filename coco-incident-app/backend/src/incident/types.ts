@@ -1,25 +1,6 @@
+import { FileData } from '../drive/types';
+
 export const INCIDENT_SHEET_NAME = 'インシデント管理';
-
-/**
- * AI解析ステータスの定数
- */
-export const AI_ANALYSIS_STATUS = {
-  PENDING: 'pending',
-  COMPLETED: 'completed',
-  NONE: 'none',
-} as const;
-
-export type AiAnalysisStatus =
-  (typeof AI_ANALYSIS_STATUS)[keyof typeof AI_ANALYSIS_STATUS];
-
-/**
- * ファイルデータの型定義
- */
-export interface FileData {
-  name: string;
-  mimeType: string;
-  data: string; // Base64 encoded
-}
 
 /**
  * インシデントデータの型定義
@@ -61,6 +42,4 @@ export interface IncidentRecord {
   stakeholders?: string;
   details?: string;
   attachments?: string;
-  aiAnalysisStatus?: AiAnalysisStatus;
-  aiAnalysis?: string;
 }

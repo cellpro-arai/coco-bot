@@ -1,16 +1,71 @@
-import { IncidentData, IncidentResult, IncidentRecord } from './incidentType';
-import { extractSheetIdFromUrl, extractFolderIdFromUrl } from '../utils';
-import { getOrCreateIncidentSheet } from './getOrCreateIncidentSheet';
-import { findIncidentRowByDate } from './findIncidentRowByDate';
-import { uploadFileToDrive } from '../drive';
+import {
+  IncidentData,
+  IncidentResult,
+  IncidentRecord,
+  INCIDENT_SHEET_NAME,
+} from './types';
+import { extractSheetIdFromUrl, extractFolderIdFromUrl } from './utils';
+import { uploadFileToDrive } from '../drive/drive';
 import { sendSlack } from '../slack/sendSlack';
 import { getAllPermissions } from '../permissions/permissionManager';
-import { USER_ROLE } from '../types/constants';
+import { USER_ROLE } from '../permissions/constants';
 import {
   getUploadFolderId,
   getSpreadSheetId,
   getTemplateSheetId,
 } from '../properties';
+
+/**
+ * 登録日時から既存レコードの行番号を検索
+ */
+function findIncidentRowByDate(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+  registeredDate: string
+): number {
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) {
+    return -1;
+  }
+
+  const dateRange = sheet.getRange(2, 1, lastRow - 1, 1);
+  const dateValues = dateRange.getValues();
+
+  for (let i = 0; i < dateValues.length; i++) {
+    if (dateValues[i][0]) {
+      const cellDate = new Date(dateValues[i][0]).toLocaleString('ja-JP');
+      if (cellDate === registeredDate) {
+        return i + 2;
+      }
+    }
+  }
+
+  return -1;
+}
+
+/**
+ * インシデント管理シートを取得または作成
+ */
+function getOrCreateIncidentSheet(
+  spreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet
+): GoogleAppsScript.Spreadsheet.Sheet {
+  let sheet = spreadsheet.getSheetByName(INCIDENT_SHEET_NAME);
+
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(INCIDENT_SHEET_NAME);
+    sheet.appendRow([
+      '登録日時',
+      '登録ユーザー',
+      '案件名',
+      '担当者',
+      'ステータス',
+      '更新日時',
+      'Drive格納先フォルダ',
+      'インシデント詳細',
+    ]);
+  }
+
+  return sheet;
+}
 
 /**
  * インシデント情報をスプレッドシートに保存

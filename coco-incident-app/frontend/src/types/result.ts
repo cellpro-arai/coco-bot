@@ -8,5 +8,4 @@ export interface IncidentResult {
   message: string;
   incidentDate: string;
   record: Incident;
-  improvementSuggestions?: string;
 }

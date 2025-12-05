@@ -1,6 +1,6 @@
 import { getSlackBotToken } from '../properties';
 
-export type SlackAccount = {
+type SlackAccount = {
   id: string;
   name: string;
   realName: string;

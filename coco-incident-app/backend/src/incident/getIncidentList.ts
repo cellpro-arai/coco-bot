@@ -1,11 +1,7 @@
-import {
-  INCIDENT_SHEET_NAME,
-  IncidentRecord,
-  AI_ANALYSIS_STATUS,
-} from './incidentType';
-import { extractSheetIdFromUrl } from '../utils';
+import { INCIDENT_SHEET_NAME, IncidentRecord } from './types';
+import { extractSheetIdFromUrl } from './utils';
 import { getCurrentUserAndAll } from '../permissions/permissionManager';
-import { USER_ROLE } from '../types/constants';
+import { USER_ROLE } from '../permissions/constants';
 import { getSpreadSheetId } from '../properties';
 
 /**
@@ -62,7 +58,7 @@ export function getIncidentList(): IncidentRecord[] {
           const detailSheet = allSheets.length > 0 ? allSheets[0] : null;
 
           if (detailSheet) {
-            const detailValues = detailSheet.getRange('B1:B5').getValues();
+            const detailValues = detailSheet.getRange('B1:B4').getValues();
             record.summary = detailValues[0][0];
             record.stakeholders = detailValues[1][0];
             record.details = detailValues[2][0];
@@ -70,25 +66,6 @@ export function getIncidentList(): IncidentRecord[] {
               .getRange('B4')
               .getRichTextValue()
               ?.getText();
-
-            // B5セルのAI解析結果を取得
-            const aiAnalysis = detailValues[4][0];
-            if (aiAnalysis && typeof aiAnalysis === 'string') {
-              // =AI(...) のような数式が入っている場合は未解析
-              if (
-                aiAnalysis.trim().startsWith('=AI(') ||
-                aiAnalysis.trim().startsWith('=ai(')
-              ) {
-                record.aiAnalysisStatus = AI_ANALYSIS_STATUS.PENDING;
-              } else if (aiAnalysis.trim().length > 0) {
-                record.aiAnalysisStatus = AI_ANALYSIS_STATUS.COMPLETED;
-                record.aiAnalysis = aiAnalysis;
-              } else {
-                record.aiAnalysisStatus = AI_ANALYSIS_STATUS.NONE;
-              }
-            } else {
-              record.aiAnalysisStatus = AI_ANALYSIS_STATUS.NONE;
-            }
           }
         } catch (e) {
           console.error(
