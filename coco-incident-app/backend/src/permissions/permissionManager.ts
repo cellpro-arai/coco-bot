@@ -1,10 +1,12 @@
 import { getSlackAccountByEmail } from '../slack/getSlackUser';
-import { USER_ROLE, UserRole } from './constants';
-import {
-  getPermissionsCsvFileId,
-  getSpreadSheetId,
-  getUploadFolderId,
-} from '../properties';
+import { UserRole } from './constants';
+import { getPermissionsCsvFileId } from '../properties';
+import { grantFolderAccess } from '../drive/grantFolderAccess';
+import { grantCSVAccess } from '../drive/grantCSVAccess';
+import { grantSpreadsheetAccess } from '../sheet/grantSpreadsheetAccess';
+import { revokeSpreadsheetAccess } from '../sheet/revokeSpreadsheetAccess';
+import { revokeFolderAccess } from '../drive/revokeFolderAccess';
+import { revokeCSVAccess } from '../drive/revokeCSVAccess';
 
 /**
  * グローバルキャッシュキー
@@ -239,123 +241,5 @@ function updatePermissionsFile(permissions: UserPermission[]): void {
     throw new Error(
       `権限ファイルの更新に失敗しました: ${(error as Error).message}`
     );
-  }
-}
-
-/**
- * スプレッドシートへのアクセス権限を付与
- */
-export function grantSpreadsheetAccess(email: string): void {
-  try {
-    const spreadsheetId = getSpreadSheetId();
-
-    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
-    spreadsheet.addEditor(email);
-
-    console.log(`${email} にスプレッドシート編集権限を付与しました。`);
-  } catch (error) {
-    console.error('grantSpreadsheetAccess error:', error);
-    throw new Error(
-      `スプレッドシート権限付与に失敗しました: ${(error as Error).message}`
-    );
-  }
-}
-
-/**
- * ドライブフォルダへのアクセス権限を付与
- */
-export function grantFolderAccess(email: string): void {
-  try {
-    const uploadFolderId = getUploadFolderId();
-
-    const folder = DriveApp.getFolderById(uploadFolderId);
-    folder.addEditor(email);
-
-    console.log(`${email} にドライブフォルダ編集権限を付与しました。`);
-  } catch (error) {
-    console.error('grantFolderAccess error:', error);
-    throw new Error(
-      `ドライブ権限付与に失敗しました: ${(error as Error).message}`
-    );
-  }
-}
-
-/**
- * CSVファイルのアクセス権限を付与（管理者は書き込み、ユーザーは読み取り）
- */
-export function grantCSVAccess(email: string, role: UserRole): void {
-  try {
-    const csvFileId = getPermissionsCsvFileId();
-
-    const file = DriveApp.getFileById(csvFileId);
-
-    if (role === USER_ROLE.ADMIN) {
-      // 管理者には編集権限を付与
-      file.addEditor(email);
-      console.log(`${email} にCSVファイル編集権限を付与しました。`);
-    } else {
-      // ユーザーには閲覧権限を付与
-      file.addViewer(email);
-      console.log(`${email} にCSVファイル閲覧権限を付与しました。`);
-    }
-  } catch (error) {
-    console.error('grantCSVAccess error:', error);
-    throw new Error(`CSV権限付与に失敗しました: ${(error as Error).message}`);
-  }
-}
-
-/**
- * スプレッドシートのアクセス権限を剥奪
- */
-export function revokeSpreadsheetAccess(email: string): void {
-  try {
-    const spreadsheetId = getSpreadSheetId();
-
-    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
-    spreadsheet.removeEditor(email);
-
-    console.log(`${email} のスプレッドシート編集権限を剥奪しました。`);
-  } catch (error) {
-    console.error('revokeSpreadsheetAccess error:', error);
-    throw new Error(
-      `スプレッドシート権限剥奪に失敗しました: ${(error as Error).message}`
-    );
-  }
-}
-
-/**
- * ドライブフォルダのアクセス権限を剥奪
- */
-export function revokeFolderAccess(email: string): void {
-  try {
-    const uploadFolderId = getUploadFolderId();
-
-    const folder = DriveApp.getFolderById(uploadFolderId);
-    folder.removeEditor(email);
-
-    console.log(`${email} のドライブフォルダ編集権限を剥奪しました。`);
-  } catch (error) {
-    console.error('revokeFolderAccess error:', error);
-    throw new Error(
-      `ドライブ権限剥奪に失敗しました: ${(error as Error).message}`
-    );
-  }
-}
-
-/**
- * CSVファイルのアクセス権限を剥奪
- */
-export function revokeCSVAccess(email: string): void {
-  try {
-    const csvFileId = getPermissionsCsvFileId();
-
-    const file = DriveApp.getFileById(csvFileId);
-    file.removeEditor(email);
-    file.removeViewer(email);
-
-    console.log(`${email} のCSVファイルアクセス権限を剥奪しました。`);
-  } catch (error) {
-    console.error('revokeCSVAccess error:', error);
-    throw new Error(`CSV権限剥奪に失敗しました: ${(error as Error).message}`);
   }
 }

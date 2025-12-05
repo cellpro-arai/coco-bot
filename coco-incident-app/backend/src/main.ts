@@ -1,9 +1,8 @@
 import { getIncidentList as _getIncidentList } from './incident/getIncidentList';
 import { submitIncident as _submitIncident } from './incident/submitIncident';
-import { uploadFileToDrive as _uploadFileToDrive } from './drive/drive';
+import { getUploadFolderUrl as _getUploadFolderUrl } from './drive/getUploadFolderUrl';
 import { sendSlack as _sendSlack } from './slack/sendSlack';
 import {
-  getAllPermissions as _getAllPermissions,
   getCurrentUserAndAll as _getCurrentUserAndAll,
   addUser as _addUser,
   removeUser as _removeUser,
@@ -27,8 +26,8 @@ if (typeof window !== 'undefined') {
   window.doGet = doGet;
   window.getIncidentList = _getIncidentList;
   window.submitIncident = _submitIncident;
+  window.getUploadFolderUrl = _getUploadFolderUrl;
   window.sendSlack = _sendSlack;
-  window.getAllPermissions = _getAllPermissions;
   window.getCurrentUserAndAll = _getCurrentUserAndAll;
   window.addUser = _addUser;
   window.removeUser = _removeUser;

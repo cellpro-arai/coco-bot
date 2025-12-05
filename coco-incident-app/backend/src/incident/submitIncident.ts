@@ -5,7 +5,7 @@ import {
   INCIDENT_SHEET_NAME,
 } from './types';
 import { extractSheetIdFromUrl, extractFolderIdFromUrl } from './utils';
-import { uploadFileToDrive } from '../drive/drive';
+import { uploadFile } from '../drive/uploadFile';
 import { sendSlack } from '../slack/sendSlack';
 import { getAllPermissions } from '../permissions/permissionManager';
 import { USER_ROLE } from '../permissions/constants';
@@ -155,7 +155,7 @@ export function submitIncident(incidentData: IncidentData): IncidentResult {
           let text = '';
 
           incidentData.fileDataList.forEach((fileData, index) => {
-            const fileUrl = uploadFileToDrive(fileData, folderId);
+            const fileUrl = uploadFile(fileData, folderId);
             const fileName = fileData.name;
             if (index > 0) {
               text += '\n';
@@ -221,7 +221,7 @@ export function submitIncident(incidentData: IncidentData): IncidentResult {
             let text = '';
 
             incidentData.fileDataList.forEach((fileData, index) => {
-              const fileUrl = uploadFileToDrive(fileData, folderId);
+              const fileUrl = uploadFile(fileData, folderId);
               const fileName = fileData.name;
               if (index > 0) {
                 text += '\n';

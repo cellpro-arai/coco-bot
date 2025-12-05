@@ -119,3 +119,25 @@ export function submitIncident(
     }
   });
 }
+
+/**
+ * アップロード先フォルダのURLを取得します。
+ * @returns {Promise<string>} フォルダのURL
+ */
+export function getUploadFolderUrl(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (import.meta.env.DEV) {
+      // 開発環境用のモック
+      setTimeout(() => {
+        resolve('https://drive.google.com/drive/folders/mock_upload_folder');
+      }, 100);
+    } else {
+      google.script.run
+        .withSuccessHandler((url: string) => resolve(url))
+        .withFailureHandler((error: Error) =>
+          reject(new Error(`フォルダURLの取得に失敗しました: ${error.message}`))
+        )
+        .getUploadFolderUrl();
+    }
+  });
+}

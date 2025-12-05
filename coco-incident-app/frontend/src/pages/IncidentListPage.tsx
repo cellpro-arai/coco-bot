@@ -12,6 +12,7 @@ import {
   ListBulletIcon,
   UserIcon,
   PlusCircleIcon,
+  UsersIcon,
 } from '../components/icons';
 import { INCIDENT_STATUS } from '../types/constants';
 
@@ -32,11 +33,13 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [uploadFolderUrl, setUploadFolderUrl] = useState('');
 
   useEffect(() => {
     if (incidents.length === 0) {
       loadIncidents();
     }
+    loadUploadFolderUrl();
   }, []);
 
   const loadIncidents = async () => {
@@ -53,18 +56,41 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
     }
   };
 
+  const loadUploadFolderUrl = async () => {
+    try {
+      const url = await api.getUploadFolderUrl();
+      setUploadFolderUrl(url);
+    } catch (error: any) {
+      console.error('フォルダURLの取得に失敗:', error);
+    }
+  };
+
   return (
     <div className="py-4">
       {/* ツールバー */}
       <div className="flex flex-col gap-3 mb-6">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 flex items-center mb-0">
-            <ListBulletIcon className="mr-2 w-8 h-8 flex-shrink-0" />
-            インシデント一覧
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 flex items-center mb-0">
+              <ListBulletIcon className="mr-2 w-8 h-8 flex-shrink-0" />
+              インシデント一覧
+            </h2>
+            {uploadFolderUrl && (
+              <a
+                href={uploadFolderUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors ml-2"
+                title="Driveフォルダを開く"
+              >
+                <ArrowTopRightOnSquareIcon className="w-5 h-5" />
+              </a>
+            )}
+          </div>
           <div className="flex gap-2 flex-wrap justify-end">
             {showPermissionManagement && (
               <Button variant="secondary" onClick={showPermissionManagement}>
+                <UsersIcon className="mr-2 w-4 h-4" />
                 権限管理
               </Button>
             )}
