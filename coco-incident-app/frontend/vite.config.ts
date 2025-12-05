@@ -15,11 +15,6 @@ export default defineConfig({
       'react/jsx-dev-runtime': 'preact/jsx-runtime',
     },
   },
-  css: {
-    modules: {
-      localsConvention: 'camelCase',
-    },
-  },
   build: {
     outDir: '../../dist',
     emptyOutDir: false,

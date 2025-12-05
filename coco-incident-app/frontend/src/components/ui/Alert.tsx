@@ -34,7 +34,7 @@ const Alert: React.FC<AlertProps> = ({
   children,
   ...rest
 }) => {
-  const baseClasses = 'p-3 sm:p-6 rounded-lg dark:text-gray-300';
+  const baseClasses = 'p-6 rounded-lg dark:text-gray-300';
   const variantClass = variant ? variantClasses[variant] : '';
   const finalClasses = [baseClasses, variantClass, className]
     .filter(Boolean)

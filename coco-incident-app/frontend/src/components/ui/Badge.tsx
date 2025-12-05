@@ -29,7 +29,7 @@ const Badge: React.FC<BadgeProps> = ({
   className = '',
 }) => {
   const baseClasses =
-    'inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 text-xs sm:text-sm font-medium rounded whitespace-nowrap';
+    'inline-flex items-center px-3 py-1 text-sm font-medium rounded whitespace-nowrap';
   const variantClass = variantClasses[variant];
   const classes = [baseClasses, variantClass, className]
     .filter(Boolean)

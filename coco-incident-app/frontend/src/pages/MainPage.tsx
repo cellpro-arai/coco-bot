@@ -59,13 +59,7 @@ function MainPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-200 dark:bg-gray-900">
-      <Header
-        theme={theme}
-        toggleTheme={toggleTheme}
-        showPermissionManagement={
-          isAdmin ? showPermissionManagement : undefined
-        }
-      />
+      <Header theme={theme} toggleTheme={toggleTheme} />
 
       <main className="flex-1">
         <Container fluid>
@@ -75,6 +69,9 @@ function MainPage() {
               setIncidents={setIncidents}
               showForm={showForm}
               editIncident={editIncident}
+              showPermissionManagement={
+                isAdmin ? showPermissionManagement : undefined
+              }
             />
           )}
 
@@ -97,9 +94,9 @@ function MainPage() {
         </Container>
       </main>
 
-      <footer className="mt-auto py-3 sm:py-4 border-t border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
+      <footer className="mt-auto py-4 border-t border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
         <Container fluid>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
             &copy; 2025 Cell Promote Inc. (Coco Incident). All rights reserved.
           </p>
         </Container>

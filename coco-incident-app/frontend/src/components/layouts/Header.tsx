@@ -6,47 +6,29 @@ import { MoonIcon, SunIcon } from '../icons';
 interface HeaderProps {
   theme: string;
   toggleTheme: () => void;
-  showPermissionManagement?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({
-  theme,
-  toggleTheme,
-  showPermissionManagement,
-}) => {
+const Header: React.FC<HeaderProps> = ({ theme, toggleTheme }) => {
   return (
-    <header className="py-3 sm:py-4 mb-6 sm:mb-8 border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
+    <header className="py-4 mb-8 border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
       <Container>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-1 break-words">
-              【セルプロ】インシデント管理システム
-            </h1>
-          </div>
-          <div className="flex gap-2 flex-shrink-0">
-            {showPermissionManagement && (
-              <Button
-                variant="secondary"
-                onClick={showPermissionManagement}
-                className="!px-2 sm:!px-4 !py-2 sm:!py-2.5 text-xs sm:text-sm min-h-10 sm:min-h-11"
-              >
-                権限管理
-              </Button>
+        <div className="flex items-center justify-between gap-4 mb-3">
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 break-words">
+            coco incident app
+          </h1>
+          <Button
+            variant="contrast"
+            onClick={toggleTheme}
+            className="!px-3 !py-2 flex-shrink-0"
+          >
+            {theme === 'light' ? (
+              <MoonIcon className="w-5 h-5" />
+            ) : (
+              <SunIcon className="w-5 h-5" />
             )}
-            <Button
-              variant="contrast"
-              onClick={toggleTheme}
-              className="!px-2 sm:!px-3 !py-2 sm:!py-2.5 min-h-10 sm:min-h-11 min-w-10 sm:min-w-11"
-            >
-              {theme === 'light' ? (
-                <MoonIcon className="w-5 h-5" />
-              ) : (
-                <SunIcon className="w-5 h-5" />
-              )}
-            </Button>
-          </div>
+          </Button>
         </div>
-        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           トラブル情報を詳細に記録し、適切な対応を行うための管理システムです
         </p>
       </Container>

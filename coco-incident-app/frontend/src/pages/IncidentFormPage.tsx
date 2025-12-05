@@ -207,15 +207,15 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
         {formData.registeredDate &&
           selectedIncident &&
           selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.PENDING && (
-            <Alert variant={ALERT_VARIANT.WARNING} className="mb-4 sm:mb-6">
-              <h6 className="flex items-center text-sm sm:text-base font-semibold mb-2 sm:mb-3">
-                <ClockIconOutline className="mr-2 w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0" />
+            <Alert variant={ALERT_VARIANT.WARNING} className="mb-6">
+              <h6 className="flex items-center text-base font-semibold mb-3">
+                <ClockIconOutline className="mr-2 w-5 h-5 flex-shrink-0" />
                 AI解析待ち
               </h6>
-              <p className="mb-1 sm:mb-2 text-xs sm:text-sm">
+              <p className="mb-2 text-sm">
                 このインシデントはAI解析がまだ完了していません。
               </p>
-              <p className="mb-2 sm:mb-4 text-xs sm:text-sm">
+              <p className="mb-4 text-sm">
                 詳細スプレッドシートを開いて、セルB5のAI数式を手動で更新してください。
               </p>
               <AppLink
@@ -223,9 +223,9 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 underline={false}
-                className="inline-flex items-center text-xs sm:text-sm"
+                className="inline-flex items-center text-sm"
               >
-                <ArrowTopRightOnSquareIcon className="mr-1 w-3 sm:w-4 h-3 sm:h-4 flex-shrink-0" />
+                <ArrowTopRightOnSquareIcon className="mr-1 w-4 h-4 flex-shrink-0" />
                 詳細スプレッドシートを開く
               </AppLink>
             </Alert>
@@ -236,12 +236,12 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
           selectedIncident &&
           selectedIncident.aiAnalysisStatus === AI_ANALYSIS_STATUS.COMPLETED &&
           selectedIncident.aiAnalysis && (
-            <Alert variant={ALERT_VARIANT.INFO} className="mb-4 sm:mb-6">
-              <h6 className="flex items-center text-sm sm:text-base font-semibold mb-2 sm:mb-3">
-                <CpuChipIcon className="mr-2 w-4 sm:w-5 h-4 sm:h-5 flex-shrink-0" />
+            <Alert variant={ALERT_VARIANT.INFO} className="mb-6">
+              <h6 className="flex items-center text-base font-semibold mb-3">
+                <CpuChipIcon className="mr-2 w-5 h-5 flex-shrink-0" />
                 AI解析結果
               </h6>
-              <div className="whitespace-pre-wrap text-xs sm:text-sm overflow-auto max-h-96">
+              <div className="whitespace-pre-wrap text-sm overflow-auto max-h-96">
                 {selectedIncident.aiAnalysis}
               </div>
             </Alert>
@@ -249,15 +249,13 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
 
         {/* フォーム */}
         <form onSubmit={submitForm}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* 案件名 */}
             <FormGroup>
               <FormLabel
                 htmlFor="caseName"
                 required
-                icon={
-                  <FolderIcon className="text-blue-600 w-3 sm:w-4 h-3 sm:h-4" />
-                }
+                icon={<FolderIcon className="text-blue-600 w-4 h-4" />}
               >
                 案件名
               </FormLabel>
@@ -280,9 +278,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
               <FormLabel
                 htmlFor="assignee"
                 required
-                icon={
-                  <UserIcon className="text-blue-600 w-3 sm:w-4 h-3 sm:h-4" />
-                }
+                icon={<UserIcon className="text-blue-600 w-4 h-4" />}
               >
                 担当者
               </FormLabel>
@@ -300,7 +296,7 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
               </FormHelperText>
             </FormGroup>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* ステータス */}
             <FormGroup>
               <FormLabel
