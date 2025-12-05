@@ -6,6 +6,7 @@ import {
 } from './types';
 import { extractSheetIdFromUrl, extractFolderIdFromUrl } from './utils';
 import { uploadFile } from '../drive/uploadFile';
+import { copyFile } from '../drive/copyTemplate';
 import { sendSlack } from '../slack/sendSlack';
 import { getAllPermissions } from '../permissions/permissionManager';
 import { USER_ROLE } from '../permissions/constants';
@@ -130,14 +131,15 @@ export function submitIncident(incidentData: IncidentData): IncidentResult {
       });
 
       const templateSheetId = getTemplateSheetId();
-      const templateFile = DriveApp.getFileById(templateSheetId);
-      const newSheet = templateFile.makeCopy(
+      incidentDetailUrl = copyFile(
+        templateSheetId,
         `${incidentData.caseName}_詳細`,
         newFolder
       );
-      incidentDetailUrl = newSheet.getUrl();
 
-      const detailSheet = SpreadsheetApp.openById(newSheet.getId());
+      const detailSheet = SpreadsheetApp.openById(
+        extractSheetIdFromUrl(incidentDetailUrl)
+      );
       const allSheets = detailSheet.getSheets();
 
       // テンプレートの最初のシートを取得（「詳細」または「シート1」など）
