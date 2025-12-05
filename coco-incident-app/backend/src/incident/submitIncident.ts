@@ -16,6 +16,24 @@ import {
   getTemplateSheetId,
 } from '../properties';
 
+interface NewIncidentContext {
+  incidentDate: Date;
+  driveFolderUrl: string;
+  incidentDetailUrl: string;
+  targetRow: number;
+  oldStatus?: undefined;
+  originalUserEmail?: undefined;
+}
+
+interface EditIncidentContext {
+  incidentDate: Date;
+  driveFolderUrl: string;
+  incidentDetailUrl: string;
+  targetRow: number;
+  oldStatus: string;
+  originalUserEmail: string;
+}
+
 /**
  * 登録日時から既存レコードの行番号を検索
  */
@@ -69,6 +87,181 @@ function getOrCreateIncidentSheet(
 }
 
 /**
+ * 詳細シートを取得（見つからない場合はエラー）
+ */
+function getDetailSheet(
+  detailSheetUrl: string,
+  sheetName: string = '詳細'
+): GoogleAppsScript.Spreadsheet.Sheet {
+  const detailSheetId = extractSheetIdFromUrl(detailSheetUrl);
+  const detailSheet = SpreadsheetApp.openById(detailSheetId);
+  const sheet = detailSheet.getSheetByName(sheetName);
+
+  if (!sheet) {
+    throw new Error(`シート「${sheetName}」が見つかりません`);
+  }
+
+  return sheet;
+}
+
+/**
+ * 詳細シートにデータを設定
+ */
+function setDetailSheetData(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+  incidentData: IncidentData,
+  folderId: string
+): void {
+  sheet.getRange('B1').setValue(incidentData.summary);
+  sheet.getRange('B2').setValue(incidentData.stakeholders);
+  sheet.getRange('B3').setValue(incidentData.details);
+
+  if (!incidentData.fileDataList || incidentData.fileDataList.length === 0) {
+    return;
+  }
+
+  const cell = sheet.getRange('B4');
+  const richTextBuilder = SpreadsheetApp.newRichTextValue();
+  let text = '';
+
+  incidentData.fileDataList.forEach((fileData, index) => {
+    const fileUrl = uploadFile(fileData, folderId);
+    const fileName = fileData.name;
+    if (index > 0) {
+      text += '\n';
+    }
+    const startOffset = text.length;
+    text += fileName;
+    const endOffset = text.length;
+    richTextBuilder.setText(text);
+    richTextBuilder.setLinkUrl(startOffset, endOffset, fileUrl);
+  });
+  cell.setRichTextValue(richTextBuilder.build());
+}
+
+/**
+ * 新規インシデント作成処理
+ */
+function createNewIncident(
+  incidentSheet: GoogleAppsScript.Spreadsheet.Sheet,
+  incidentData: IncidentData,
+  userEmail: string
+): NewIncidentContext {
+  const incidentDate = new Date();
+  const updateDate = new Date();
+
+  // フォルダ作成
+  const parentFolderId = getUploadFolderId();
+  const parentFolder = DriveApp.getFolderById(parentFolderId);
+  const folderName = `${incidentData.caseName}_${incidentDate.getFullYear()}${(
+    incidentDate.getMonth() + 1
+  )
+    .toString()
+    .padStart(2, '0')}${incidentDate.getDate().toString().padStart(2, '0')}`;
+  const newFolder = parentFolder.createFolder(folderName);
+  const driveFolderUrl = newFolder.getUrl();
+
+  // 管理者に権限付与
+  const adminUsers = getAllPermissions().filter(
+    user => user.role === USER_ROLE.ADMIN
+  );
+  adminUsers.forEach(admin => {
+    newFolder.addEditor(admin.email);
+  });
+
+  // テンプレートをコピー
+  const templateSheetId = getTemplateSheetId();
+  const incidentDetailUrl = copyFile(
+    templateSheetId,
+    `${incidentData.caseName}_詳細`,
+    newFolder
+  );
+
+  // 詳細シート初期化
+  const detailSheet = SpreadsheetApp.openById(
+    extractSheetIdFromUrl(incidentDetailUrl)
+  );
+  const allSheets = detailSheet.getSheets();
+  if (allSheets.length === 0) {
+    throw new Error('テンプレートシートが見つかりません');
+  }
+
+  const sheet = allSheets[0];
+  setDetailSheetData(sheet, incidentData, newFolder.getId());
+
+  // 管理シートに追加
+  const targetRow = incidentSheet.getLastRow() + 1;
+  incidentSheet.appendRow([
+    incidentDate,
+    userEmail,
+    incidentData.caseName,
+    incidentData.assignee,
+    incidentData.status,
+    updateDate,
+    driveFolderUrl,
+    incidentDetailUrl,
+  ]);
+
+  return {
+    incidentDate,
+    driveFolderUrl,
+    incidentDetailUrl,
+    targetRow,
+  };
+}
+
+/**
+ * 既存インシデント編集処理
+ */
+function editExistingIncident(
+  incidentSheet: GoogleAppsScript.Spreadsheet.Sheet,
+  incidentData: IncidentData,
+  registeredDate: string
+): EditIncidentContext {
+  const updateDate = new Date();
+
+  const targetRow = findIncidentRowByDate(incidentSheet, registeredDate);
+  if (targetRow === -1) {
+    throw new Error('編集対象のレコードが見つかりませんでした。');
+  }
+
+  const existingData = incidentSheet
+    .getRange(targetRow, 1, 1, 8)
+    .getValues()[0];
+  const incidentDate = new Date(existingData[0]);
+  const originalUserEmail = existingData[1] as string;
+  const driveFolderUrl = existingData[6] as string;
+  const incidentDetailUrl = existingData[7] as string;
+  const oldStatus = existingData[4] as string;
+
+  // 管理シートを更新
+  incidentSheet
+    .getRange(targetRow, 3, 1, 4)
+    .setValues([
+      [
+        incidentData.caseName,
+        incidentData.assignee,
+        incidentData.status,
+        updateDate,
+      ],
+    ]);
+
+  // 詳細シートを更新
+  const sheet = getDetailSheet(incidentDetailUrl, '詳細');
+  const folderId = extractFolderIdFromUrl(driveFolderUrl);
+  setDetailSheetData(sheet, incidentData, folderId);
+
+  return {
+    incidentDate,
+    originalUserEmail,
+    driveFolderUrl,
+    incidentDetailUrl,
+    oldStatus,
+    targetRow,
+  };
+}
+
+/**
  * インシデント情報をスプレッドシートに保存
  */
 export function submitIncident(incidentData: IncidentData): IncidentResult {
@@ -76,195 +269,49 @@ export function submitIncident(incidentData: IncidentData): IncidentResult {
     const spreadsheetId = getSpreadSheetId();
     const ss = SpreadsheetApp.openById(spreadsheetId);
     const userEmail = Session.getEffectiveUser().getEmail();
-
     const incidentSheet = getOrCreateIncidentSheet(ss);
 
     const isEditMode = !!(
       incidentData.registeredDate && incidentData.registeredDate.trim()
     );
-    let targetRow = -1;
-    let incidentDate: Date;
-    let originalUserEmail = userEmail;
 
-    let driveFolderUrl = '';
-    let incidentDetailUrl = '';
-    let oldStatus = '';
+    // 新規/編集処理を実行
+    const context = isEditMode
+      ? editExistingIncident(
+          incidentSheet,
+          incidentData,
+          incidentData.registeredDate!
+        )
+      : createNewIncident(incidentSheet, incidentData, userEmail);
 
-    const updateDate = new Date();
-
-    if (isEditMode) {
-      targetRow = findIncidentRowByDate(
-        incidentSheet,
-        incidentData.registeredDate!
-      );
-      if (targetRow === -1) {
-        throw new Error('編集対象のレコードが見つかりませんでした。');
-      }
-      const existingData = incidentSheet
-        .getRange(targetRow, 1, 1, 8)
-        .getValues()[0];
-      incidentDate = new Date(existingData[0]);
-      originalUserEmail = existingData[1] as string;
-      driveFolderUrl = existingData[6] as string;
-      incidentDetailUrl = existingData[7] as string;
-    } else {
-      incidentDate = new Date();
-
-      const parentFolderId = getUploadFolderId();
-      const parentFolder = DriveApp.getFolderById(parentFolderId);
-      const folderName = `${
-        incidentData.caseName
-      }_${incidentDate.getFullYear()}${(incidentDate.getMonth() + 1)
-        .toString()
-        .padStart(2, '0')}${incidentDate
-        .getDate()
-        .toString()
-        .padStart(2, '0')}`;
-      const newFolder = parentFolder.createFolder(folderName);
-      driveFolderUrl = newFolder.getUrl();
-
-      const adminUsers = getAllPermissions().filter(
-        user => user.role === USER_ROLE.ADMIN
-      );
-      adminUsers.forEach(admin => {
-        newFolder.addEditor(admin.email);
-      });
-
-      const templateSheetId = getTemplateSheetId();
-      incidentDetailUrl = copyFile(
-        templateSheetId,
-        `${incidentData.caseName}_詳細`,
-        newFolder
-      );
-
-      const detailSheet = SpreadsheetApp.openById(
-        extractSheetIdFromUrl(incidentDetailUrl)
-      );
-      const allSheets = detailSheet.getSheets();
-
-      // テンプレートの最初のシートを取得（「詳細」または「シート1」など）
-      const sheet = allSheets.length > 0 ? allSheets[0] : null;
-
-      if (sheet) {
-        sheet.getRange('B1').setValue(incidentData.summary);
-        sheet.getRange('B2').setValue(incidentData.stakeholders);
-        sheet.getRange('B3').setValue(incidentData.details);
-
-        if (incidentData.fileDataList && incidentData.fileDataList.length > 0) {
-          const folderId = newFolder.getId();
-          const cell = sheet.getRange('B4');
-          const richTextBuilder = SpreadsheetApp.newRichTextValue();
-          let text = '';
-
-          incidentData.fileDataList.forEach((fileData, index) => {
-            const fileUrl = uploadFile(fileData, folderId);
-            const fileName = fileData.name;
-            if (index > 0) {
-              text += '\n';
-            }
-            const startOffset = text.length;
-            text += fileName;
-            const endOffset = text.length;
-            richTextBuilder.setText(text);
-            richTextBuilder.setLinkUrl(startOffset, endOffset, fileUrl);
-          });
-          cell.setRichTextValue(richTextBuilder.build());
-        }
-      } else {
-        console.error('詳細シートが見つかりません');
-      }
-
-      targetRow = incidentSheet.getLastRow() + 1;
-      incidentSheet.appendRow([
-        incidentDate,
-        userEmail,
-        incidentData.caseName,
-        incidentData.assignee,
-        incidentData.status,
-        updateDate,
-        driveFolderUrl,
-        incidentDetailUrl,
-      ]);
-    }
-
-    if (isEditMode) {
-      const existingData = incidentSheet
-        .getRange(targetRow, 1, 1, 8)
-        .getValues()[0];
-      oldStatus = existingData[4] as string;
-
-      incidentSheet
-        .getRange(targetRow, 3, 1, 4)
-        .setValues([
-          [
-            incidentData.caseName,
-            incidentData.assignee,
-            incidentData.status,
-            updateDate,
-          ],
-        ]);
-
-      if (incidentDetailUrl) {
-        const detailSheetId = extractSheetIdFromUrl(incidentDetailUrl);
-        const detailSheet = SpreadsheetApp.openById(detailSheetId);
-        const sheet = detailSheet.getSheetByName('詳細');
-        if (sheet) {
-          sheet.getRange('B1').setValue(incidentData.summary);
-          sheet.getRange('B2').setValue(incidentData.stakeholders);
-          sheet.getRange('B3').setValue(incidentData.details);
-
-          if (
-            incidentData.fileDataList &&
-            incidentData.fileDataList.length > 0
-          ) {
-            const folderId = extractFolderIdFromUrl(driveFolderUrl);
-            const cell = sheet.getRange('B4');
-            const richTextBuilder = SpreadsheetApp.newRichTextValue();
-            let text = '';
-
-            incidentData.fileDataList.forEach((fileData, index) => {
-              const fileUrl = uploadFile(fileData, folderId);
-              const fileName = fileData.name;
-              if (index > 0) {
-                text += '\n';
-              }
-              const startOffset = text.length;
-              text += fileName;
-              const endOffset = text.length;
-              richTextBuilder.setText(text);
-              richTextBuilder.setLinkUrl(startOffset, endOffset, fileUrl);
-            });
-            cell.setRichTextValue(richTextBuilder.build());
-          }
-        }
-      }
-    }
+    const registeredUserEmail = context.originalUserEmail ?? userEmail;
 
     // Slack通知
     sendSlack({
       caseName: incidentData.caseName,
       assignee: incidentData.assignee,
-      oldStatus: oldStatus,
+      oldStatus: context.oldStatus ?? '',
       newStatus: incidentData.status,
-      originalUserEmail: originalUserEmail,
+      originalUserEmail: registeredUserEmail,
       isNewIncident: !isEditMode,
     });
 
+    // 戻り値を作成
     const record: IncidentRecord = {
-      registeredDate: incidentDate.toLocaleString('ja-JP'),
-      registeredUser: originalUserEmail,
+      registeredDate: context.incidentDate.toLocaleString('ja-JP'),
+      registeredUser: registeredUserEmail,
       caseName: incidentData.caseName,
       assignee: incidentData.assignee,
       status: incidentData.status,
-      updateDate: updateDate.toLocaleString('ja-JP'),
-      driveFolderUrl: driveFolderUrl,
-      incidentDetailUrl: incidentDetailUrl,
+      updateDate: new Date().toLocaleString('ja-JP'),
+      driveFolderUrl: context.driveFolderUrl,
+      incidentDetailUrl: context.incidentDetailUrl,
     };
 
     return {
       success: true,
       message: 'インシデント情報を登録しました',
-      incidentDate: incidentDate.toISOString(),
+      incidentDate: context.incidentDate.toISOString(),
       record: record,
     };
   } catch (error) {
