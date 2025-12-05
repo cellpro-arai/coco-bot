@@ -100,6 +100,7 @@ function MainPage() {
               selectedIncident={selectedIncident}
               setIncidents={setIncidents}
               backToList={backToList}
+              isAdmin={isAdmin}
             />
           )}
 

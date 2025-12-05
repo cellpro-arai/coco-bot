@@ -43,12 +43,14 @@ interface IncidentFormPageProps {
   selectedIncident: Incident | null;
   setIncidents: React.Dispatch<React.SetStateAction<Incident[]>>;
   backToList: () => void;
+  isAdmin: boolean;
 }
 
 const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
   selectedIncident,
   setIncidents,
   backToList,
+  isAdmin,
 }) => {
   const [formData, setFormData] = useState<IncidentFormData>({
     registeredDate: selectedIncident?.registeredDate || '',
@@ -111,6 +113,36 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
       ),
     }));
   };
+
+  // ステータスが非活性かどうかを判定
+  const isStatusDisabled = (status: string) => {
+    if (!selectedIncident) {
+      // 新規起票時は「起票」のみ有効
+      return status !== INCIDENT_STATUS.REPORTED;
+    }
+
+    // 更新時は「起票」を非活性
+    if (status === INCIDENT_STATUS.REPORTED) {
+      return true;
+    }
+
+    if (isAdmin) {
+      // 管理者は全て有効（起票以外）
+      return false;
+    } else {
+      // ユーザーロールは「確認依頼」のみ有効
+      return status !== INCIDENT_STATUS.REVIEW_REQUESTED;
+    }
+  };
+
+  // 全ステータスを表示用に取得
+  const getAllStatuses = () => [
+    INCIDENT_STATUS.REPORTED,
+    INCIDENT_STATUS.REVIEW_REQUESTED,
+    INCIDENT_STATUS.REJECTED,
+    INCIDENT_STATUS.IN_PROGRESS,
+    INCIDENT_STATUS.CLOSED,
+  ];
 
   const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -273,23 +305,24 @@ const IncidentFormPage: React.FC<IncidentFormPageProps> = ({
                 onChange={handleInputChange}
                 required
               >
-                <option value={INCIDENT_STATUS.REPORTED}>
-                  {INCIDENT_STATUS.REPORTED}
-                </option>
-                <option value={INCIDENT_STATUS.REVIEW_REQUESTED}>
-                  {INCIDENT_STATUS.REVIEW_REQUESTED}
-                </option>
-                <option value={INCIDENT_STATUS.REJECTED}>
-                  {INCIDENT_STATUS.REJECTED}
-                </option>
-                <option value={INCIDENT_STATUS.IN_PROGRESS}>
-                  {INCIDENT_STATUS.IN_PROGRESS}
-                </option>
-                <option value={INCIDENT_STATUS.CLOSED}>
-                  {INCIDENT_STATUS.CLOSED}
-                </option>
+                {getAllStatuses().map(status => (
+                  <option
+                    key={status}
+                    value={status}
+                    disabled={isStatusDisabled(status)}
+                  >
+                    {status}
+                  </option>
+                ))}
               </FormSelect>
-              <FormHelperText>現在の対応状況を選択してください</FormHelperText>
+              <FormHelperText>
+                <ul className="list-disc list-inside mt-1 space-y-1">
+                  <li>確認依頼: 責任者へ確認依頼を行います</li>
+                  <li>差し戻し: 責任者が確認し担当者に差し戻します</li>
+                  <li>対応中: 責任者がインシデントを対応中です</li>
+                  <li>クローズ: インシデントが解決し対応が完了</li>
+                </ul>
+              </FormHelperText>
             </FormGroup>
 
             {/* トラブル概要 */}
