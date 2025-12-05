@@ -12,10 +12,13 @@ import {
   UsersIcon,
   ArrowPathIcon,
 } from '../components/icons';
-import { ConfirmEditIncidentModal } from '../components/modals';
+import {
+  ConfirmEditIncidentModal,
+  StatusChangeModal,
+} from '../components/modals';
 import { INCIDENT_STATUS } from '../types/constants';
 import { updateIncidentStatus } from '../services/incidentService';
-import { canChangeStatus, getAllStatuses } from '../utils';
+import { canChangeStatus } from '../utils';
 
 interface IncidentListPageProps {
   incidents: Incident[];
@@ -46,7 +49,8 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
   const [selectedIncident, setSelectedIncident] =
     React.useState<Incident | null>(null);
 
-  // ステータス変更UI関連の状態
+  // ステータス変更モーダルの状態
+  const [isStatusModalOpen, setIsStatusModalOpen] = React.useState(false);
   const [statusChangeIncident, setStatusChangeIncident] =
     React.useState<Incident | null>(null);
   const [isStatusUpdating, setIsStatusUpdating] = React.useState(false);
@@ -92,18 +96,22 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
       );
 
       // ステータス変更後、インシデント一覧を更新する
-      // 実装例：onRefresh()を呼ぶか、状態を直接更新
       if (onRefresh) {
         onRefresh();
       }
 
+      setIsStatusModalOpen(false);
       setStatusChangeIncident(null);
     } catch (error) {
       console.error('ステータス変更に失敗しました:', error);
-      // エラーハンドリング（トーストなど）が必要に応じて追加
     } finally {
       setIsStatusUpdating(false);
     }
+  };
+
+  const handleOpenStatusModal = (incident: Incident) => {
+    setStatusChangeIncident(incident);
+    setIsStatusModalOpen(true);
   };
 
   return (
@@ -235,57 +243,20 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
                     {incident.summary}
                   </p>
 
-                  {statusChangeIncident?.registeredDate ===
-                  incident.registeredDate ? (
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
-                      <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        ステータスを変更
-                      </p>
-                      <div className="flex flex-col gap-2">
-                        {getAllStatuses().map(status => {
-                          const isDisabled =
-                            isStatusUpdating ||
-                            !canChangeStatus(incident.status, status, isAdmin);
-                          return (
-                            <button
-                              key={status}
-                              onClick={() => handleStatusChange(status)}
-                              disabled={isDisabled}
-                              className={`px-3 py-1.5 text-sm rounded transition-colors ${
-                                isDisabled
-                                  ? 'bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed'
-                                  : 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-800'
-                              }`}
-                            >
-                              {status}
-                            </button>
-                          );
-                        })}
-                        <button
-                          onClick={() => setStatusChangeIncident(null)}
-                          disabled={isStatusUpdating}
-                          className="px-3 py-1.5 text-sm rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                        >
-                          キャンセル
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleCardClick(incident)}
-                        className="flex-1 px-3 py-2 text-sm rounded bg-gray-400 text-white hover:bg-gray-500 dark:bg-gray-600 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        編集
-                      </button>
-                      <button
-                        onClick={() => setStatusChangeIncident(incident)}
-                        className="flex-1 px-3 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors"
-                      >
-                        ステータス変更
-                      </button>
-                    </div>
-                  )}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleCardClick(incident)}
+                      className="flex-1 px-3 py-2 text-sm rounded bg-gray-400 text-white hover:bg-gray-500 dark:bg-gray-600 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      編集
+                    </button>
+                    <button
+                      onClick={() => handleOpenStatusModal(incident)}
+                      className="flex-1 px-3 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors"
+                    >
+                      ステータス変更
+                    </button>
+                  </div>
                 </Card>
               ))}
             </div>
@@ -300,6 +271,25 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
         onConfirm={handleConfirmEdit}
         onEditSpreadsheet={handleEditSpreadsheet}
         incidentName={selectedIncident?.caseName}
+      />
+
+      {/* ステータス変更モーダル */}
+      <StatusChangeModal
+        isOpen={isStatusModalOpen}
+        onClose={() => {
+          setIsStatusModalOpen(false);
+          setStatusChangeIncident(null);
+        }}
+        onConfirm={handleStatusChange}
+        currentStatus={statusChangeIncident?.status || ''}
+        isLoading={isStatusUpdating}
+        canChangeStatus={(newStatus: string) =>
+          canChangeStatus(
+            statusChangeIncident?.status || '',
+            newStatus,
+            isAdmin
+          )
+        }
       />
     </div>
   );
