@@ -3,14 +3,15 @@
   "version": "1.0.0",
   "description": "Google Apps Script backend",
   "scripts": {
-    "build": "npm run delete-files && tsc && npm run copy-files",
-    "delete-files": "rm -rf ../dist",
-    "copy-files": "cp ../appsscript.json ../dist/",
+    "build": "npm run remove-dist && vite build && npm run copy-manifest",
+    "copy-manifest": "cp ../appsscript.json ../dist/",
+    "remove-dist": "rm -rf ../dist",
     "format": "prettier --write ."
   },
   "devDependencies": {
     "@types/google-apps-script": "^2.0.8",
     "prettier": "^3.7.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite": "^7.2.4"
   }
 }
