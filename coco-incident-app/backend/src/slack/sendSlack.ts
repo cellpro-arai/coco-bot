@@ -1,6 +1,6 @@
-import { getCurrentUserAndAll } from '../permissions/permissionManager';
+import { getCurrentUserAndAll } from '../user/permissionManager';
 import { getSlackBotToken, getDeployUrl } from '../properties';
-import { USER_ROLE } from '../permissions/constants';
+import { USER_ROLE } from '../user/constants';
 import { INCIDENT_STATUS } from './constants';
 
 /**

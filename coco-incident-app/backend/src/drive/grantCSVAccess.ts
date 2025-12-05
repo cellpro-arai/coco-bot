@@ -1,4 +1,4 @@
-import { USER_ROLE, UserRole } from '../permissions/constants';
+import { USER_ROLE, UserRole } from '../user/constants';
 import { getPermissionsCsvFileId } from '../properties';
 
 /**

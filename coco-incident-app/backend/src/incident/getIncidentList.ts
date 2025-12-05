@@ -1,7 +1,7 @@
 import { INCIDENT_SHEET_NAME, IncidentRecord } from './types';
 import { extractSheetIdFromUrl } from './utils';
-import { getCurrentUserAndAll } from '../permissions/permissionManager';
-import { USER_ROLE } from '../permissions/constants';
+import { getCurrentUserAndAll } from '../user/permissionManager';
+import { USER_ROLE } from '../user/constants';
 import { getSpreadSheetId } from '../properties';
 
 /**

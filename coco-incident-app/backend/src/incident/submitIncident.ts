@@ -8,13 +8,13 @@ import { extractSheetIdFromUrl, extractFolderIdFromUrl } from './utils';
 import { uploadFile } from '../drive/uploadFile';
 import { copyFile } from '../drive/copyTemplate';
 import { sendSlack } from '../slack/sendSlack';
-import { getAllPermissions } from '../permissions/permissionManager';
-import { USER_ROLE } from '../permissions/constants';
+import { USER_ROLE } from '../user/constants';
 import {
   getUploadFolderId,
   getSpreadSheetId,
   getTemplateSheetId,
 } from '../properties';
+import { getAllPermissions } from '../user/getAllPermissions';
 
 interface NewIncidentContext {
   incidentDate: Date;
