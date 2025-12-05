@@ -7,6 +7,7 @@ import {
   IncidentResult,
   AI_ANALYSIS_STATUS,
   UserPermission,
+  CurrentUserAndAllUsers,
 } from '../types';
 
 const isDevelopment = typeof google === 'undefined';
@@ -137,39 +138,43 @@ export function submitIncident(
 }
 
 /**
- * すべてのユーザー権限を取得します。
- * @returns {Promise<UserPermission[]>} ユーザー権限のリスト
+ * 現在のユーザーと全ユーザーの権限情報を取得します。
+ * @returns {Promise<CurrentUserAndAllUsers>} 現在のユーザーと全ユーザーの権限情報
  */
-export function getAllPermissions(): Promise<UserPermission[]> {
+export function getCurrentUserAndAllPermissions(): Promise<CurrentUserAndAllUsers> {
   return new Promise((resolve, reject) => {
     if (isDevelopment) {
       // 開発環境用のモックデータ
       setTimeout(() => {
-        resolve([
-          {
-            email: 'admin@example.com',
-            role: 'admin',
-            slackUserId: 'U123456789',
-          },
-          {
-            email: 'user1@example.com',
-            role: 'user',
-            slackUserId: 'U987654321',
-          },
-          {
-            email: 'user2@example.com',
-            role: 'user',
-            slackUserId: 'U111111111',
-          },
-        ]);
+        resolve({
+          current_user: 'admin@example.com',
+          role: 'admin',
+          users: [
+            {
+              email: 'admin@example.com',
+              role: 'admin',
+              slackUserId: 'U123456789',
+            },
+            {
+              email: 'user1@example.com',
+              role: 'user',
+              slackUserId: 'U987654321',
+            },
+            {
+              email: 'user2@example.com',
+              role: 'user',
+              slackUserId: 'U111111111',
+            },
+          ],
+        });
       }, 300);
     } else {
       google.script.run
-        .withSuccessHandler((result: UserPermission[]) => resolve(result))
+        .withSuccessHandler((result: CurrentUserAndAllUsers) => resolve(result))
         .withFailureHandler((error: Error) =>
           reject(new Error(`権限情報の取得に失敗しました: ${error.message}`))
         )
-        .getAllPermissions();
+        .getCurrentUserAndAll();
     }
   });
 }
@@ -227,52 +232,6 @@ export function removeUser(email: string): Promise<void> {
           reject(new Error(`ユーザー削除に失敗しました: ${error.message}`))
         )
         .removeUser(email);
-    }
-  });
-}
-
-/**
- * 現在のユーザーが管理者かどうかを確認します。
- * @returns {Promise<boolean>} 管理者ならtrue
- */
-export function isCurrentUserAdmin(): Promise<boolean> {
-  return new Promise((resolve, reject) => {
-    if (isDevelopment) {
-      // 開発環境用のモック
-      setTimeout(() => {
-        resolve(true); // 開発環境では常に管理者として扱う
-      }, 100);
-    } else {
-      google.script.run
-        .withSuccessHandler((result: boolean) => resolve(result))
-        .withFailureHandler((error: Error) =>
-          reject(new Error(`権限確認に失敗しました: ${error.message}`))
-        )
-        .isUserAdmin(Session.getActiveUser().getEmail());
-    }
-  });
-}
-
-/**
- * 現在のユーザーのメールアドレスを取得します。
- * @returns {Promise<string>} メールアドレス
- */
-export function getCurrentUserEmail(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (isDevelopment) {
-      // 開発環境用のモック
-      setTimeout(() => {
-        resolve('admin@example.com');
-      }, 100);
-    } else {
-      google.script.run
-        .withSuccessHandler((email: string) => resolve(email))
-        .withFailureHandler((error: Error) => {
-          reject(
-            new Error(`ユーザー情報の取得に失敗しました: ${error.message}`)
-          );
-        })
-        .getActiveUserEmail?.();
     }
   });
 }

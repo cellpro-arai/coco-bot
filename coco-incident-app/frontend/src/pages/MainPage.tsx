@@ -6,13 +6,14 @@ import IncidentFormPage from './IncidentFormPage';
 import PermissionManagementPage from './PermissionManagementPage';
 import useTheme from '../hooks/useTheme';
 import { useViewManager, VIEW_VARIANT } from '../hooks/useViewManager';
-import { getAllPermissions, getCurrentUserEmail } from '../services/apiService';
+import { getCurrentUserAndAllPermissions } from '../services/apiService';
 
 function MainPage() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [permissions, setPermissions] = useState<UserPermission[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingPermissions, setLoadingPermissions] = useState(true);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
   const { theme, toggleTheme } = useTheme();
   const {
     currentView,
@@ -27,20 +28,20 @@ function MainPage() {
   useEffect(() => {
     const initializePermissions = async () => {
       try {
-        // すべての権限一覧を取得
-        const perms = await getAllPermissions();
-        setPermissions(perms);
+        setPermissionError(null);
 
-        // 現在のユーザーのメールアドレスを取得
-        const currentUserEmail = await getCurrentUserEmail();
+        // 現在のユーザーと全ユーザーの権限情報を取得
+        const userAndPerms = await getCurrentUserAndAllPermissions();
+        setPermissions(userAndPerms.users);
 
-        // 管理者かどうかを判定
-        const isUserAdmin = perms.some(
-          p => p.email === currentUserEmail && p.role === 'admin'
-        );
-        setIsAdmin(isUserAdmin);
+        // バックエンドから返される role で管理者かどうかを判定
+        setIsAdmin(userAndPerms.role === 'admin');
       } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : '不明なエラーが発生しました';
         console.error('権限情報の初期化に失敗:', error);
+        setPermissionError(errorMessage);
+        setIsAdmin(false);
       } finally {
         setLoadingPermissions(false);
       }
@@ -63,6 +64,13 @@ function MainPage() {
 
       <main className="flex-1">
         <Container fluid>
+          {permissionError && (
+            <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+              <p className="font-semibold">権限エラー</p>
+              <p className="text-sm mt-2">{permissionError}</p>
+            </div>
+          )}
+
           {currentView === VIEW_VARIANT.LIST && (
             <IncidentListPage
               incidents={incidents}
