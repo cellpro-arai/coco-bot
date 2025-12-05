@@ -11,7 +11,7 @@ import {
   FormSelect,
 } from '../components/ui';
 import { ConfirmDeleteModal } from '../components/modals';
-import { addUser, removeUser } from '../services/apiService';
+import { addUser, removeUser } from '../services/permissionService';
 import {
   ArrowLeftIcon,
   UsersIcon,

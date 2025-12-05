@@ -7,7 +7,7 @@ import {
   PLACEHOLDERS,
   INCIDENT_STATUS,
 } from '../types';
-import * as api from '../services/apiService';
+import * as api from '../services/incidentService';
 import { SuccessModal } from '../components/modals';
 import {
   Button,

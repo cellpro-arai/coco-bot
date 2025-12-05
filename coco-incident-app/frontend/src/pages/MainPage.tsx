@@ -6,7 +6,7 @@ import IncidentFormPage from './IncidentFormPage';
 import PermissionManagementPage from './PermissionManagementPage';
 import useTheme from '../hooks/useTheme';
 import { useViewManager, VIEW_VARIANT } from '../hooks/useViewManager';
-import { getCurrentUserAndAllPermissions } from '../services/apiService';
+import { getCurrentUserAndAllPermissions } from '../services/permissionService';
 
 function MainPage() {
   const [incidents, setIncidents] = useState<Incident[]>([]);

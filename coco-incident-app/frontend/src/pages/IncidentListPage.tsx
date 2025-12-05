@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Incident } from '../types';
-import * as api from '../services/apiService';
+import * as api from '../services/incidentService';
 import { Button, Card, Badge, Alert, ALERT_VARIANT } from '../components/ui';
 import {
   ArrowPathIcon,
