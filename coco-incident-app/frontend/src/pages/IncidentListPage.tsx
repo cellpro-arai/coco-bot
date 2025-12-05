@@ -12,6 +12,7 @@ import {
   UsersIcon,
   ArrowPathIcon,
 } from '../components/icons';
+import { ConfirmEditIncidentModal } from '../components/modals';
 import { INCIDENT_STATUS } from '../types/constants';
 
 interface IncidentListPageProps {
@@ -35,6 +36,40 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
 }) => {
   // uploadFolderUrl が空の場合はローディング状態
   const isLoading = !uploadFolderUrl;
+
+  // 確認モーダルの状態
+  const [isConfirmOpen, setIsConfirmOpen] = React.useState(false);
+  const [selectedIncident, setSelectedIncident] =
+    React.useState<Incident | null>(null);
+
+  // カードクリック時の処理
+  const handleCardClick = (incident: Incident) => {
+    setSelectedIncident(incident);
+    setIsConfirmOpen(true);
+  };
+
+  // 「そのまま開く」ボタンクリック時の処理
+  const handleConfirmEdit = () => {
+    if (selectedIncident) {
+      setIsConfirmOpen(false);
+      editIncident(selectedIncident);
+    }
+  };
+
+  // スプレッドシートで直接編集する処理
+  const handleEditSpreadsheet = () => {
+    if (selectedIncident && selectedIncident.driveFolderUrl) {
+      // スプレッドシートフォルダを開く
+      window.open(selectedIncident.driveFolderUrl, '_blank');
+      setIsConfirmOpen(false);
+    }
+  };
+
+  // モーダルを閉じる
+  const handleCloseModal = () => {
+    setIsConfirmOpen(false);
+    setSelectedIncident(null);
+  };
 
   return (
     <div className="py-4">
@@ -109,8 +144,8 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
               {incidents.map(incident => (
                 <Card
                   key={incident.registeredDate}
-                  onClick={() => editIncident(incident)}
-                  className="relative"
+                  onClick={() => handleCardClick(incident)}
+                  className="relative cursor-pointer transition-transform hover:scale-105"
                 >
                   <div className="flex justify-between items-start mb-3 gap-2">
                     <h5 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-0 line-clamp-2">
@@ -172,6 +207,15 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
           )}
         </>
       )}
+
+      {/* 確認モーダル */}
+      <ConfirmEditIncidentModal
+        isOpen={isConfirmOpen}
+        onClose={handleCloseModal}
+        onConfirm={handleConfirmEdit}
+        onEditSpreadsheet={handleEditSpreadsheet}
+        incidentName={selectedIncident?.caseName}
+      />
     </div>
   );
 };
