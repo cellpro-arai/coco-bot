@@ -7,62 +7,6 @@ const shouldSimulatePermissionError =
   localStorage.getItem('simulatePermissionError') === 'true';
 
 /**
- * インシデント一覧を取得します。
- * @returns {Promise<Incident[]>} インシデントのリスト
- */
-export function getIncidentList(): Promise<Incident[]> {
-  return new Promise((resolve, reject) => {
-    if (import.meta.env.DEV) {
-      // 開発環境用のモックデータ
-      setTimeout(() => {
-        if (shouldSimulatePermissionError) {
-          reject(new Error('権限がありません。管理者に問い合わせてください。'));
-          return;
-        }
-        resolve([
-          {
-            registeredDate: '2025/1/15 10:30:00',
-            registeredUser: 'dev@example.com',
-            caseName: 'システムダウン',
-            assignee: '山田太郎',
-            status: '対応中',
-            updateDate: '2025/1/15 14:30:00',
-            driveFolderUrl: 'https://drive.google.com/drive/folders/mock1',
-            incidentDetailUrl: 'https://docs.google.com/spreadsheets/d/mock1',
-            summary: 'サーバーがダウンし、サービスにアクセスできない状態',
-            stakeholders: '顧客: 株式会社ABC 田中様\n社内: 開発部 鈴木課長',
-            details:
-              '【発生日時】2025年1月15日 10:00頃\n【現象】503エラーが表示される\n【影響範囲】全ユーザー',
-            attachments: 'error_log.txt\nscreenshot.png',
-          },
-          {
-            registeredDate: '2025/1/14 09:00:00',
-            registeredUser: 'dev@example.com',
-            caseName: 'データ不整合',
-            assignee: '佐藤花子',
-            status: '解決済み',
-            updateDate: '2025/1/15 16:00:00',
-            driveFolderUrl: 'https://drive.google.com/drive/folders/mock2',
-            incidentDetailUrl: 'https://docs.google.com/spreadsheets/d/mock2',
-            summary: 'データベースの一部データに不整合が発見された',
-            stakeholders: '社内: データ管理部 高橋主任',
-            details:
-              '【発生日時】2025年1月14日\n【現象】顧客データの一部が重複\n【対応】重複データを削除し、正常化',
-          },
-        ]);
-      }, 500);
-    } else {
-      google.script.run
-        .withSuccessHandler((result: Incident[]) => resolve(result))
-        .withFailureHandler((error: Error) =>
-          reject(new Error(`データの読み込みに失敗しました: ${error.message}`))
-        )
-        .getIncidentList();
-    }
-  });
-}
-
-/**
  * インシデントを登録または更新します。
  * @param {IncidentFormData} data フォームデータ
  * @returns {Promise<IncidentResult>} 登録結果
@@ -116,28 +60,6 @@ export function submitIncident(
           reject(new Error(`送信に失敗しました: ${error.message}`))
         )
         .submitIncident(data);
-    }
-  });
-}
-
-/**
- * アップロード先フォルダのURLを取得します。
- * @returns {Promise<string>} フォルダのURL
- */
-export function getUploadFolderUrl(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (import.meta.env.DEV) {
-      // 開発環境用のモック
-      setTimeout(() => {
-        resolve('https://drive.google.com/drive/folders/mock_upload_folder');
-      }, 100);
-    } else {
-      google.script.run
-        .withSuccessHandler((url: string) => resolve(url))
-        .withFailureHandler((error: Error) =>
-          reject(new Error(`フォルダURLの取得に失敗しました: ${error.message}`))
-        )
-        .getUploadFolderUrl();
     }
   });
 }

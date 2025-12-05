@@ -1,10 +1,13 @@
-import { CurrentUserAndAllUsers } from './types';
-import { getAllPermissions } from './getAllPermissions';
+import { InitialData } from './types';
+import { getAllPermissions } from '../user/getAllPermissions';
+import { getUploadFolderUrl } from '../drive/getUploadFolderUrl';
+import { getIncidentList } from './getIncidentList';
 
 /**
- * 現在のユーザーと全ユーザーの情報を取得
+ * 初期表示時のデータ取得
+ * インシデント詳細のDriveパス, 現在のユーザー, 全ユーザーの情報を取得
  */
-export function getCurrentUserAndAll(): CurrentUserAndAllUsers {
+export function getInitialData(): InitialData {
   try {
     const currentUserEmail = Session.getEffectiveUser().getEmail();
 
@@ -20,10 +23,18 @@ export function getCurrentUserAndAll(): CurrentUserAndAllUsers {
       );
     }
 
+    // アップロード先フォルダのURLを取得
+    const uploadFolderUrl = getUploadFolderUrl();
+
+    // インシデント一覧を取得
+    const incidents = getIncidentList(currentUserEmail, currentUser.role);
+
     return {
       current_user: currentUserEmail,
       role: currentUser.role,
       users: permissions,
+      upload_folder_url: uploadFolderUrl,
+      incidents: incidents,
     };
   } catch (error) {
     console.error('getCurrentUserAndAll error:', error);

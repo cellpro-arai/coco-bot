@@ -1,3 +1,5 @@
+import { Incident } from './incident';
+
 /**
  * ユーザーロールの定数
  */
@@ -24,4 +26,12 @@ export interface CurrentUserAndAllUsers {
   current_user: string;
   role: UserRole;
   users: UserPermission[];
+}
+
+/**
+ * 初期表示時のすべてのデータ
+ */
+export interface InitialData extends CurrentUserAndAllUsers {
+  upload_folder_url: string;
+  incidents: Incident[];
 }

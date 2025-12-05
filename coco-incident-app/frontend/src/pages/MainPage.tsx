@@ -6,14 +6,16 @@ import IncidentFormPage from './IncidentFormPage';
 import PermissionManagementPage from './PermissionManagementPage';
 import useTheme from '../hooks/useTheme';
 import { useViewManager, VIEW_VARIANT } from '../hooks/useViewManager';
-import { getCurrentUserAndAllPermissions } from '../services/permissionService';
+import { getInitialData } from '../services/permissionService';
 
 function MainPage() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [permissions, setPermissions] = useState<UserPermission[]>([]);
+  const [uploadFolderUrl, setUploadFolderUrl] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingPermissions, setLoadingPermissions] = useState(true);
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const {
     currentView,
@@ -24,30 +26,33 @@ function MainPage() {
     showPermissionManagement,
   } = useViewManager();
 
-  // 初期化時に権限情報と管理者フラグを取得
+  // 初期化時に全データを一括取得
+  const fetchData = async (setLoading: (value: boolean) => void) => {
+    try {
+      setPermissionError(null);
+
+      // 初期データを一括取得（ユーザー権限、インシデント、アップロードフォルダURL）
+      const initialData = await getInitialData();
+
+      setPermissions(initialData.users);
+      setIncidents(initialData.incidents);
+      setUploadFolderUrl(initialData.upload_folder_url);
+
+      // バックエンドから返される role で管理者かどうかを判定
+      setIsAdmin(initialData.role === USER_ROLE.ADMIN);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : '不明なエラーが発生しました';
+      console.error('データの取得に失敗:', error);
+      setPermissionError(errorMessage);
+      setIsAdmin(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const initializePermissions = async () => {
-      try {
-        setPermissionError(null);
-
-        // 現在のユーザーと全ユーザーの権限情報を取得
-        const userAndPerms = await getCurrentUserAndAllPermissions();
-        setPermissions(userAndPerms.users);
-
-        // バックエンドから返される role で管理者かどうかを判定
-        setIsAdmin(userAndPerms.role === USER_ROLE.ADMIN);
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : '不明なエラーが発生しました';
-        console.error('権限情報の初期化に失敗:', error);
-        setPermissionError(errorMessage);
-        setIsAdmin(false);
-      } finally {
-        setLoadingPermissions(false);
-      }
-    };
-
-    initializePermissions();
+    fetchData(setLoadingPermissions);
   }, []);
 
   const handleAddUser = (newUser: UserPermission) => {
@@ -56,6 +61,11 @@ function MainPage() {
 
   const handleRemoveUser = (email: string) => {
     setPermissions(permissions.filter(p => p.email !== email));
+  };
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchData(setIsRefreshing);
   };
 
   return (
@@ -74,12 +84,14 @@ function MainPage() {
           {currentView === VIEW_VARIANT.LIST && (
             <IncidentListPage
               incidents={incidents}
-              setIncidents={setIncidents}
+              uploadFolderUrl={uploadFolderUrl}
               showForm={showForm}
               editIncident={editIncident}
               showPermissionManagement={
                 isAdmin ? showPermissionManagement : undefined
               }
+              onRefresh={handleRefresh}
+              isRefreshing={isRefreshing}
             />
           )}
 

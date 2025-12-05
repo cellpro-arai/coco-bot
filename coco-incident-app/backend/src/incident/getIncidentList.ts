@@ -1,19 +1,20 @@
 import { INCIDENT_SHEET_NAME, IncidentRecord } from './types';
 import { extractSheetIdFromUrl } from './utils';
-import { getCurrentUserAndAll } from '../user/permissionManager';
 import { USER_ROLE } from '../user/constants';
 import { getSpreadSheetId } from '../properties';
 
 /**
  * インシデント一覧を取得
  */
-export function getIncidentList(): IncidentRecord[] {
+export function getIncidentList(
+  currentUserEmail: string,
+  userRole: string
+): IncidentRecord[] {
   try {
     const spreadsheetId = getSpreadSheetId();
     const ss = SpreadsheetApp.openById(spreadsheetId);
 
-    const userInfo = getCurrentUserAndAll();
-    const userIsAdmin = userInfo.role === USER_ROLE.ADMIN;
+    const userIsAdmin = userRole === USER_ROLE.ADMIN;
 
     const incidentSheet = ss.getSheetByName(INCIDENT_SHEET_NAME);
     if (!incidentSheet) {
@@ -29,7 +30,7 @@ export function getIncidentList(): IncidentRecord[] {
 
     // 管理者は全件表示、一般ユーザーは自分が登録したもののみ表示
     if (!userIsAdmin) {
-      values = values.filter(row => row[1] === userInfo.current_user);
+      values = values.filter(row => row[1] === currentUserEmail);
     }
 
     const records: IncidentRecord[] = [];

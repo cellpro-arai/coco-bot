@@ -1,6 +1,19 @@
 import { FileData } from '../drive/types';
+import { UserRole } from '../user/constants';
+import { UserPermission } from '../user/types';
 
 export const INCIDENT_SHEET_NAME = 'インシデント管理';
+
+/**
+ * 初期表示時のデータ
+ */
+export interface InitialData {
+  current_user: string;
+  role: UserRole;
+  users: UserPermission[];
+  upload_folder_url: string;
+  incidents: IncidentRecord[];
+}
 
 /**
  * インシデントデータの型定義

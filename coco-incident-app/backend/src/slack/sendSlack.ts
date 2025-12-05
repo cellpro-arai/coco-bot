@@ -1,6 +1,6 @@
-import { getCurrentUserAndAll } from '../user/permissionManager';
 import { getSlackBotToken, getDeployUrl } from '../properties';
 import { USER_ROLE } from '../user/constants';
+import { getAllPermissions } from '../user/getAllPermissions';
 import { INCIDENT_STATUS } from './constants';
 
 /**
@@ -26,7 +26,7 @@ export function sendSlack({
     let slackUserIds: string[] = [];
 
     // 管理者ユーザーを取得
-    const { users } = getCurrentUserAndAll();
+    const users = getAllPermissions();
     const adminUsers = users.filter(u => u.role === USER_ROLE.ADMIN);
 
     if (isNewIncident) {

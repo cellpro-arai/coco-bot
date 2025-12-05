@@ -1,18 +1,13 @@
 /**
  * @fileoverview 権限管理に関する Google Apps Script との通信
  */
-import {
-  UserPermission,
-  CurrentUserAndAllUsers,
-  USER_ROLE,
-  UserRole,
-} from '../types';
+import { UserPermission, InitialData, USER_ROLE, UserRole } from '../types';
 
 /**
- * 現在のユーザーと全ユーザーの権限情報を取得します。
- * @returns {Promise<CurrentUserAndAllUsers>} 現在のユーザーと全ユーザーの権限情報
+ * 初期表示時のすべてのデータを取得します（ユーザー権限、インシデント、アップロードフォルダURL）。
+ * @returns {Promise<InitialData>} 初期表示に必要なすべてのデータ
  */
-export function getCurrentUserAndAllPermissions(): Promise<CurrentUserAndAllUsers> {
+export function getInitialData(): Promise<InitialData> {
   return new Promise((resolve, reject) => {
     if (import.meta.env.DEV) {
       // 開発環境用のモックデータ
@@ -37,15 +32,30 @@ export function getCurrentUserAndAllPermissions(): Promise<CurrentUserAndAllUser
               slackUserId: 'U111111111',
             },
           ],
+          upload_folder_url:
+            'https://drive.google.com/drive/folders/mock-folder-id',
+          incidents: [
+            {
+              registeredDate: '2025/1/15 10:30:00',
+              registeredUser: 'dev@example.com',
+              caseName: 'システムダウン',
+              assignee: '山田太郎',
+              status: '対応中',
+              updateDate: '2025/1/15 14:30:00',
+              driveFolderUrl: 'https://drive.google.com/drive/folders/mock1',
+              incidentDetailUrl:
+                'https://drive.google.com/drive/folders/mock-detail1',
+            },
+          ],
         });
       }, 300);
     } else {
       google.script.run
-        .withSuccessHandler((result: CurrentUserAndAllUsers) => resolve(result))
+        .withSuccessHandler((result: InitialData) => resolve(result))
         .withFailureHandler((error: Error) =>
-          reject(new Error(`権限情報の取得に失敗しました: ${error.message}`))
+          reject(new Error(`初期データの取得に失敗しました: ${error.message}`))
         )
-        .getCurrentUserAndAll();
+        .getInitialData();
     }
   });
 }

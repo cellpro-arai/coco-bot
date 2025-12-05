@@ -1,69 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Incident } from '../types';
-import * as api from '../services/incidentService';
 import { Button, Card, Badge, Alert, ALERT_VARIANT } from '../components/ui';
 import {
-  ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   ClockIcon,
-  ExclamationCircleIcon,
   FlagIcon,
   InformationCircleIconOutline,
   ListBulletIcon,
   UserIcon,
   PlusCircleIcon,
   UsersIcon,
+  ArrowPathIcon,
 } from '../components/icons';
 import { INCIDENT_STATUS } from '../types/constants';
 
 interface IncidentListPageProps {
   incidents: Incident[];
-  setIncidents: React.Dispatch<React.SetStateAction<Incident[]>>;
+  uploadFolderUrl: string;
   showForm: () => void;
   editIncident: (incident: Incident) => void;
   showPermissionManagement?: () => void;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 const IncidentListPage: React.FC<IncidentListPageProps> = ({
   incidents,
-  setIncidents,
+  uploadFolderUrl,
   showForm,
   editIncident,
   showPermissionManagement,
+  onRefresh,
+  isRefreshing = false,
 }) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [uploadFolderUrl, setUploadFolderUrl] = useState('');
-
-  useEffect(() => {
-    if (incidents.length === 0) {
-      loadIncidents();
-    }
-    loadUploadFolderUrl();
-  }, []);
-
-  const loadIncidents = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const data = await api.getIncidentList();
-      setIncidents(data);
-    } catch (error: any) {
-      setError(error.message || 'データの読み込みに失敗しました');
-      setIncidents([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadUploadFolderUrl = async () => {
-    try {
-      const url = await api.getUploadFolderUrl();
-      setUploadFolderUrl(url);
-    } catch (error: any) {
-      console.error('フォルダURLの取得に失敗:', error);
-    }
-  };
+  // uploadFolderUrl が空の場合はローディング状態
+  const isLoading = !uploadFolderUrl;
 
   return (
     <div className="py-4">
@@ -89,19 +60,26 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
           </div>
           <div className="flex gap-2 flex-wrap justify-end">
             {showPermissionManagement && (
-              <Button variant="secondary" onClick={showPermissionManagement}>
+              <Button
+                variant="secondary"
+                onClick={showPermissionManagement}
+                disabled={isLoading}
+              >
                 <UsersIcon className="mr-2 w-4 h-4" />
                 権限管理
               </Button>
             )}
             <Button
               variant="secondary"
-              onClick={loadIncidents}
-              disabled={loading}
+              onClick={onRefresh}
+              disabled={isLoading || isRefreshing}
+              title="更新"
             >
-              <ArrowPathIcon className="w-4 h-4" />
+              <ArrowPathIcon
+                className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}
+              />
             </Button>
-            <Button onClick={showForm}>
+            <Button onClick={showForm} disabled={isLoading}>
               <PlusCircleIcon className="mr-2 w-4 h-4" />
               新規
             </Button>
@@ -109,8 +87,8 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
         </div>
       </div>
 
-      {/* ローディング */}
-      {loading && (
+      {/* ローディング表示 */}
+      {isLoading ? (
         <Card className="text-center py-12">
           <div className="animate-pulse">
             <p className="text-gray-600 dark:text-gray-400">
@@ -118,19 +96,9 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
             </p>
           </div>
         </Card>
-      )}
-
-      {/* エラー表示 */}
-      {error && !loading && (
-        <Alert variant={ALERT_VARIANT.DANGER} className="flex items-center">
-          <ExclamationCircleIcon className="mr-2 w-5 h-5" />
-          <span>{error}</span>
-        </Alert>
-      )}
-
-      {/* カード一覧 */}
-      {!loading && !error && (
-        <div>
+      ) : (
+        <>
+          {/* カード一覧 */}
           {incidents.length === 0 ? (
             <Alert variant={ALERT_VARIANT.INFO} className="text-center">
               <InformationCircleIconOutline className="mr-2 w-5 h-5" />
@@ -202,7 +170,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
               ))}
             </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );
