@@ -3,7 +3,7 @@ import {
   COLOR_WHITE,
   BORDER_MEDIUM,
   BORDER_SOLID,
-} from '../types/type';
+} from './expensesReportTypes';
 import { getLastDayOfMonth } from '../utils';
 
 // 月次経費精算書シートを指定フォーマットで初期化

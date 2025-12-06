@@ -4,14 +4,12 @@ import {
   formatYearMonth,
   getScriptProperty,
 } from '../utils';
+import { ExpenseEntry, CommuteEntry, ExpenseEntryRecord } from '../types/type';
 import {
   EXPENSE_REPORT_SHEET_NAME,
   BORDER_SOLID,
   BORDER_MEDIUM,
-  ExpenseEntry,
-  CommuteEntry,
-  ExpenseEntryRecord,
-} from '../types/type';
+} from './expensesReportTypes';
 import { addSpreadsheetToFolder, uploadFileToDrive } from '../drive';
 import { initializeExpenseReportSheet } from './expenseReportSheetFormat';
 

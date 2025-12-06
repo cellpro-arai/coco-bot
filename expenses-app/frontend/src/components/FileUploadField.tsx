@@ -1,4 +1,10 @@
 import { ChangeEvent, useRef } from 'react';
+import {
+  destructiveButtonClass,
+  legendBaseClass,
+  sectionCardClass,
+  secondaryButtonClass,
+} from './formClasses';
 
 interface FileUploadFieldProps {
   label: string;
@@ -31,51 +37,52 @@ export default function FileUploadField({
   };
 
   const handleButtonClick = () => {
+    // デザインを崩さないよう非表示 input を透過的にクリックさせる
     if (inputRef.current) {
       inputRef.current.click();
     }
   };
 
   return (
-    <fieldset>
-      <label htmlFor={label}>{label}</label>
-      <div className="work-schedule-input">
+    <fieldset className={`${sectionCardClass} space-y-4`}>
+      <legend className={legendBaseClass}>{label}</legend>
+      <div className="flex flex-wrap items-center gap-3">
         <input
           ref={inputRef}
           type="file"
           id={label}
           onChange={handleFilesChange}
           accept={accept}
-          style={{ display: 'none' }}
+          className="hidden"
           multiple={multiple}
         />
-        <button type="button" className="secondary" onClick={handleButtonClick}>
+        <button
+          type="button"
+          className={secondaryButtonClass}
+          onClick={handleButtonClick}
+        >
           {label}を選択
         </button>
+        {files.length > 0 && (
+          <span className="text-sm text-slate-500">
+            {files.length}件のファイルを選択中
+          </span>
+        )}
       </div>
       {files.length > 0 && (
-        <div style={{ marginTop: '0.5rem' }}>
+        <div className="space-y-2">
           {files.map((file, index) => (
             <div
               key={index}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                marginBottom: '0.3rem',
-              }}
+              className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2"
             >
-              <span className="file-name" style={{ flex: 1 }}>
+              <span className="flex-1 truncate text-sm text-slate-700">
                 {file.name}
               </span>
               <button
                 type="button"
-                className="secondary"
+                className={destructiveButtonClass}
                 onClick={() => onRemoveFile(index)}
-                style={{
-                  padding: '0.2rem 0.6rem',
-                  fontSize: '0.8rem',
-                }}
               >
                 削除
               </button>

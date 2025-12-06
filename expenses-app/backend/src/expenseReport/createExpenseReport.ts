@@ -2,8 +2,8 @@ import {
   CommuteEntry,
   ExpenseData,
   ExpenseEntryRecord,
-  EXPENSE_REPORT_SHEET_NAME,
 } from '../types/type';
+import { EXPENSE_REPORT_SHEET_NAME } from './expensesReportTypes';
 import {
   addDateToExpenseReportSheet,
   getOrCreateExpenseReportSS,

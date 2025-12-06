@@ -1,10 +1,14 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { viteSingleFile } from 'vite-plugin-singlefile';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   root: 'src',
-  plugins: [react(), viteSingleFile()],
+  plugins: [react(), viteSingleFile(), tailwindcss()],
+  optimizeDeps: {
+    include: ['date-fns'],
+  },
   resolve: {
     alias: {
       react: 'preact/compat',
@@ -12,11 +16,6 @@ export default defineConfig({
       'react-dom/test-utils': 'preact/test-utils',
       'react/jsx-runtime': 'preact/jsx-runtime',
       'react/jsx-dev-runtime': 'preact/jsx-runtime',
-    },
-  },
-  css: {
-    modules: {
-      localsConvention: 'camelCase',
     },
   },
   build: {

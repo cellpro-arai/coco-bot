@@ -13,5 +13,8 @@
     "prettier": "^3.7.1",
     "typescript": "^5.9.3",
     "vite": "^7.2.4"
+  },
+  "dependencies": {
+    "date-fns": "^4.1.0"
   }
 }

@@ -1,10 +1,11 @@
-import { useState, useRef, FormEvent, ChangeEvent } from 'react';
+import { useState, useRef, FormEvent, ChangeEvent, useMemo } from 'react';
 import type { FormData } from '../types';
 import { submitExpense } from '../services/apiService';
 import { encodeFileToBase64 } from '../utils/fileUtils';
 import {
   getDefaultSubmissionMonth,
   getSubmissionMonthOptions,
+  getSubmissionMonthDateRange,
 } from '../utils/dateUtils';
 import {
   FileUploadField,
@@ -12,6 +13,11 @@ import {
   ExpenseSection,
   FormSection,
 } from '../components';
+import {
+  fieldLabelClass,
+  inputFieldClass,
+  timeFieldClass,
+} from '../components/formClasses';
 import { useCommuteEntries } from '../hooks/useCommuteEntries';
 import { useExpenseEntries } from '../hooks/useExpenseEntries';
 
@@ -40,6 +46,10 @@ export default function MainPage() {
 
   const commuteEntries = useCommuteEntries();
   const expenseEntries = useExpenseEntries();
+  const submissionMonthDateRange = useMemo(
+    () => getSubmissionMonthDateRange(formData.submissionMonth),
+    [formData.submissionMonth]
+  );
 
   const updateFormField = <K extends keyof typeof formData>(
     field: K,
@@ -126,47 +136,62 @@ export default function MainPage() {
   };
 
   return (
-    <>
-      <main className="container">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8">
         {/* ヘッダー */}
-        <article className="text-center py-3">
-          <div className="d-flex align-items-center justify-content-center mb-2">
-            <i
-              className="bi bi-receipt me-2"
-              style={{ fontSize: '2rem', color: 'var(--pico-primary)' }}
-            ></i>
-            <h1 className="mb-0">経費精算フォーム</h1>
+        <article className="rounded-3xl border border-slate-200 bg-white px-6 py-8 text-center shadow-sm">
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:text-left">
+            <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-3xl text-indigo-600">
+              <i className="bi bi-receipt" aria-hidden="true"></i>
+            </span>
+            <div className="sm:text-left">
+              <h1 className="text-2xl font-semibold text-slate-900">
+                経費精算フォーム
+              </h1>
+              <p className="mt-2 text-sm text-slate-500">
+                経費精算に必要な情報を入力してください
+              </p>
+            </div>
           </div>
-          <p className="mb-0">経費精算に必要な情報を入力してください</p>
         </article>
 
         {/* フォーム */}
-        <article>
-          <form ref={formRef} onSubmit={handleSubmit}>
-            {/* 氏名 */}
-            <legend className="required-label">氏名</legend>
-            <label htmlFor="name">
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-                placeholder="山田 太郎"
-              />
-            </label>
+        <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2">
+              <label
+                htmlFor="name"
+                className={`flex flex-col gap-2 ${fieldLabelClass}`}
+              >
+                <span className="flex items-center gap-1">
+                  氏名 <span className="text-rose-500">*</span>
+                </span>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="山田 太郎"
+                  className={inputFieldClass}
+                />
+              </label>
 
-            {/* 提出月 */}
-            <fieldset>
-              <legend className="required-label">提出月</legend>
-              <label htmlFor="submissionMonth">
+              <label
+                htmlFor="submissionMonth"
+                className={`flex flex-col gap-2 ${fieldLabelClass}`}
+              >
+                <span className="flex items-center gap-1">
+                  提出月 <span className="text-rose-500">*</span>
+                </span>
                 <select
                   id="submissionMonth"
                   name="submissionMonth"
                   value={formData.submissionMonth}
                   onChange={handleInputChange}
                   required
+                  className={inputFieldClass}
                 >
                   {getSubmissionMonthOptions().map(option => (
                     <option key={option.value} value={option.value}>
@@ -175,7 +200,7 @@ export default function MainPage() {
                   ))}
                 </select>
               </label>
-            </fieldset>
+            </div>
 
             {/* 勤務表 */}
             <FileUploadField
@@ -194,6 +219,7 @@ export default function MainPage() {
               onAdd={commuteEntries.add}
               onRemove={commuteEntries.remove}
               onDuplicate={commuteEntries.duplicate}
+              dateRange={submissionMonthDateRange}
             />
 
             {/* 経費 */}
@@ -204,12 +230,16 @@ export default function MainPage() {
               onCertificateChange={expenseEntries.handleCertificateChange}
               onAdd={expenseEntries.add}
               onRemove={expenseEntries.remove}
+              dateRange={submissionMonthDateRange}
             />
 
             {/* 現場勤務状況 */}
             <FormSection title="現場勤務状況" required>
-              <div className="grid">
-                <label htmlFor="workStartTime">
+              <div className="grid gap-4 md:grid-cols-2">
+                <label
+                  htmlFor="workStartTime"
+                  className={`flex flex-col gap-2 ${fieldLabelClass}`}
+                >
                   始業時間
                   <input
                     type="time"
@@ -218,10 +248,14 @@ export default function MainPage() {
                     value={formData.workStartTime}
                     onChange={handleInputChange}
                     required
+                    className={timeFieldClass}
                   />
                 </label>
 
-                <label htmlFor="workEndTime">
+                <label
+                  htmlFor="workEndTime"
+                  className={`flex flex-col gap-2 ${fieldLabelClass}`}
+                >
                   就業時間
                   <input
                     type="time"
@@ -230,12 +264,16 @@ export default function MainPage() {
                     value={formData.workEndTime}
                     onChange={handleInputChange}
                     required
+                    className={timeFieldClass}
                   />
                 </label>
               </div>
 
               {/* 出社頻度 */}
-              <label htmlFor="officeFrequency">
+              <label
+                htmlFor="officeFrequency"
+                className={`flex flex-col gap-2 ${fieldLabelClass}`}
+              >
                 出社頻度
                 <select
                   id="officeFrequency"
@@ -243,6 +281,7 @@ export default function MainPage() {
                   value={formData.officeFrequency}
                   onChange={handleInputChange}
                   required
+                  className={inputFieldClass}
                 >
                   <option value="fullRemote">フルリモート</option>
                   <option value="weekly1to2">週1~2出社</option>
@@ -253,33 +292,40 @@ export default function MainPage() {
 
             {/* 定期券購入 */}
             <FormSection title="定期券購入" required>
-              <label>
-                <input
-                  type="radio"
-                  name="hasCommuterPass"
-                  value="yes"
-                  checked={formData.hasCommuterPass === 'yes'}
-                  onChange={handleInputChange}
-                />
-                有り
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="hasCommuterPass"
-                  value="no"
-                  checked={formData.hasCommuterPass === 'no'}
-                  onChange={handleInputChange}
-                />
-                無し
-              </label>
+              <div className="flex flex-wrap gap-4">
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <input
+                    type="radio"
+                    name="hasCommuterPass"
+                    value="yes"
+                    checked={formData.hasCommuterPass === 'yes'}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  有り
+                </label>
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <input
+                    type="radio"
+                    name="hasCommuterPass"
+                    value="no"
+                    checked={formData.hasCommuterPass === 'no'}
+                    onChange={handleInputChange}
+                    className="h-4 w-4 border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  無し
+                </label>
+              </div>
             </FormSection>
 
             {/* 定期券詳細（条件付き表示） */}
             {formData.hasCommuterPass === 'yes' && (
               <FormSection title="定期券詳細" required>
-                <div className="grid">
-                  <label htmlFor="nearestStation">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label
+                    htmlFor="nearestStation"
+                    className={`flex flex-col gap-2 ${fieldLabelClass}`}
+                  >
                     最寄り駅
                     <input
                       type="text"
@@ -287,12 +333,16 @@ export default function MainPage() {
                       name="nearestStation"
                       value={formData.nearestStation}
                       onChange={handleInputChange}
-                      required={formData.hasCommuterPass === 'yes'}
+                      required
                       placeholder="例: 渋谷駅"
+                      className={inputFieldClass}
                     />
                   </label>
 
-                  <label htmlFor="workStation">
+                  <label
+                    htmlFor="workStation"
+                    className={`flex flex-col gap-2 ${fieldLabelClass}`}
+                  >
                     勤務先の駅
                     <input
                       type="text"
@@ -300,13 +350,17 @@ export default function MainPage() {
                       name="workStation"
                       value={formData.workStation}
                       onChange={handleInputChange}
-                      required={formData.hasCommuterPass === 'yes'}
+                      required
                       placeholder="例: 新宿駅"
+                      className={inputFieldClass}
                     />
                   </label>
                 </div>
 
-                <label htmlFor="monthlyFee">
+                <label
+                  htmlFor="monthlyFee"
+                  className={`flex flex-col gap-2 ${fieldLabelClass}`}
+                >
                   月額（円）
                   <input
                     type="number"
@@ -314,16 +368,20 @@ export default function MainPage() {
                     name="monthlyFee"
                     value={formData.monthlyFee}
                     onChange={handleInputChange}
-                    required={formData.hasCommuterPass === 'yes'}
+                    required
                     min="0"
                     placeholder="例: 15000"
+                    className={inputFieldClass}
                   />
                 </label>
               </FormSection>
             )}
 
             {/* 備考 */}
-            <label htmlFor="remarks">
+            <label
+              htmlFor="remarks"
+              className={`flex flex-col gap-2 ${fieldLabelClass}`}
+            >
               備考
               <textarea
                 id="remarks"
@@ -332,11 +390,16 @@ export default function MainPage() {
                 onChange={handleInputChange}
                 rows={4}
                 placeholder="その他連絡事項があればご記入ください"
+                className={`${inputFieldClass} min-h-[8rem]`}
               ></textarea>
             </label>
 
             {/* 送信ボタン */}
-            <button type="submit" disabled={submitted}>
+            <button
+              type="submit"
+              disabled={submitted}
+              className="inline-flex w-full items-center justify-center rounded-2xl bg-indigo-600 px-4 py-3 text-base font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 disabled:cursor-not-allowed disabled:opacity-70"
+            >
               {submitted ? '送信中...' : '提出する'}
             </button>
           </form>
@@ -344,11 +407,9 @@ export default function MainPage() {
       </main>
 
       {/* フッター */}
-      <footer className="container text-center">
-        <p className="mb-0">
-          <small>&copy; 2025 Demo Inc. All rights reserved.</small>
-        </p>
+      <footer className="mx-auto w-full max-w-5xl px-4 py-6 text-center text-sm text-slate-500">
+        <p>&copy; 2025 Demo Inc. All rights reserved.</p>
       </footer>
-    </>
+    </div>
   );
 }

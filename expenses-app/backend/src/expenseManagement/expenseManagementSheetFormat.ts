@@ -1,7 +1,7 @@
 import {
   EXPENSE_MANAGEMENT_SHEET_NAME,
   EXPENSE_SHEET_HEADERS,
-} from '../types/type';
+} from './expenseManagementTypes';
 
 export function getHeaderColumnPositions(
   sheet: GoogleAppsScript.Spreadsheet.Sheet
