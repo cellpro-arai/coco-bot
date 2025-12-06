@@ -34,7 +34,7 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
     const commuteEntries: CommuteEntry[] = expenseData.commuteEntries || [];
     const expenseEntries = expenseData.expenseEntries || [];
     const expenseEntryRecords: ExpenseEntryRecord[] =
-      uploadExpenseReceipts(expenseEntries);
+      uploadExpenseReceipts(expenseEntries, userEmail, submittedMonth);
 
     const expenseReportSSUrl = createExpenseReport(
       expenseData,

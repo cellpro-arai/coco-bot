@@ -30,15 +30,15 @@ export default function ExpenseEntryCard({
   // 資格受験のみ合格通知書を必須にするための表示フラグ
   const isCertification = category === 'certification';
   const twoColumnRowClass = 'grid gap-4 md:grid-cols-2';
-  const threeColumnRowClass = isCertification
-    ? twoColumnRowClass
-    : 'grid gap-4 md:grid-cols-3';
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 text-sm shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       <div className={twoColumnRowClass}>
         <div className="flex flex-col gap-1">
-          <label className={cardLabelClass} htmlFor={`expense-category-${index}`}>
+          <label
+            className={cardLabelClass}
+            htmlFor={`expense-category-${index}`}
+          >
             経費種別
           </label>
           <select
@@ -103,53 +103,64 @@ export default function ExpenseEntryCard({
         </div>
       </div>
 
-      <div className={threeColumnRowClass}>
+      <div className={twoColumnRowClass}>
         <div className="flex flex-col gap-1">
-          <label className={cardLabelClass} htmlFor={`expense-receipt-${index}`}>
-            領収書
-          </label>
-          <input
-            type="file"
-            id={`expense-receipt-${index}`}
-            onChange={e => onReceiptChange(index, e.target.files?.[0] || null)}
-            accept=".pdf,.jpg,.jpeg,.png"
-            className={`${inputFieldClass} cursor-pointer`}
-          />
-          {entry.receiptFile && (
-            <span className="text-xs text-slate-500">
-              {entry.receiptFile.name}
-            </span>
-          )}
+          <label className={cardLabelClass}>領収書</label>
+          <div>
+            <input
+              type="file"
+              id={`expense-receipt-${index}`}
+              onChange={e =>
+                onReceiptChange(index, e.target.files?.[0] || null)
+              }
+              accept=".pdf,.jpg,.jpeg,.png"
+              className="hidden"
+            />
+            <label
+              htmlFor={`expense-receipt-${index}`}
+              className={`${inputFieldClass} cursor-pointer inline-block text-center`}
+            >
+              ファイルを選択
+            </label>
+            {entry.receiptFile && (
+              <div className="mt-1 text-xs text-slate-500">
+                {entry.receiptFile.name}
+              </div>
+            )}
+          </div>
         </div>
 
         {isCertification && (
           // 合格通知書のアップロード欄は資格受験のときだけ描画する
           <div className="flex flex-col gap-1">
-            <label
-              className={cardLabelClass}
-              htmlFor={`expense-certificate-${index}`}
-            >
-              合格通知書
-            </label>
-            <input
-              type="file"
-              id={`expense-certificate-${index}`}
-              onChange={e =>
-                onCertificateChange(index, e.target.files?.[0] || null)
-              }
-              accept=".pdf,.jpg,.jpeg,.png"
-              className={`${inputFieldClass} cursor-pointer`}
-            />
-            {entry.certificateFile && (
-              <span className="text-xs text-slate-500">
-                {entry.certificateFile.name}
-              </span>
-            )}
+            <label className={cardLabelClass}>合格通知書</label>
+            <div>
+              <input
+                type="file"
+                id={`expense-certificate-${index}`}
+                onChange={e =>
+                  onCertificateChange(index, e.target.files?.[0] || null)
+                }
+                accept=".pdf,.jpg,.jpeg,.png"
+                className="hidden"
+              />
+              <label
+                htmlFor={`expense-certificate-${index}`}
+                className={`${inputFieldClass} cursor-pointer inline-block text-center`}
+              >
+                ファイルを選択
+              </label>
+              {entry.certificateFile && (
+                <div className="mt-1 text-xs text-slate-500">
+                  {entry.certificateFile.name}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
 
-      <div className="mt-4 flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
+      <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
         <button
           type="button"
           className={destructiveButtonClass}

@@ -11,8 +11,7 @@ export type OfficeFrequency = 'fullRemote' | 'weekly1to2' | 'weekly3to5';
 // フォルダのスクリプトプロパティキー
 export type FolderPropertyKey =
   | 'WORK_SCHEDULE_FOLDER_ID'
-  | 'EXPENSE_REPORT_FOLDER_ID'
-  | 'RECEIPT_FOLDER_ID';
+  | 'EXPENSE_REPORT_FOLDER_ID';
 
 // 交通費明細データ
 export interface CommuteEntry {

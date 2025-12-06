@@ -27,16 +27,41 @@ export function uploadFileToDrive(
   }
 }
 
+// フォルダIDを直接指定してファイルをアップロード
+export function uploadFileToFolderById(
+  fileData: FileData,
+  folderId: string
+): string {
+  try {
+    const folder = DriveApp.getFolderById(folderId);
+    const decodedData = Utilities.base64Decode(fileData.data);
+    const blob = Utilities.newBlob(
+      decodedData,
+      fileData.mimeType,
+      fileData.name
+    );
+    const file = folder.createFile(blob);
+    return file.getUrl();
+  } catch (error) {
+    throw new Error(
+      `フォルダへのアップロードに失敗しました: ${(error as Error).message}`
+    );
+  }
+}
+
 // スプレッドシートを指定のフォルダへ移動する
 export function addSpreadsheetToFolder(
   spreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet,
-  folderPropertyKey: FolderPropertyKey
+  folderPropertyKey: FolderPropertyKey,
+  targetFolderId?: string
 ): void {
   const folderDescription = getFolderDescription(folderPropertyKey);
-  const folderId = getScriptProperty(
-    folderPropertyKey,
-    `${folderDescription}のフォルダIDが設定されていません。`
-  );
+  const folderId =
+    targetFolderId ??
+    getScriptProperty(
+      folderPropertyKey,
+      `${folderDescription}のフォルダIDが設定されていません。`
+    );
 
   try {
     const fileId = spreadsheet.getId();

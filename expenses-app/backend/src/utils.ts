@@ -25,8 +25,10 @@ export function getFolderDescription(
       return '作業表フォルダ';
     case 'EXPENSE_REPORT_FOLDER_ID':
       return '経費精算書フォルダ';
-    case 'RECEIPT_FOLDER_ID':
-      return '領収書フォルダ';
+    default:
+      // すべてのケースを網羅しているため、ここには到達しない
+      const _exhaustiveCheck: never = folderPropertyKey;
+      throw new Error(`未知のフォルダプロパティキー: ${_exhaustiveCheck}`);
   }
 }
 

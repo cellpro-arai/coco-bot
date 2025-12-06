@@ -10,8 +10,55 @@ import {
   BORDER_SOLID,
   BORDER_MEDIUM,
 } from './expensesReportTypes';
-import { addSpreadsheetToFolder, uploadFileToDrive } from '../drive';
+import {
+  addSpreadsheetToFolder,
+  uploadFileToFolderById,
+} from '../drive';
 import { initializeExpenseReportSheet } from './expenseReportSheetFormat';
+
+// 指定フォルダ直下にサブフォルダ (年/月/メールローカル部) を作成して返す
+function getOrCreateChildFolder(
+  parent: GoogleAppsScript.Drive.Folder,
+  name: string
+): GoogleAppsScript.Drive.Folder {
+  const folders = parent.getFoldersByName(name);
+  if (folders.hasNext()) {
+    return folders.next();
+  }
+  return parent.createFolder(name);
+}
+
+// フォルダ名に使うためメールのローカル部をサニタイズ
+function getEmailLocalPart(userEmail: string): string {
+  if (!userEmail) {
+    return 'unknown-user';
+  }
+
+  const [localPart] = userEmail.split('@');
+  return (localPart || 'unknown-user').replace(/[\\/:*?"<>|]/g, '_');
+}
+
+// ユーザ毎の経費精算書格納フォルダを取得する
+function getExpenseReportTargetFolder(
+  userEmail: string,
+  date: Date
+): GoogleAppsScript.Drive.Folder {
+  // 経費精算書フォルダ > yyyy > mm > email の階層を確保する
+  const rootFolderId = getScriptProperty(
+    'EXPENSE_REPORT_FOLDER_ID',
+    '経費精算書フォルダのIDが設定されていません。'
+  );
+  const rootFolder = DriveApp.getFolderById(rootFolderId);
+  const yearFolder = getOrCreateChildFolder(
+    rootFolder,
+    String(date.getFullYear())
+  );
+  const monthFolder = getOrCreateChildFolder(
+    yearFolder,
+    String(date.getMonth() + 1).padStart(2, '0')
+  );
+  return getOrCreateChildFolder(monthFolder, getEmailLocalPart(userEmail));
+}
 
 // ユーザ毎の経費精算書ブックを取得または作成する
 export function getOrCreateExpenseReportSS(
@@ -21,15 +68,11 @@ export function getOrCreateExpenseReportSS(
 ): GoogleAppsScript.Spreadsheet.Spreadsheet {
   const yearMonth = formatYearMonth(date);
   const spreadsheetName = `${EXPENSE_REPORT_SHEET_NAME}_${userName || userEmail}_${yearMonth}`;
+  const targetFolder = getExpenseReportTargetFolder(userEmail, date);
 
   // 経費精算書フォルダ内で既存のスプレッドシートを検索
   try {
-    const folderId = getScriptProperty(
-      'EXPENSE_REPORT_FOLDER_ID',
-      '経費精算書フォルダのIDが設定されていません。'
-    );
-    const folder = DriveApp.getFolderById(folderId);
-    const files = folder.getFilesByName(spreadsheetName);
+    const files = targetFolder.getFilesByName(spreadsheetName);
 
     // 同名のファイルが見つかった場合、最初のものを使用
     if (files.hasNext()) {
@@ -57,7 +100,11 @@ export function getOrCreateExpenseReportSS(
   Utilities.sleep(2000);
 
   // 経費精算書フォルダに追加
-  addSpreadsheetToFolder(expenseReport, 'EXPENSE_REPORT_FOLDER_ID');
+  addSpreadsheetToFolder(
+    expenseReport,
+    'EXPENSE_REPORT_FOLDER_ID',
+    targetFolder.getId()
+  );
 
   return expenseReport;
 }
@@ -170,20 +217,29 @@ export function addDateToExpenseReportSheet(
 
 // 経費の添付ファイルをアップロードしダウンロードURLを付与する
 export function uploadExpenseReceipts(
-  entries: ExpenseEntry[]
+  entries: ExpenseEntry[],
+  userEmail: string,
+  date: Date
 ): ExpenseEntryRecord[] {
   if (!entries || entries.length === 0) {
     return [];
   }
 
+  // ユーザー毎のフォルダを取得
+  const userFolder = getExpenseReportTargetFolder(userEmail, date);
+
+  // 領収書フォルダを作成または取得
+  const receiptFolder = getOrCreateChildFolder(userFolder, '領収書');
+  const receiptFolderId = receiptFolder.getId();
+
   return entries.map(entry => {
     const category = entry.category || 'other';
     const receiptUrl = entry.receiptFile
-      ? uploadFileToDrive(entry.receiptFile, 'RECEIPT_FOLDER_ID')
+      ? uploadFileToFolderById(entry.receiptFile, receiptFolderId)
       : '';
     const certificateUrl =
       category === 'certification' && entry.certificateFile
-        ? uploadFileToDrive(entry.certificateFile, 'RECEIPT_FOLDER_ID')
+        ? uploadFileToFolderById(entry.certificateFile, receiptFolderId)
         : '';
 
     return {
