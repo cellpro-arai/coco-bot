@@ -91,7 +91,7 @@ const IncidentListPage: React.FC<IncidentListPageProps> = ({
     try {
       setIsStatusUpdating(true);
       await updateIncidentStatus(
-        statusChangeIncident.registeredDate,
+        statusChangeIncident,
         newStatus
       );
 

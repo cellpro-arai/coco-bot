@@ -71,7 +71,7 @@ export function submitIncident(
  * @returns {Promise<IncidentResult>} 更新結果
  */
 export function updateIncidentStatus(
-  registeredDate: string,
+  incident: Incident,
   newStatus: string
 ): Promise<IncidentResult> {
   return new Promise((resolve, reject) => {
@@ -79,14 +79,14 @@ export function updateIncidentStatus(
       // 開発環境用のモック
       setTimeout(() => {
         console.log(
-          `[開発モード] ステータス更新: ${registeredDate} -> ${newStatus}`
+          `[開発モード] ステータス更新: ${incident.registeredDate} -> ${newStatus}`
         );
 
         resolve({
           success: true,
           message: 'ステータスを更新しました',
           incidentDate: new Date().toISOString(),
-          record: undefined,
+          record: { ...incident, status: newStatus },
         });
       }, 500);
     } else {
@@ -95,7 +95,7 @@ export function updateIncidentStatus(
         .withFailureHandler((error: Error) =>
           reject(new Error(`ステータス更新に失敗しました: ${error.message}`))
         )
-        .updateIncidentStatus(registeredDate, newStatus);
+        .updateIncidentStatus(incident.registeredDate, newStatus);
     }
   });
 }
