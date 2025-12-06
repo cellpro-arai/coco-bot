@@ -1,0 +1,16 @@
+{
+  "scriptId": "[このファイルをコピー .clasp.json にしてここを実際のscriptIdに置き換えてください]",
+  "rootDir": "dist",
+  "scriptExtensions": [
+    ".js",
+    ".gs"
+  ],
+  "htmlExtensions": [
+    ".html"
+  ],
+  "jsonExtensions": [
+    ".json"
+  ],
+  "filePushOrder": [],
+  "skipSubdirectories": true
+}

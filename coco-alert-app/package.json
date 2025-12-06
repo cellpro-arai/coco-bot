@@ -1,0 +1,25 @@
+{
+  "name": "coco-alert-app",
+  "version": "1.0.0",
+  "description": "Google Apps Script incident management with Vite + TypeScript",
+  "private": true,
+  "workspaces": [
+    "backend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace backend",
+    "format": "npm run format --workspace backend",
+    "push": "npm run build && clasp push",
+    "deploy": "npm run push && clasp deploy"
+  },
+  "keywords": [
+    "google-apps-script",
+    "typescript",
+    "vite"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@google/clasp": "^2.4.2"
+  }
+}
