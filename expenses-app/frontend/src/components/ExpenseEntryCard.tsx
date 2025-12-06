@@ -27,7 +27,6 @@ export default function ExpenseEntryCard({
   dateRange,
 }: ExpenseEntryCardProps) {
   const category = entry.category || 'other';
-  // 資格受験のみ合格通知書を必須にするための表示フラグ
   const isCertification = category === 'certification';
   const twoColumnRowClass = 'grid gap-4 md:grid-cols-2';
 

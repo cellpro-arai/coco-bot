@@ -1,12 +1,4 @@
-import {
-  addDays,
-  addMonths,
-  endOfMonth,
-  format,
-  getDaysInMonth,
-  parse,
-  startOfMonth,
-} from 'date-fns';
+import { addMonths, endOfMonth, format, parse, startOfMonth } from 'date-fns';
 
 /**
  * デフォルトの提出月を取得します
@@ -36,32 +28,14 @@ export const getSubmissionMonthOptions = () => {
   return options;
 };
 
-export interface MonthDayOption {
-  value: string;
-  label: string;
-}
-
 export interface SubmissionMonthDateRange {
   min: string;
   max: string;
 }
 
-export const getMonthDayOptions = (submissionMonth: string): MonthDayOption[] => {
-  if (!submissionMonth) return [];
-  const baseDate = parse(`${submissionMonth}-01`, 'yyyy-MM-dd', new Date());
-  if (isNaN(baseDate.getTime())) return [];
-
-  const daysInMonth = getDaysInMonth(baseDate);
-
-  return Array.from({ length: daysInMonth }, (_, idx) => {
-    const dayDate = addDays(baseDate, idx);
-    return {
-      value: format(dayDate, 'yyyy-MM-dd'),
-      label: format(dayDate, 'MM/dd'),
-    };
-  });
-};
-
+/**
+ * 提出月を基に date input 用の min/max を求めます
+ */
 export const getSubmissionMonthDateRange = (
   submissionMonth: string
 ): SubmissionMonthDateRange | null => {

@@ -1,19 +1,14 @@
 import { useState } from 'react';
 import { ExpenseEntry } from '../types';
+import { EXPENSE_ERROR_MESSAGES } from '../types/constants';
 import { createEmptyExpenseEntry } from '../utils/formUtils';
 import { encodeFileToBase64 } from '../utils/fileUtils';
 
-const ERROR_MESSAGES = {
-  EXPENSE_INCOMPLETE: '経費の日付、内容、金額を入力してください。',
-  RECEIPT_REQUIRED: '経費には領収書の添付が必須です。',
-  CERTIFICATE_REQUIRED: '資格受験の経費には合格通知書の添付が必須です。',
-  RECEIPT_ENCODE_FAILED: '領収書の変換に失敗しました。',
-  CERTIFICATE_ENCODE_FAILED: '合格通知書の変換に失敗しました。',
-} as const;
-
+// 経費入力カードの状態管理と検証をまとめたカスタムフック
 export function useExpenseEntries() {
   const [entries, setEntries] = useState<ExpenseEntry[]>([]);
 
+  // 入力値の更新と付随処理 (添付ファイルのリセットなど) をまとめて制御
   const handleChange = (
     index: number,
     field: keyof ExpenseEntry,
@@ -61,21 +56,22 @@ export function useExpenseEntries() {
 
   const validateEntry = (entry: ExpenseEntry) => {
     if (!entry.date || !entry.description || !entry.amount) {
-      throw new Error(ERROR_MESSAGES.EXPENSE_INCOMPLETE);
+      throw new Error(EXPENSE_ERROR_MESSAGES.EXPENSE_INCOMPLETE);
     }
     if (!entry.receiptFile) {
-      throw new Error(ERROR_MESSAGES.RECEIPT_REQUIRED);
+      throw new Error(EXPENSE_ERROR_MESSAGES.RECEIPT_REQUIRED);
     }
     const category = entry.category || 'other';
     if (category === 'certification' && !entry.certificateFile) {
-      throw new Error(ERROR_MESSAGES.CERTIFICATE_REQUIRED);
+      throw new Error(EXPENSE_ERROR_MESSAGES.CERTIFICATE_REQUIRED);
     }
   };
 
+  // Drive へ渡すためファイルを Base64 へ変換する
   const encodeFiles = async (entry: ExpenseEntry) => {
     const receiptFileData = await encodeFileToBase64(entry.receiptFile!);
     if (!receiptFileData) {
-      throw new Error(ERROR_MESSAGES.RECEIPT_ENCODE_FAILED);
+      throw new Error(EXPENSE_ERROR_MESSAGES.RECEIPT_ENCODE_FAILED);
     }
 
     const category = entry.category || 'other';
@@ -83,7 +79,7 @@ export function useExpenseEntries() {
     if (category === 'certification' && entry.certificateFile) {
       certificateFileData = await encodeFileToBase64(entry.certificateFile);
       if (!certificateFileData) {
-        throw new Error(ERROR_MESSAGES.CERTIFICATE_ENCODE_FAILED);
+        throw new Error(EXPENSE_ERROR_MESSAGES.CERTIFICATE_ENCODE_FAILED);
       }
     }
 
@@ -97,6 +93,7 @@ export function useExpenseEntries() {
     };
   };
 
+  // 未入力行を除外しつつ validate → encode を順番に実行
   const collectEntries = async () => {
     const filledEntries = entries.filter(
       entry => entry.date || entry.description || entry.amount
