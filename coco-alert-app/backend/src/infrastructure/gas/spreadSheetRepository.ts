@@ -79,7 +79,12 @@ export class SpreadSheetRepositoryImpl implements SpreadSheetRepository {
       .getValues();
 
     for (let i = 1; i < data.length; i++) {
-      if (String(data[i][1]) === messageTs) {
+      let storedTs = String(data[i][1]).trim();
+      if (storedTs.startsWith("'")) {
+        storedTs = storedTs.substring(1);
+      }
+
+      if (storedTs === messageTs) {
         return {
           clientMsgId: data[i][0] as string,
           messageTs: data[i][1] as string,
@@ -98,7 +103,12 @@ export class SpreadSheetRepositoryImpl implements SpreadSheetRepository {
       .getValues();
 
     for (let i = 1; i < data.length; i++) {
-      if (String(data[i][1]).trim() === messageTs) {
+      let storedTs = String(data[i][1]).trim();
+      // saveMessage で "'" + messageTs として保存されているため、シングルクォートを削除
+      if (storedTs.startsWith("'")) {
+        storedTs = storedTs.substring(1);
+      }
+      if (storedTs === messageTs) {
         this.messagesSheet.deleteRow(i + 1);
         break;
       }

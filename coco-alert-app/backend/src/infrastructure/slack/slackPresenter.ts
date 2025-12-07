@@ -28,48 +28,40 @@ export interface SlackPresenter {
 
 export class SlackAPIPresenter implements SlackPresenter {
   postMessage(channelId: string, text: string): void {
-    try {
-      const resp: GoogleAppsScript.URL_Fetch.HTTPResponse = UrlFetchApp.fetch(
-        'https://slack.com/api/chat.postMessage',
-        {
-          method: 'post',
-          headers: { Authorization: 'Bearer ' + getSlackBotToken() },
-          payload: JSON.stringify({ channel: channelId, text }),
-          contentType: 'application/json',
-          muteHttpExceptions: true,
-        }
-      );
-      const data = JSON.parse(resp.getContentText());
-      if (!data.ok) {
-        console.error('chat.postMessage failed:', data);
+    const resp: GoogleAppsScript.URL_Fetch.HTTPResponse = UrlFetchApp.fetch(
+      'https://slack.com/api/chat.postMessage',
+      {
+        method: 'post',
+        headers: { Authorization: 'Bearer ' + getSlackBotToken() },
+        payload: JSON.stringify({ channel: channelId, text }),
+        contentType: 'application/json',
+        muteHttpExceptions: true,
       }
-    } catch (err) {
-      console.error('postMessage error:', err);
+    );
+    const data = JSON.parse(resp.getContentText());
+    if (!data.ok) {
+      console.error('chat.postMessage failed:', data);
     }
   }
 
   postMessageInThread(channelId: string, text: string, threadTs: string): void {
-    try {
-      const resp: GoogleAppsScript.URL_Fetch.HTTPResponse = UrlFetchApp.fetch(
-        'https://slack.com/api/chat.postMessage',
-        {
-          method: 'post',
-          headers: { Authorization: 'Bearer ' + getSlackBotToken() },
-          payload: JSON.stringify({
-            channel: channelId,
-            text,
-            thread_ts: threadTs,
-          }),
-          contentType: 'application/json',
-          muteHttpExceptions: true,
-        }
-      );
-      const data = JSON.parse(resp.getContentText());
-      if (!data.ok) {
-        console.error('chat.postMessage in thread failed:', data);
+    const resp: GoogleAppsScript.URL_Fetch.HTTPResponse = UrlFetchApp.fetch(
+      'https://slack.com/api/chat.postMessage',
+      {
+        method: 'post',
+        headers: { Authorization: 'Bearer ' + getSlackBotToken() },
+        payload: JSON.stringify({
+          channel: channelId,
+          text,
+          thread_ts: threadTs,
+        }),
+        contentType: 'application/json',
+        muteHttpExceptions: true,
       }
-    } catch (err) {
-      console.error('postMessageInThread error:', err);
+    );
+    const data = JSON.parse(resp.getContentText());
+    if (!data.ok) {
+      console.error('chat.postMessage in thread failed:', data);
     }
   }
 
@@ -79,87 +71,82 @@ export class SlackAPIPresenter implements SlackPresenter {
     targetChannelId: string,
     targetMessageTs: string
   ): MessageResponse | null {
-    try {
-      const token = getSlackBotToken();
+    const token = getSlackBotToken();
 
-      const payload = {
-        channel: userId,
-        text: text,
-        blocks: [
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: text,
-            },
+    const payload = {
+      channel: userId,
+      text: text,
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: text,
           },
-          {
-            type: 'actions',
-            elements: [
-              {
-                type: 'button',
-                text: {
-                  type: 'plain_text',
-                  text: '完了',
-                  emoji: true,
-                },
-                value: JSON.stringify({
-                  targetChannelId,
-                  targetMessageTs,
-                  userId,
-                }),
-                action_id: 'completion_button',
-              },
-            ],
-          },
-        ],
-      };
-
-      const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-        method: 'post',
-        contentType: 'application/json',
-        headers: {
-          Authorization: `Bearer ${token}`,
         },
-        payload: JSON.stringify(payload),
-        muteHttpExceptions: true,
-      };
+        {
+          type: 'actions',
+          elements: [
+            {
+              type: 'button',
+              text: {
+                type: 'plain_text',
+                text: '完了',
+                emoji: true,
+              },
+              value: JSON.stringify({
+                targetChannelId,
+                targetMessageTs,
+                userId,
+              }),
+              action_id: 'completion_button',
+            },
+          ],
+        },
+      ],
+    };
 
-      const response = UrlFetchApp.fetch(
-        'https://slack.com/api/chat.postMessage',
-        options
+    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      method: 'post',
+      contentType: 'application/json',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true,
+    };
+
+    const response = UrlFetchApp.fetch(
+      'https://slack.com/api/chat.postMessage',
+      options
+    );
+
+    const result: ChatPostMessageResponse = JSON.parse(
+      response.getContentText()
+    );
+
+    if (!result.ok) {
+      console.error(
+        'postDMWithButton failed:',
+        result.error,
+        result.response_metadata
       );
-
-      const result: ChatPostMessageResponse = JSON.parse(
-        response.getContentText()
-      );
-
-      if (!result.ok) {
-        console.error(
-          'postDMWithButton failed:',
-          result.error,
-          result.response_metadata
-        );
-        return null;
-      }
-
-      return {
-        ts: result.ts || '',
-        channel: result.channel || '',
-        message_ts: result.message?.ts,
-        message: result.message
-          ? {
-              type: result.message.type || '',
-              user: result.message.user || '',
-              text: result.message.text || '',
-              ts: result.message.ts || '',
-            }
-          : undefined,
-      };
-    } catch (error) {
-      console.error('postDMWithButton error:', error);
       return null;
     }
+
+    return {
+      ts: result.ts || '',
+      channel: result.channel || '',
+      message_ts: result.message?.ts,
+      message: result.message
+        ? {
+            type: result.message.type || '',
+            user: result.message.user || '',
+            text: result.message.text || '',
+            ts: result.message.ts || '',
+          }
+        : undefined,
+    };
   }
 
   updateMessage(channel: string, ts: string, text: string): boolean {
@@ -197,5 +184,31 @@ export class SlackAPIPresenter implements SlackPresenter {
     }
 
     return true;
+  }
+
+  getUserName(userId: string): string | null {
+    const token = getSlackBotToken();
+    const response = UrlFetchApp.fetch(
+      `https://slack.com/api/users.info?user=${userId}`,
+      {
+        method: 'get',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        muteHttpExceptions: true,
+      }
+    );
+
+    const result = JSON.parse(response.getContentText());
+
+    if (!result.ok) {
+      logToSheet('[getUserName] ERROR', {
+        error: result.error,
+        user_id: userId,
+      });
+      return null;
+    }
+
+    return result.user?.real_name || result.user?.name || null;
   }
 }

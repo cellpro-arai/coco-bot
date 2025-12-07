@@ -50,7 +50,6 @@ export class InteractionController {
       const dmChannelId = payload.container?.channel_id;
 
       this.handleCompletionButton(
-        payload.user.name,
         buttonData.targetChannelId,
         dmChannelId || '',
         dmMessageTs,
@@ -64,7 +63,6 @@ export class InteractionController {
   }
 
   private handleCompletionButton(
-    userName: string,
     targetChannelId: string,
     dmUserId: string,
     dmMessageTs?: string,
@@ -88,7 +86,7 @@ export class InteractionController {
     }
 
     // DM を完了メッセージで修正
-    const completionText = `✅ ${userName}さんが完了しました`;
+    const completionText = `✅ 完了しました`;
     const updated = this.slackPresenter.updateMessage(
       dmUserId,
       dmMessageTs,
@@ -99,8 +97,12 @@ export class InteractionController {
       // スプレッドシートから行を削除
       this.spreadSheetRepo.deleteMessageRow(dmMessageTs);
 
+      // ユーザー名を取得
+      const userName = this.slackPresenter.getUserName(dmUserId);
+      const userDisplay = userName || `<@${dmUserId}>`;
+
       // 元のチャンネルのスレッドに完了通知を投稿
-      const threadReplyText = `<@${dmUserId}> が完了しました`;
+      const threadReplyText = `${userDisplay} が完了しました`;
       if (targetMessageTs) {
         this.slackPresenter.postMessageInThread(
           targetChannelId,
