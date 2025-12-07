@@ -1,15 +1,7 @@
 import { UserCountRepository } from '../../domain/repository/userCountRepository';
+import { getSpreadSheetId } from '../../properties';
 
 const SHEET_USER_COUNT = 'user_count';
-
-function getSpreadSheetId(): string {
-  const scriptProperties = PropertiesService.getScriptProperties();
-  const value = scriptProperties.getProperty('SPREADSHEET_ID');
-  if (!value) {
-    throw new Error('スプレッドシートIDが設定されていません。');
-  }
-  return value;
-}
 
 export class SpreadSheetUserCountRepository implements UserCountRepository {
   private sheet: GoogleAppsScript.Spreadsheet.Sheet;

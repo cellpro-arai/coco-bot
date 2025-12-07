@@ -26,30 +26,7 @@ const slackController = new SlackController(appMentionUseCase, logRepository);
 function doPost(
   e: GoogleAppsScript.Events.DoPost
 ): GoogleAppsScript.Content.TextOutput {
-  try {
-    const body = e.postData && e.postData.contents ? e.postData.contents : '';
-    const data = body ? JSON.parse(body) : {};
-
-    // URL検証リクエストの場合は即座に返す
-    if (data && data.type === 'url_verification' && data.challenge) {
-      return ContentService.createTextOutput(data.challenge).setMimeType(
-        ContentService.MimeType.TEXT
-      );
-    }
-
-    // 通常のイベント処理
-    const result = slackController.doPost(e);
-    return (
-      result ||
-      ContentService.createTextOutput('OK').setMimeType(
-        ContentService.MimeType.TEXT
-      )
-    );
-  } catch (err) {
-    return ContentService.createTextOutput('ERROR').setMimeType(
-      ContentService.MimeType.TEXT
-    );
-  }
+  return slackController.doPost(e);
 }
 
 declare const window: any;

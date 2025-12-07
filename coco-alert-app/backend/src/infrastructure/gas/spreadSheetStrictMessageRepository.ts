@@ -1,15 +1,7 @@
 import { StrictMessageRepository } from '../../domain/repository/strictMessageRepository';
+import { getSpreadSheetId } from '../../properties';
 
 const SHEET_STRICT_MESSAGES = 'strict_messages';
-
-function getSpreadSheetId(): string {
-  const scriptProperties = PropertiesService.getScriptProperties();
-  const value = scriptProperties.getProperty('SPREADSHEET_ID');
-  if (!value) {
-    throw new Error('スプレッドシートIDが設定されていません。');
-  }
-  return value;
-}
 
 export class SpreadSheetStrictMessageRepository implements StrictMessageRepository {
   private sheet: GoogleAppsScript.Spreadsheet.Sheet;
