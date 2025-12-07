@@ -22,7 +22,7 @@ export const EXPENSE_STATUS_OPTIONS = [
 /**
  * 提出ステータスの型定義
  */
-export type ExpenseStatus = typeof EXPENSE_STATUS_OPTIONS[number];
+export type ExpenseStatus = (typeof EXPENSE_STATUS_OPTIONS)[number];
 
 /**
  * 経費精算管理シートのヘッダー項目リスト

@@ -8,7 +8,10 @@ import { parseSubmissionMonth } from './utils';
 import { uploadWorkScheduleFiles, getUserFolderUrl } from './drive';
 import { createExpenseReport } from './expenseReport/createExpenseReport';
 import { uploadExpenseReceipts } from './expenseReport/expenseReportSheet';
-import { saveToManagementSS } from './expenseManagement/saveManagementSheet';
+import {
+  saveToManagementSS,
+  backupExistingSubmissionFiles,
+} from './expenseManagement/saveManagementSheet';
 import { initializeMonthlyExpenseSheet } from './expenseManagement/initializeMonthlySheet';
 import {
   getCurrentUserEmployeeInfo,
@@ -30,6 +33,12 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
     const userEmail = Session.getEffectiveUser().getEmail();
     const submittedAt = new Date();
     const submittedMonth = parseSubmissionMonth(expenseData.submissionMonth);
+
+    const performedFileBackup = backupExistingSubmissionFiles(
+      userEmail,
+      submittedMonth,
+      submittedAt
+    );
 
     // 勤務表ファイルをアップロード
     const workScheduleFiles = expenseData.workScheduleFiles || [];
@@ -75,8 +84,10 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
       submittedMonth,
       workScheduleFolderUrl,
       expenseReportFolderUrl,
-      commuteEntries,
-      expenseEntryRecords
+      {
+        submissionStartedAt: submittedAt,
+        skipFileBackup: performedFileBackup,
+      }
     );
 
     return {

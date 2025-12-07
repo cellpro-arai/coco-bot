@@ -17,8 +17,14 @@ import {
 } from '../drive';
 import { initializeExpenseReportSheet } from './expenseReportSheetFormat';
 
-// ユーザ毎の経費精算書ブックを取得または作成する
-export function getOrCreateExpenseReportSS(
+/**
+ * 提出者ごとの経費精算書スプレッドシートを新規作成する。
+ * @param userEmail - ユーザーのメールアドレス。
+ * @param userName - ユーザー氏名（フォルダ/シート名に使用）。
+ * @param date - 提出対象月。
+ * @returns 作成したスプレッドシートインスタンス。
+ */
+export function createExpenseReportSS(
   userEmail: string,
   userName: string,
   date: Date
@@ -31,22 +37,6 @@ export function getOrCreateExpenseReportSS(
     date
   );
 
-  // 経費精算書フォルダ内で既存のスプレッドシートを検索
-  try {
-    const files = targetFolder.getFilesByName(spreadsheetName);
-
-    // 同名のファイルが見つかった場合、最初のものを使用
-    if (files.hasNext()) {
-      const file = files.next();
-      return SpreadsheetApp.openById(file.getId());
-    }
-  } catch (error) {
-    console.warn(
-      `既存のスプレッドシート検索中にエラーが発生しました: ${(error as Error).message}`
-    );
-  }
-
-  // 既存のスプレッドシートが見つからない場合、新規作成
   const expenseReport = SpreadsheetApp.create(spreadsheetName);
 
   // 最初のシートを経費精算書として初期化
@@ -70,7 +60,13 @@ export function getOrCreateExpenseReportSS(
   return expenseReport;
 }
 
-// 月次経費精算書シートに交通費・経費データを追加する
+/**
+ * 月次経費精算書シートに交通費・経費データを追加する。
+ * @param sheet - 追記対象のシート。
+ * @param commuteEntries - 交通費データ一覧。
+ * @param expenseEntries - 経費データ一覧。
+ * @returns なし。
+ */
 export function addDateToExpenseReportSheet(
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
   commuteEntries: CommuteEntry[],
@@ -183,7 +179,13 @@ export function addDateToExpenseReportSheet(
     .setBorder(null, true, true, true, null, null, null, BORDER_MEDIUM);
 }
 
-// 経費の添付ファイルをアップロードしダウンロードURLを付与する
+/**
+ * 経費エントリーに付随する領収書をDriveへアップロードする。
+ * @param entries - 経費エントリー一覧。
+ * @param userEmail - ユーザーのメールアドレス。
+ * @param date - 対象年月（日付）。
+ * @returns 領収書URL付きのエントリーレコード配列。
+ */
 export function uploadExpenseReceipts(
   entries: ExpenseEntry[],
   userEmail: string,

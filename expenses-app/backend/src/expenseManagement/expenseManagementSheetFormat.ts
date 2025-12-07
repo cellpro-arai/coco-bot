@@ -79,9 +79,7 @@ export function getOrCreateMonthlyManagementSpreadsheet(
     initializeEmployeeRows(firstSheet, headerPositions);
     Logger.log('✔ 従業員の初期行を投入しました。');
   } catch (error) {
-    Logger.log(
-      `従業員初期行の投入に失敗しました: ${(error as Error).message}`
-    );
+    Logger.log(`従業員初期行の投入に失敗しました: ${(error as Error).message}`);
     // エラーがあっても処理を続行（従業員マスタが未設定の場合など）
   }
 
@@ -106,9 +104,7 @@ export function getOrCreateMonthlyManagementSpreadsheet(
     // 月フォルダに追加
     monthFolder.addFile(file);
 
-    Logger.log(
-      `✔ 管理スプレッドシートを月フォルダに移動: ${spreadsheetName}`
-    );
+    Logger.log(`✔ 管理スプレッドシートを月フォルダに移動: ${spreadsheetName}`);
   } catch (error) {
     const message = `月フォルダへの移動に失敗しました: ${(error as Error).message}`;
     Logger.log(message);
@@ -339,7 +335,9 @@ export function setStatusValidation(
   const statusColumn = headerPositions.get('提出ステータス');
 
   if (!statusColumn) {
-    Logger.log('提出ステータス列が見つかりません。バリデーションをスキップします。');
+    Logger.log(
+      '提出ステータス列が見つかりません。バリデーションをスキップします。'
+    );
     return;
   }
 
@@ -354,7 +352,9 @@ export function setStatusValidation(
     const maxRows = Math.max(sheet.getLastRow(), 1000);
     if (maxRows > 1) {
       sheet.getRange(2, statusColumn, maxRows - 1, 1).setDataValidation(rule);
-      Logger.log(`提出ステータス列（${statusColumn}列目）にデータバリデーションを設定しました。`);
+      Logger.log(
+        `提出ステータス列（${statusColumn}列目）にデータバリデーションを設定しました。`
+      );
     }
   } catch (error) {
     // テーブルビューが設定されている場合などに発生するエラーをキャッチ
@@ -405,7 +405,6 @@ export function getOrCreateBackupSheet(
  *
  * @param {GoogleAppsScript.Spreadsheet.Spreadsheet} ss - 対象のスプレッドシート
  * @param {GoogleAppsScript.Spreadsheet.Sheet} managementSheet - 管理シート
- * @param {Map<string, number>} headerPositions - ヘッダー位置のマップ
  * @param {number} targetRow - バックアップ対象の行番号
  * @param {string} email - 対象メールアドレス
  * @param {string} oldStatus - 旧提出ステータス
@@ -414,7 +413,6 @@ export function getOrCreateBackupSheet(
 export function backupExistingRow(
   ss: GoogleAppsScript.Spreadsheet.Spreadsheet,
   managementSheet: GoogleAppsScript.Spreadsheet.Sheet,
-  headerPositions: Map<string, number>,
   targetRow: number,
   email: string,
   oldStatus: string
@@ -423,7 +421,9 @@ export function backupExistingRow(
 
   // 既存行のデータを取得
   const lastColumn = managementSheet.getLastColumn();
-  const rowData = managementSheet.getRange(targetRow, 1, 1, lastColumn).getValues()[0];
+  const rowData = managementSheet
+    .getRange(targetRow, 1, 1, lastColumn)
+    .getValues()[0];
 
   // バックアップ行を構築
   const backupRow = [

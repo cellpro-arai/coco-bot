@@ -40,5 +40,7 @@ export function initializeMonthlyExpenseSheet(
     initializeEmployeeRows(expenseSheet, headerPositions);
   }
 
-  Logger.log(`${targetYear}年${targetMonth}月の管理シート初期化が完了しました。`);
+  Logger.log(
+    `${targetYear}年${targetMonth}月の管理シート初期化が完了しました。`
+  );
 }

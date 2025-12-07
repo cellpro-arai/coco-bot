@@ -1,4 +1,4 @@
-import { CommuteEntry, ExpenseData, ExpenseEntryRecord } from '../types/type';
+import { ExpenseData } from '../types/type';
 import {
   formatCommuterRoute,
   formatOfficeFrequency,
@@ -12,6 +12,59 @@ import {
   backupExistingRow,
 } from './expenseManagementSheetFormat';
 import { getActiveEmployees } from './employeeManagement';
+import { backupUserDriveData } from '../drive';
+
+const APPROVED_ERROR_MESSAGE =
+  '承認済みの申請は更新できません。管理者に連絡してください。';
+
+interface SaveManagementOptions {
+  submissionStartedAt?: Date;
+  skipFileBackup?: boolean;
+}
+
+/**
+ * 既存提出分のファイルをアップロード前にバックアップする
+ *
+ * 管理シートで対象ユーザーのステータスを確認し、未提出以外の場合は
+ * Drive 上の勤務表/経費精算フォルダをバックアップフォルダへ移動します。
+ * 承認済みステータスの場合はエラーを送出します。
+ *
+ * @param {string} userEmail - 提出者のメールアドレス
+ * @param {Date} submissionMonth - 提出月
+ * @param {Date} [submissionStartedAt] - 提出処理開始日時
+ * @returns {boolean} ファイルバックアップを実行した場合は true
+ */
+export function backupExistingSubmissionFiles(
+  userEmail: string,
+  submissionMonth: Date,
+  submissionStartedAt?: Date
+): boolean {
+  const { spreadsheet: managementSS } =
+    getOrCreateMonthlyManagementSpreadsheet(submissionMonth);
+  const expenseSheet = getOrCreateExpenseManagementSheet(managementSS);
+  const headerPositions = getHeaderColumnPositions(expenseSheet);
+  const targetRow = findRowByEmail(expenseSheet, headerPositions, userEmail);
+
+  if (targetRow <= 0) {
+    return false;
+  }
+
+  const statusColumn = headerPositions.get('提出ステータス');
+  const oldStatus = statusColumn
+    ? String(expenseSheet.getRange(targetRow, statusColumn).getValue() || '')
+    : '';
+
+  if (oldStatus === '承認済み') {
+    throw new Error(APPROVED_ERROR_MESSAGE);
+  }
+
+  if (!oldStatus || oldStatus === '未提出') {
+    return false;
+  }
+
+  backupUserDriveData(userEmail, submissionMonth, submissionStartedAt);
+  return true;
+}
 
 /**
  * 月別マネジメントシートに経費精算情報を登録する
@@ -27,8 +80,7 @@ import { getActiveEmployees } from './employeeManagement';
  * @param {Date} submissionMonth - 提出月（expenseData.submissionMonthから変換、月別フォルダの判定に使用）
  * @param {string} workScheduleFolderUrl - 勤務表フォルダのURL
  * @param {string} expenseReportFolderUrl - 経費精算書フォルダのURL
- * @param {CommuteEntry[]} commuteEntries - 交通費エントリーのリスト
- * @param {ExpenseEntryRecord[]} expenseEntryRecords - 経費エントリーのレコードリスト
+ * @param {SaveManagementOptions} [options] - バックアップ制御用オプション
  * @returns {void}
  */
 export function saveToManagementSS(
@@ -37,8 +89,7 @@ export function saveToManagementSS(
   submissionMonth: Date,
   workScheduleFolderUrl: string,
   expenseReportFolderUrl: string,
-  commuteEntries: CommuteEntry[],
-  expenseEntryRecords: ExpenseEntryRecord[]
+  options?: SaveManagementOptions
 ): void {
   // 無効従業員チェック：有効な従業員のみ更新を許可
   const activeEmployees = getActiveEmployees();
@@ -94,15 +145,21 @@ export function saveToManagementSS(
 
     // 承認済みの場合は更新禁止
     if (oldStatus === '承認済み') {
-      throw new Error('承認済みの申請は更新できません。管理者に連絡してください。');
+      throw new Error(APPROVED_ERROR_MESSAGE);
     }
 
     // バックアップ処理（未提出以外の場合）
     if (oldStatus && oldStatus !== '未提出') {
+      if (!options?.skipFileBackup) {
+        backupUserDriveData(
+          userEmail,
+          submissionMonth,
+          options?.submissionStartedAt
+        );
+      }
       backupExistingRow(
         managementSS,
         expenseSheet,
-        headerPositions,
         targetRow,
         userEmail,
         oldStatus
@@ -110,7 +167,12 @@ export function saveToManagementSS(
     }
 
     // データを更新
-    updateRowWithHeaderPositions(expenseSheet, headerPositions, dataMap, targetRow);
+    updateRowWithHeaderPositions(
+      expenseSheet,
+      headerPositions,
+      dataMap,
+      targetRow
+    );
 
     // ステータス遷移ロジック
     if (oldStatus === '差戻し') {
@@ -123,7 +185,11 @@ export function saveToManagementSS(
   } else {
     // 新規行を追加
     Logger.log(`メールアドレス ${userEmail} の新規行を追加します。`);
-    lastRow = appendRowWithHeaderPositions(expenseSheet, headerPositions, dataMap);
+    lastRow = appendRowWithHeaderPositions(
+      expenseSheet,
+      headerPositions,
+      dataMap
+    );
     newStatus = '提出済み';
   }
 
@@ -162,7 +228,6 @@ export function saveToManagementSS(
     }
   }
 }
-
 
 /**
  * 管理シートに登録するデータマップを構築する
