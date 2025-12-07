@@ -1,4 +1,17 @@
 import { getSlackBotToken } from '../../properties';
+import type { ChatPostMessageResponse } from '@slack/web-api/dist/types/response/ChatPostMessageResponse';
+
+export interface MessageResponse {
+  ts: string; // メッセージタイムスタンプ（メッセージID）
+  channel: string; // DM送信先チャンネルID
+  message_ts?: string; // message オブジェクトのタイムスタンプ
+  message?: {
+    type: string;
+    user: string;
+    text: string;
+    ts: string;
+  };
+}
 
 export interface SlackPresenter {
   postMessage(channel: string, message: string): void;
@@ -7,7 +20,8 @@ export interface SlackPresenter {
     text: string,
     targetChannelId: string,
     targetMessageTs: string
-  ): void;
+  ): MessageResponse | null;
+  updateMessage(channel: string, ts: string, text: string): boolean;
 }
 
 export class SlackAPIPresenter implements SlackPresenter {
@@ -37,7 +51,7 @@ export class SlackAPIPresenter implements SlackPresenter {
     text: string,
     targetChannelId: string,
     targetMessageTs: string
-  ): void {
+  ): MessageResponse | null {
     try {
       const token = getSlackBotToken();
 
@@ -89,7 +103,9 @@ export class SlackAPIPresenter implements SlackPresenter {
         options
       );
 
-      const result = JSON.parse(response.getContentText());
+      const result: ChatPostMessageResponse = JSON.parse(
+        response.getContentText()
+      );
 
       if (!result.ok) {
         console.error(
@@ -97,9 +113,68 @@ export class SlackAPIPresenter implements SlackPresenter {
           result.error,
           result.response_metadata
         );
+        return null;
       }
+
+      return {
+        ts: result.ts || '',
+        channel: result.channel || '',
+        message_ts: result.message?.ts,
+        message: result.message
+          ? {
+              type: result.message.type || '',
+              user: result.message.user || '',
+              text: result.message.text || '',
+              ts: result.message.ts || '',
+            }
+          : undefined,
+      };
     } catch (error) {
       console.error('postDMWithButton error:', error);
+      return null;
+    }
+  }
+
+  updateMessage(channel: string, ts: string, text: string): boolean {
+    try {
+      const token = getSlackBotToken();
+
+      const payload = {
+        channel: channel,
+        ts: ts,
+        text: text,
+      };
+
+      const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+        method: 'post',
+        contentType: 'application/json',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        payload: JSON.stringify(payload),
+        muteHttpExceptions: true,
+      };
+
+      const response = UrlFetchApp.fetch(
+        'https://slack.com/api/chat.update',
+        options
+      );
+
+      const result = JSON.parse(response.getContentText());
+
+      if (!result.ok) {
+        console.error(
+          'updateMessage failed:',
+          result.error,
+          result.response_metadata
+        );
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('updateMessage error:', error);
+      return false;
     }
   }
 }

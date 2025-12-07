@@ -1,5 +1,5 @@
 import { SpreadSheetRepository } from '../infrastructure/gas/spreadSheetRepository';
-import { SlackPresenter } from '../infrastructure/slack/presenter';
+import { SlackPresenter } from '../infrastructure/slack/slackPresenter';
 import { getBotUserId } from '../properties';
 
 interface AppMentionEvent {
@@ -40,12 +40,21 @@ export class AppMentionUseCase {
       const message: string = `アラート:\n${text}\n\n:warning: cocoの一言: ${strictMessage}\n(${userCount}回目)`;
 
       // DM with button to the mentioned user
-      this.slackPresenter.postDMWithButton(
+      const messageResponse = this.slackPresenter.postDMWithButton(
         userId,
         message,
         event.channel,
         event.ts
       );
+
+      // メッセージIDとclient_msg_idをスプレッドシートに保存
+      if (messageResponse) {
+        this.spreadSheetRepo.saveMessage(
+          event.client_msg_id,
+          messageResponse.ts,
+          'pending'
+        );
+      }
     });
   }
 }

@@ -4,7 +4,7 @@ import { InteractionController } from './controller/interactionController';
 import { AppMentionUseCase } from './usecase/appMentionUseCase';
 import { CacheRepositoryImpl } from './infrastructure/gas/cacheRepository';
 import { SpreadSheetRepositoryImpl } from './infrastructure/gas/spreadSheetRepository';
-import { SlackAPIPresenter } from './infrastructure/slack/presenter';
+import { SlackAPIPresenter } from './infrastructure/slack/slackPresenter';
 
 // DIコンテナの役割
 const ccdRepository = new CacheRepositoryImpl();

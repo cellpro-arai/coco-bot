@@ -1,4 +1,5 @@
-import { getSlackBotToken } from '../properties';
+import { SpreadSheetRepositoryImpl } from '../infrastructure/gas/spreadSheetRepository';
+import { SlackAPIPresenter } from '../infrastructure/slack/slackPresenter';
 
 interface BlockActionPayload {
   type: string;
@@ -16,77 +17,73 @@ interface BlockActionPayload {
 
 // slack botのインタラクションイベント（完了ボタン）を処理するコントローラ
 export class InteractionController {
-  doPost(
-    e: GoogleAppsScript.Events.DoPost
+  private spreadSheetRepo: SpreadSheetRepositoryImpl;
+  private slackPresenter: SlackAPIPresenter;
+
+  constructor() {
+    this.spreadSheetRepo = new SpreadSheetRepositoryImpl();
+    this.slackPresenter = new SlackAPIPresenter();
+  }
+
+  handleBlockAction(
+    payload: BlockActionPayload
   ): GoogleAppsScript.Content.TextOutput {
-    try {
-      const payload: BlockActionPayload = JSON.parse(e.postData.contents);
+    // Handle block actions (button clicks)
+    const action = payload.actions[0];
 
-      // Handle block actions (button clicks)
-      if (payload.type === 'block_actions') {
-        const action = payload.actions[0];
-        if (action.action_id === 'completion_button') {
-          const buttonData = JSON.parse(action.value);
-          this.handleCompletionButton(
-            payload.user.name,
-            buttonData.targetChannelId,
-            buttonData.targetMessageTs
-          );
-        }
-      }
+    if (action.action_id === 'completion_button') {
+      const buttonData = JSON.parse(action.value);
 
-      return ContentService.createTextOutput('OK').setMimeType(
-        ContentService.MimeType.TEXT
-      );
-    } catch (err) {
-      const error = err as Error;
-      console.error('Interaction error:', error);
-      return ContentService.createTextOutput('ERROR').setMimeType(
-        ContentService.MimeType.TEXT
+      this.handleCompletionButton(
+        payload.user.name,
+        buttonData.targetChannelId,
+        buttonData.targetMessageTs,
+        buttonData.userId
       );
     }
+
+    return ContentService.createTextOutput('OK').setMimeType(
+      ContentService.MimeType.TEXT
+    );
   }
 
   private handleCompletionButton(
     userName: string,
     targetChannelId: string,
-    targetMessageTs: string
+    targetMessageTs: string,
+    dmUserId: string
   ): void {
-    try {
-      const token = getSlackBotToken();
+    const messageInfo = this.spreadSheetRepo.getMessageByTs(targetMessageTs);
 
-      const payload = {
-        channel: targetChannelId,
-        thread_ts: targetMessageTs,
-        text: `✅ ${userName}さんが完了しました`,
-      };
+    if (!messageInfo) {
+      console.error(
+        '[handleCompletionButton] Message not found in spreadsheet:',
+        targetMessageTs
+      );
+      return;
+    }
 
-      const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-        method: 'post',
-        contentType: 'application/json',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        payload: JSON.stringify(payload),
-        muteHttpExceptions: true,
-      };
+    // DM を完了メッセージで修正
+    const completionText = `✅ ${userName}さんが完了しました`;
 
-      const response = UrlFetchApp.fetch(
-        'https://slack.com/api/chat.postMessage',
-        options
+    const updated = this.slackPresenter.updateMessage(
+      dmUserId,
+      messageInfo.messageTs,
+      completionText
+    );
+
+    if (updated) {
+      // スプレッドシートのステータスを「完了」に更新
+      this.spreadSheetRepo.updateMessageStatus(
+        messageInfo.messageTs,
+        'completed'
       );
 
-      const result = JSON.parse(response.getContentText());
-
-      if (!result.ok) {
-        console.error(
-          'Failed to post completion message:',
-          result.error,
-          result.response_metadata
-        );
-      }
-    } catch (error) {
-      console.error('handleCompletionButton error:', error);
+      // 元のチャンネルに完了通知を投稿
+      this.slackPresenter.postMessage(
+        targetChannelId,
+        `<@${dmUserId}> が <@${userName}> のアラートを完了しました`
+      );
     }
   }
 }

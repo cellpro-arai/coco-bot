@@ -2,15 +2,27 @@ import { getSpreadSheetId } from '../../properties';
 
 const SHEET_STRICT_MESSAGES = 'strict_messages';
 const SHEET_USER_COUNT = 'user_count';
+const SHEET_MESSAGES = 'messages';
 
 export interface SpreadSheetRepository {
   getStrictMessage(count: number): string;
   incrementUserCount(userName: string): number;
+  saveMessage(clientMsgId: string, messageTs: string, status: string): void;
+  getMessageByTs(
+    messageTs: string
+  ): {
+    clientMsgId: string;
+    messageTs: string;
+    status: string;
+    timestamp: string;
+  } | null;
+  updateMessageStatus(messageTs: string, status: string): void;
 }
 
 export class SpreadSheetRepositoryImpl implements SpreadSheetRepository {
   private strictMessagesSheet: GoogleAppsScript.Spreadsheet.Sheet;
   private userCountSheet: GoogleAppsScript.Spreadsheet.Sheet;
+  private messagesSheet: GoogleAppsScript.Spreadsheet.Sheet;
 
   constructor() {
     const spreadsheet = SpreadsheetApp.openById(getSpreadSheetId());
@@ -18,6 +30,7 @@ export class SpreadSheetRepositoryImpl implements SpreadSheetRepository {
       SHEET_STRICT_MESSAGES
     )!;
     this.userCountSheet = spreadsheet.getSheetByName(SHEET_USER_COUNT)!;
+    this.messagesSheet = spreadsheet.getSheetByName(SHEET_MESSAGES)!;
   }
 
   getStrictMessage(count: number): string {
@@ -48,5 +61,50 @@ export class SpreadSheetRepositoryImpl implements SpreadSheetRepository {
     // 見つからなければ最後に追記
     this.userCountSheet.appendRow([userName, 1]);
     return 1;
+  }
+
+  saveMessage(clientMsgId: string, messageTs: string, status: string): void {
+    const timestamp = new Date().toISOString();
+    this.messagesSheet.appendRow([clientMsgId, messageTs, status, timestamp]);
+  }
+
+  getMessageByTs(
+    messageTs: string
+  ): {
+    clientMsgId: string;
+    messageTs: string;
+    status: string;
+    timestamp: string;
+  } | null {
+    const data: (string | number | boolean | Date)[][] = this.messagesSheet
+      .getDataRange()
+      .getValues();
+
+    for (let i = 1; i < data.length; i++) {
+      // 1行目はヘッダ、2列目がmessageTs
+      if (data[i][1] === messageTs) {
+        return {
+          clientMsgId: data[i][0] as string,
+          messageTs: data[i][1] as string,
+          status: data[i][2] as string,
+          timestamp: data[i][3] as string,
+        };
+      }
+    }
+
+    return null;
+  }
+
+  updateMessageStatus(messageTs: string, status: string): void {
+    const data: (string | number | boolean | Date)[][] = this.messagesSheet
+      .getDataRange()
+      .getValues();
+
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][1] === messageTs) {
+        this.messagesSheet.getRange(i + 1, 3).setValue(status);
+        break;
+      }
+    }
   }
 }
