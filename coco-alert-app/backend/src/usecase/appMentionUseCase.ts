@@ -24,9 +24,13 @@ export class AppMentionUseCase {
     const botUserId = getBotUserId();
     const targetChannel = getTargetChannel();
 
-    const mentions: string[] = (event.text.match(/<@([A-Z0-9]+)>/g) || [])
-      .map(m => m.replace(/[<@>]/g, ''))
-      .filter(id => id !== botUserId);
+    const mentions: string[] = Array.from(
+      new Set(
+        (event.text.match(/<@([A-Z0-9]+)>/g) || [])
+          .map(m => m.replace(/[<@>]/g, ''))
+          .filter(id => id !== botUserId)
+      )
+    );
 
     text = text
       .replace(new RegExp(`<@(${event.user}|${botUserId})>`, 'g'), '')
