@@ -1,7 +1,11 @@
-import { CommuteEntry } from '../types';
-import type { SubmissionMonthDateRange } from '../utils/dateUtils';
-import { CommuteEntryCard, FormSection } from './';
-import { helperTextClass, secondaryButtonClass } from './formClasses';
+import { CommuteEntry } from '../../types';
+import type { SubmissionMonthDateRange } from '../../utils/dateUtils';
+import { CommuteEntryCard } from '.';
+import { FormSection } from '../ui';
+import {
+  helperTextClass,
+  secondaryButtonClass,
+} from '../../constants/formClasses';
 
 interface CommuteSectionProps {
   entries: CommuteEntry[];

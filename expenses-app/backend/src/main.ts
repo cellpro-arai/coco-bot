@@ -10,6 +10,10 @@ import { createExpenseReport } from './expenseReport/createExpenseReport';
 import { uploadExpenseReceipts } from './expenseReport/expenseReportSheet';
 import { saveToManagementSS } from './expenseManagement/saveManagementSheet';
 import { initializeMonthlyExpenseSheet } from './expenseManagement/initializeMonthlySheet';
+import {
+  getCurrentUserEmployeeInfo,
+  EmployeeInfo,
+} from './expenseManagement/employeeManagement';
 
 // WebアプリのGETリクエスト処理
 function doGet(): GoogleAppsScript.HTML.HtmlOutput {
@@ -87,6 +91,13 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
 }
 
 /**
+ * 現在のユーザーの従業員情報を取得する（フロントエンドから呼び出される）
+ */
+function getUserInfo(): EmployeeInfo | null {
+  return getCurrentUserEmployeeInfo();
+}
+
+/**
  * GASのグローバルスコープに関数を登録
  */
 declare const window: any;
@@ -95,4 +106,5 @@ if (typeof window !== 'undefined') {
   window.doGet = doGet;
   window.submitExpense = submitExpense;
   window.initializeMonthlyExpenseSheet = initializeMonthlyExpenseSheet;
+  window.getUserInfo = getUserInfo;
 }

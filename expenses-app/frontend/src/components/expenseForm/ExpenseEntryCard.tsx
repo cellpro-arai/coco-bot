@@ -1,11 +1,11 @@
-import { ExpenseEntry } from '../types';
-import type { SubmissionMonthDateRange } from '../utils/dateUtils';
+import { ExpenseEntry } from '../../types';
+import type { SubmissionMonthDateRange } from '../../utils/dateUtils';
 import {
   cardLabelClass,
   dateFieldClass,
   destructiveButtonClass,
   inputFieldClass,
-} from './formClasses';
+} from '../../constants/formClasses';
 
 interface ExpenseEntryCardProps {
   entry: ExpenseEntry;

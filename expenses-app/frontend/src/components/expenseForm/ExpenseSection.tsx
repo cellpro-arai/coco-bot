@@ -1,7 +1,11 @@
-import { ExpenseEntry } from '../types';
-import type { SubmissionMonthDateRange } from '../utils/dateUtils';
-import { ExpenseEntryCard, FormSection } from './';
-import { helperTextClass, secondaryButtonClass } from './formClasses';
+import { ExpenseEntry } from '../../types';
+import type { SubmissionMonthDateRange } from '../../utils/dateUtils';
+import { ExpenseEntryCard } from '.';
+import { FormSection } from '../ui';
+import {
+  helperTextClass,
+  secondaryButtonClass,
+} from '../../constants/formClasses';
 
 interface ExpenseSectionProps {
   entries: ExpenseEntry[];
@@ -44,18 +48,18 @@ export default function ExpenseSection({
         )}
         {hasEntries ? (
           <div className="flex flex-col gap-4">
-                {entries.map((entry, index) => (
-                  <ExpenseEntryCard
-                    key={`expense-${index}`}
-                    entry={entry}
-                    index={index}
-                    onChange={onChange}
-                    onReceiptChange={onReceiptChange}
-                    onCertificateChange={onCertificateChange}
-                    onRemove={onRemove}
-                    dateRange={dateRange}
-                  />
-                ))}
+            {entries.map((entry, index) => (
+              <ExpenseEntryCard
+                key={`expense-${index}`}
+                entry={entry}
+                index={index}
+                onChange={onChange}
+                onReceiptChange={onReceiptChange}
+                onCertificateChange={onCertificateChange}
+                onRemove={onRemove}
+                dateRange={dateRange}
+              />
+            ))}
           </div>
         ) : (
           <p className="text-sm text-slate-500">

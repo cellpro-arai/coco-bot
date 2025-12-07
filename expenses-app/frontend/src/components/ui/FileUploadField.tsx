@@ -4,7 +4,7 @@ import {
   legendBaseClass,
   sectionCardClass,
   secondaryButtonClass,
-} from './formClasses';
+} from '../../constants/formClasses';
 
 interface FileUploadFieldProps {
   label: string;

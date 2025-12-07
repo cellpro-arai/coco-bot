@@ -82,3 +82,13 @@ export interface ExpenseResult {
   success: boolean;
   message: string;
 }
+
+/**
+ * 従業員情報
+ */
+export interface EmployeeInfo {
+  employeeId: string;
+  name: string;
+  email: string;
+  isActive: boolean;
+}

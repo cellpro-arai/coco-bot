@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import {
   legendBaseClass,
   sectionCardClass,
-} from './formClasses';
+} from '../../constants/formClasses';
 
 interface FormSectionProps {
   title: string;

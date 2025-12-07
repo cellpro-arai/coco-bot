@@ -1,11 +1,11 @@
-import { CommuteEntry } from '../types';
-import type { SubmissionMonthDateRange } from '../utils/dateUtils';
+import { CommuteEntry } from '../../types';
+import type { SubmissionMonthDateRange } from '../../utils/dateUtils';
 import {
   dateFieldCompactClass,
   destructiveButtonClass,
   inputFieldCompactClass,
   secondaryButtonClass,
-} from './formClasses';
+} from '../../constants/formClasses';
 
 interface CommuteEntryCardProps {
   entry: CommuteEntry;

@@ -118,3 +118,36 @@ export function getActiveEmployees(): EmployeeInfo[] {
   Logger.log(`有効な従業員を ${employees.length} 件取得しました。`);
   return employees;
 }
+
+/**
+ * 現在のユーザーの従業員情報を従業員管理テーブルから取得する
+ *
+ * Session.getEffectiveUser()で取得したメールアドレスを元に、
+ * 従業員管理テーブルから該当する従業員情報を検索します。
+ *
+ * @returns {EmployeeInfo | null} 従業員情報。見つからない場合はnull
+ */
+export function getCurrentUserEmployeeInfo(): EmployeeInfo | null {
+  try {
+    const userEmail = Session.getEffectiveUser().getEmail();
+
+    if (!userEmail) {
+      Logger.log('ユーザーのメールアドレスを取得できませんでした。');
+      return null;
+    }
+
+    const employees = getActiveEmployees();
+    const employee = employees.find(emp => emp.email === userEmail);
+
+    if (!employee) {
+      Logger.log(`従業員管理テーブルにメールアドレス ${userEmail} が見つかりませんでした。`);
+      return null;
+    }
+
+    Logger.log(`従業員情報を取得: ${employee.name} (${employee.email})`);
+    return employee;
+  } catch (error) {
+    Logger.log(`従業員情報の取得に失敗: ${(error as Error).message}`);
+    return null;
+  }
+}

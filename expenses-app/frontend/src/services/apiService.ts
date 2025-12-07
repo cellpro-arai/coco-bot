@@ -1,7 +1,7 @@
 /**
  * @fileoverview Google Apps Scriptとの通信
  */
-import { ExpenseSubmitData, ExpenseResult } from '../types';
+import { ExpenseSubmitData, ExpenseResult, EmployeeInfo } from '../types';
 
 declare const google: any;
 
@@ -30,6 +30,34 @@ export function submitExpense(data: ExpenseSubmitData): Promise<ExpenseResult> {
           reject(new Error(error.message))
         )
         .submitExpense(data);
+    }
+  });
+}
+
+/**
+ * 現在のユーザーの従業員情報を取得します。
+ * @returns {Promise<EmployeeInfo | null>} 従業員情報。見つからない場合はnull
+ */
+export function getUserInfo(): Promise<EmployeeInfo | null> {
+  return new Promise((resolve, reject) => {
+    if (isDevelopment) {
+      // 開発環境用のモック
+      setTimeout(() => {
+        console.log('[開発モード] ユーザー情報取得');
+        resolve({
+          employeeId: '001',
+          name: '山田 太郎',
+          email: 'yamada@example.com',
+          isActive: true,
+        });
+      }, 500);
+    } else {
+      google.script.run
+        .withSuccessHandler((result: EmployeeInfo | null) => resolve(result))
+        .withFailureHandler((error: Error) =>
+          reject(new Error(error.message))
+        )
+        .getUserInfo();
     }
   });
 }
