@@ -48,12 +48,14 @@ export class InteractionController {
       // DMのメッセージタイムスタンプを取得
       const dmMessageTs = payload.container?.message_ts || payload.message?.ts;
       const dmChannelId = payload.container?.channel_id;
+      const userId = payload.user.id;
 
       this.handleCompletionButton(
         buttonData.targetChannelId,
         dmChannelId || '',
         dmMessageTs,
-        buttonData.targetMessageTs
+        buttonData.targetMessageTs,
+        userId
       );
     }
 
@@ -64,9 +66,10 @@ export class InteractionController {
 
   private handleCompletionButton(
     targetChannelId: string,
-    dmUserId: string,
+    dmChannelId: string,
     dmMessageTs?: string,
-    targetMessageTs?: string
+    targetMessageTs?: string,
+    userId?: string
   ): void {
     if (!dmMessageTs) {
       logToSheet(
@@ -88,7 +91,7 @@ export class InteractionController {
     // DM を完了メッセージで修正
     const completionText = `✅ 完了しました`;
     const updated = this.slackPresenter.updateMessage(
-      dmUserId,
+      dmChannelId,
       dmMessageTs,
       completionText
     );
@@ -98,8 +101,11 @@ export class InteractionController {
       this.spreadSheetRepo.deleteMessageRow(dmMessageTs);
 
       // ユーザー名を取得
-      const userName = this.slackPresenter.getUserName(dmUserId);
-      const userDisplay = userName || `<@${dmUserId}>`;
+      let userName: string | null = null;
+      if (userId) {
+        userName = this.slackPresenter.getUserName(userId);
+      }
+      const userDisplay = userName || (userId ? `<@${userId}>` : 'ユーザー');
 
       // 元のチャンネルのスレッドに完了通知を投稿
       const threadReplyText = `${userDisplay} が完了しました`;

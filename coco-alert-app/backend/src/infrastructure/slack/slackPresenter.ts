@@ -208,6 +208,7 @@ export class SlackAPIPresenter implements SlackPresenter {
       return null;
     }
 
-    return result.user?.real_name || result.user?.name || null;
+    const userName = result.user?.real_name || result.user?.name || null;
+    return userName;
   }
 }
