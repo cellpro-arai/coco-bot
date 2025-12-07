@@ -17,8 +17,14 @@ import {
 } from '../drive';
 import { initializeExpenseReportSheet } from './expenseReportSheetFormat';
 
-// ユーザ毎の経費精算書ブックを取得または作成する
-export function getOrCreateExpenseReportSS(
+/**
+ * 提出者ごとの経費精算書スプレッドシートを新規作成する。
+ * @param userEmail - ユーザーのメールアドレス。
+ * @param userName - ユーザー氏名（フォルダ/シート名に使用）。
+ * @param date - 提出対象月。
+ * @returns 作成したスプレッドシートインスタンス。
+ */
+export function createExpenseReportSS(
   userEmail: string,
   userName: string,
   date: Date
@@ -31,22 +37,6 @@ export function getOrCreateExpenseReportSS(
     date
   );
 
-  // 経費精算書フォルダ内で既存のスプレッドシートを検索
-  try {
-    const files = targetFolder.getFilesByName(spreadsheetName);
-
-    // 同名のファイルが見つかった場合、最初のものを使用
-    if (files.hasNext()) {
-      const file = files.next();
-      return SpreadsheetApp.openById(file.getId());
-    }
-  } catch (error) {
-    console.warn(
-      `既存のスプレッドシート検索中にエラーが発生しました: ${(error as Error).message}`
-    );
-  }
-
-  // 既存のスプレッドシートが見つからない場合、新規作成
   const expenseReport = SpreadsheetApp.create(spreadsheetName);
 
   // 最初のシートを経費精算書として初期化
@@ -70,12 +60,19 @@ export function getOrCreateExpenseReportSS(
   return expenseReport;
 }
 
-// 月次経費精算書シートに交通費・経費データを追加する
+/**
+ * 月次経費精算書シートに交通費・経費データを追加する。
+ * @param sheet - 追記対象のシート。
+ * @param commuteEntries - 交通費データ一覧。
+ * @param expenseEntries - 経費データ一覧。
+ * @returns なし。
+ */
 export function addDateToExpenseReportSheet(
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
   commuteEntries: CommuteEntry[],
   expenseEntries: ExpenseEntryRecord[]
 ): void {
+  const MINIMUM_DATA_ROWS = 15;
   // 交通費と経費を結合
   const commuteRows = commuteEntries.map(convertCommuteToRowData);
   const expenseRows = expenseEntries.map(convertExpenseToRowData);
@@ -89,36 +86,42 @@ export function addDateToExpenseReportSheet(
   const startRow = 10;
   const lastRow = sheet.getLastRow();
   let currentRowNumber = lastRow >= startRow ? lastRow - startRow + 2 : 1;
+  const additionalOffset = lastRow >= startRow ? lastRow - startRow + 1 : 0;
+  const dataStartRow = startRow + additionalOffset;
+  const dataRowCount = Math.max(allRows.length, MINIMUM_DATA_ROWS);
 
   // データを追加
-  allRows.forEach((rowData, index) => {
-    const rowIndex =
-      startRow + index + (lastRow >= startRow ? lastRow - startRow + 1 : 0);
+  for (let index = 0; index < dataRowCount; index++) {
+    const rowIndex = startRow + index + additionalOffset;
+    const rowData = allRows[index];
 
     // A列: 番号
     sheet.getRange(rowIndex, 1).setValue(currentRowNumber);
 
-    // B列: 日付
-    if (rowData.date) {
-      sheet.getRange(rowIndex, 2).setValue(rowData.date);
-      sheet.getRange(rowIndex, 2).setNumberFormat('yyyy/mm/dd');
+    if (rowData) {
+      // B列: 日付
+      if (rowData.date) {
+        sheet.getRange(rowIndex, 2).setValue(rowData.date);
+        sheet.getRange(rowIndex, 2).setNumberFormat('yyyy/mm/dd');
+      }
+
+      // C列: 内容
+      sheet.getRange(rowIndex, 3).setValue(rowData.description);
+
+      // D列: 金額
+      sheet.getRange(rowIndex, 4).setValue(rowData.amount);
+      sheet.getRange(rowIndex, 4).setNumberFormat('¥#,##0');
+    } else {
+      // 足りない行は空欄を確保する（番号のみ表示）
+      sheet.getRange(rowIndex, 2, 1, 3).clearContent();
     }
 
-    // C列: 内容
-    sheet.getRange(rowIndex, 3).setValue(rowData.description);
-
-    // D列: 金額
-    sheet.getRange(rowIndex, 4).setValue(rowData.amount);
-    sheet.getRange(rowIndex, 4).setNumberFormat('¥#,##0');
-
     currentRowNumber++;
-  });
+  }
 
   // 追加したデータ範囲に罫線を引く
-  const dataStartRow =
-    startRow + (lastRow >= startRow ? lastRow - startRow + 1 : 0);
-  const dataRange = sheet.getRange(dataStartRow, 1, allRows.length, 4);
-  const centerRange = sheet.getRange(dataStartRow, 1, allRows.length, 1);
+  const dataRange = sheet.getRange(dataStartRow, 1, dataRowCount, 4);
+  const centerRange = sheet.getRange(dataStartRow, 1, dataRowCount, 1);
   centerRange.setHorizontalAlignment('center');
   // データ行全体
   dataRange
@@ -136,7 +139,7 @@ export function addDateToExpenseReportSheet(
     .setVerticalAlignment('middle');
 
   // 右側（D列）だけ太線にする
-  const rightEdgeRange = sheet.getRange(dataStartRow, 4, allRows.length, 1);
+  const rightEdgeRange = sheet.getRange(dataStartRow, 4, dataRowCount, 1);
   rightEdgeRange.setBorder(
     null,
     null,
@@ -149,7 +152,7 @@ export function addDateToExpenseReportSheet(
   );
 
   // 合計金額行を追加
-  const totalRow = dataStartRow + allRows.length;
+  const totalRow = dataStartRow + dataRowCount;
   const totalAmount = allRows.reduce((sum, row) => sum + row.amount, 0);
 
   // A:C列に「合計金額」を結合して表示
@@ -176,7 +179,13 @@ export function addDateToExpenseReportSheet(
     .setBorder(null, true, true, true, null, null, null, BORDER_MEDIUM);
 }
 
-// 経費の添付ファイルをアップロードしダウンロードURLを付与する
+/**
+ * 経費エントリーに付随する領収書をDriveへアップロードする。
+ * @param entries - 経費エントリー一覧。
+ * @param userEmail - ユーザーのメールアドレス。
+ * @param date - 対象年月（日付）。
+ * @returns 領収書URL付きのエントリーレコード配列。
+ */
 export function uploadExpenseReceipts(
   entries: ExpenseEntry[],
   userEmail: string,

@@ -98,10 +98,12 @@ export function getActiveEmployees(): EmployeeInfo[] {
   const employees: EmployeeInfo[] = [];
 
   dataRows.forEach(row => {
-    const employeeId = employeeIdCol > 0 ? String(row[employeeIdCol - 1] || '') : '';
+    const employeeId =
+      employeeIdCol > 0 ? String(row[employeeIdCol - 1] || '') : '';
     const name = String(row[nameCol - 1] || '').trim();
     const email = String(row[emailCol - 1] || '').trim();
-    const isActive = row[activeFlagCol - 1] === true || row[activeFlagCol - 1] === 'TRUE';
+    const isActive =
+      row[activeFlagCol - 1] === true || row[activeFlagCol - 1] === 'TRUE';
 
     // 有効フラグがTRUEで、メールアドレスが存在し、まだ追加されていない場合のみ追加
     if (isActive && email && !emailSet.has(email)) {
@@ -140,7 +142,9 @@ export function getCurrentUserEmployeeInfo(): EmployeeInfo | null {
     const employee = employees.find(emp => emp.email === userEmail);
 
     if (!employee) {
-      Logger.log(`従業員管理テーブルにメールアドレス ${userEmail} が見つかりませんでした。`);
+      Logger.log(
+        `従業員管理テーブルにメールアドレス ${userEmail} が見つかりませんでした。`
+      );
       return null;
     }
 

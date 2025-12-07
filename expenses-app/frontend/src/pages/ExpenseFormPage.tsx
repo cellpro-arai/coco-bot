@@ -85,8 +85,16 @@ export default function ExpenseFormPage({
             />
           </div>
 
+          {/* 現場勤務状況 */}
+          <WorkHoursSection
+            workStartTime={formData.workStartTime}
+            workEndTime={formData.workEndTime}
+            officeFrequency={formData.officeFrequency}
+            onChange={handleInputChange}
+          />
+
           {/* 勤務表 */}
-          <FormSection title="勤務表">
+          <FormSection title="勤務表" required>
             <FileUploadField
               label="勤務表"
               files={formData.workScheduleFiles}
@@ -98,6 +106,15 @@ export default function ExpenseFormPage({
               onHasUploadChange={setHasWorkHours}
             />
           </FormSection>
+
+          {/* 定期券購入 */}
+          <CommuterPassSection
+            hasCommuterPass={formData.hasCommuterPass}
+            nearestStation={formData.nearestStation}
+            workStation={formData.workStation}
+            monthlyFee={formData.monthlyFee}
+            onChange={handleInputChange}
+          />
 
           {/* 交通費 */}
           <CommuteSection
@@ -122,23 +139,6 @@ export default function ExpenseFormPage({
             dateRange={submissionMonthDateRange}
             hasExpense={hasExpense}
             onHasExpenseChange={setHasExpense}
-          />
-
-          {/* 現場勤務状況 */}
-          <WorkHoursSection
-            workStartTime={formData.workStartTime}
-            workEndTime={formData.workEndTime}
-            officeFrequency={formData.officeFrequency}
-            onChange={handleInputChange}
-          />
-
-          {/* 定期券購入 */}
-          <CommuterPassSection
-            hasCommuterPass={formData.hasCommuterPass}
-            nearestStation={formData.nearestStation}
-            workStation={formData.workStation}
-            monthlyFee={formData.monthlyFee}
-            onChange={handleInputChange}
           />
 
           {/* 備考 */}
