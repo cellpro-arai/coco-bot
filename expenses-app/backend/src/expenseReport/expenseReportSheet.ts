@@ -2,7 +2,6 @@ import {
   convertCommuteToRowData,
   convertExpenseToRowData,
   formatYearMonth,
-  getScriptProperty,
 } from '../utils';
 import { ExpenseEntry, CommuteEntry, ExpenseEntryRecord } from '../types/type';
 import {
@@ -13,52 +12,10 @@ import {
 import {
   addSpreadsheetToFolder,
   uploadFileToFolderById,
+  getOrCreateChildFolder,
+  getTargetFolder,
 } from '../drive';
 import { initializeExpenseReportSheet } from './expenseReportSheetFormat';
-
-// 指定フォルダ直下にサブフォルダ (年/月/メールローカル部) を作成して返す
-function getOrCreateChildFolder(
-  parent: GoogleAppsScript.Drive.Folder,
-  name: string
-): GoogleAppsScript.Drive.Folder {
-  const folders = parent.getFoldersByName(name);
-  if (folders.hasNext()) {
-    return folders.next();
-  }
-  return parent.createFolder(name);
-}
-
-// フォルダ名に使うためメールのローカル部をサニタイズ
-function getEmailLocalPart(userEmail: string): string {
-  if (!userEmail) {
-    return 'unknown-user';
-  }
-
-  const [localPart] = userEmail.split('@');
-  return (localPart || 'unknown-user').replace(/[\\/:*?"<>|]/g, '_');
-}
-
-// ユーザ毎の経費精算書格納フォルダを取得する
-function getExpenseReportTargetFolder(
-  userEmail: string,
-  date: Date
-): GoogleAppsScript.Drive.Folder {
-  // 経費精算書フォルダ > yyyy > mm > email の階層を確保する
-  const rootFolderId = getScriptProperty(
-    'EXPENSE_REPORT_FOLDER_ID',
-    '経費精算書フォルダのIDが設定されていません。'
-  );
-  const rootFolder = DriveApp.getFolderById(rootFolderId);
-  const yearFolder = getOrCreateChildFolder(
-    rootFolder,
-    String(date.getFullYear())
-  );
-  const monthFolder = getOrCreateChildFolder(
-    yearFolder,
-    String(date.getMonth() + 1).padStart(2, '0')
-  );
-  return getOrCreateChildFolder(monthFolder, getEmailLocalPart(userEmail));
-}
 
 // ユーザ毎の経費精算書ブックを取得または作成する
 export function getOrCreateExpenseReportSS(
@@ -68,7 +25,11 @@ export function getOrCreateExpenseReportSS(
 ): GoogleAppsScript.Spreadsheet.Spreadsheet {
   const yearMonth = formatYearMonth(date);
   const spreadsheetName = `${EXPENSE_REPORT_SHEET_NAME}_${userName || userEmail}_${yearMonth}`;
-  const targetFolder = getExpenseReportTargetFolder(userEmail, date);
+  const targetFolder = getTargetFolder(
+    'EXPENSE_REPORT_FOLDER_ID',
+    userEmail,
+    date
+  );
 
   // 経費精算書フォルダ内で既存のスプレッドシートを検索
   try {
@@ -226,7 +187,11 @@ export function uploadExpenseReceipts(
   }
 
   // ユーザー毎のフォルダを取得
-  const userFolder = getExpenseReportTargetFolder(userEmail, date);
+  const userFolder = getTargetFolder(
+    'EXPENSE_REPORT_FOLDER_ID',
+    userEmail,
+    date
+  );
 
   // 領収書フォルダを作成または取得
   const receiptFolder = getOrCreateChildFolder(userFolder, '領収書');

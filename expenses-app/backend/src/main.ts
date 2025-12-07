@@ -5,7 +5,7 @@ import {
   ExpenseEntryRecord,
 } from './types/type';
 import { parseSubmissionMonth } from './utils';
-import { uploadFileToDrive } from './drive';
+import { uploadWorkScheduleFiles } from './drive';
 import { createExpenseReport } from './expenseReport/createExpenseReport';
 import { uploadExpenseReceipts } from './expenseReport/expenseReportSheet';
 import { saveToManagementSS } from './expenseManagement/saveManagementSheet';
@@ -27,8 +27,10 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
     const submittedMonth = parseSubmissionMonth(expenseData.submissionMonth);
 
     const workScheduleFiles = expenseData.workScheduleFiles || [];
-    const workScheduleUrls = workScheduleFiles.map(file =>
-      uploadFileToDrive(file, 'WORK_SCHEDULE_FOLDER_ID')
+    const workScheduleUrls = uploadWorkScheduleFiles(
+      workScheduleFiles,
+      userEmail,
+      submittedMonth
     );
 
     const commuteEntries: CommuteEntry[] = expenseData.commuteEntries || [];

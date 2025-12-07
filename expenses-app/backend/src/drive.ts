@@ -1,6 +1,71 @@
 import { FileData, FolderPropertyKey } from './types/type';
 import { getFolderDescription, getScriptProperty } from './utils';
 
+// 指定フォルダ直下にサブフォルダを作成または取得
+export function getOrCreateChildFolder(
+  parent: GoogleAppsScript.Drive.Folder,
+  name: string
+): GoogleAppsScript.Drive.Folder {
+  const folders = parent.getFoldersByName(name);
+  if (folders.hasNext()) {
+    return folders.next();
+  }
+  return parent.createFolder(name);
+}
+
+// メールのローカル部をフォルダ名に使える形式にサニタイズ
+export function getEmailLocalPart(userEmail: string): string {
+  if (!userEmail) {
+    return 'unknown-user';
+  }
+
+  const [localPart] = userEmail.split('@');
+  return (localPart || 'unknown-user').replace(/[\\/:*?"<>|]/g, '_');
+}
+
+// ユーザ毎のファイル格納フォルダを取得（rootFolder > yyyy > mm > emailの階層）
+export function getTargetFolder(
+  folderPropertyKey: FolderPropertyKey,
+  userEmail: string,
+  date: Date
+): GoogleAppsScript.Drive.Folder {
+  const folderDescription = getFolderDescription(folderPropertyKey);
+  const rootFolderId = getScriptProperty(
+    folderPropertyKey,
+    `${folderDescription}のIDが設定されていません。`
+  );
+  const rootFolder = DriveApp.getFolderById(rootFolderId);
+  const yearFolder = getOrCreateChildFolder(
+    rootFolder,
+    String(date.getFullYear())
+  );
+  const monthFolder = getOrCreateChildFolder(
+    yearFolder,
+    String(date.getMonth() + 1).padStart(2, '0')
+  );
+  return getOrCreateChildFolder(monthFolder, getEmailLocalPart(userEmail));
+}
+
+// 作業表ファイルを階層フォルダにアップロード
+export function uploadWorkScheduleFiles(
+  files: FileData[],
+  userEmail: string,
+  date: Date
+): string[] {
+  if (!files || files.length === 0) {
+    return [];
+  }
+
+  const targetFolder = getTargetFolder(
+    'WORK_SCHEDULE_FOLDER_ID',
+    userEmail,
+    date
+  );
+  const targetFolderId = targetFolder.getId();
+
+  return files.map(file => uploadFileToFolderById(file, targetFolderId));
+}
+
 // ファイルをGoogle Driveの指定フォルダにアップロード
 export function uploadFileToDrive(
   fileData: FileData,
