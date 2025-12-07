@@ -107,6 +107,7 @@ npm run format --workspace frontend
 
 - `doGet()`: Serves the HTML interface
 - `submitExpense(expenseData)`: Processes expense submission, uploads files to Drive, creates expense reports
+- `initializeMonthlyExpenseSheet(year?, month?)`: Initializes monthly management sheet with employee data (for scheduled triggers)
 
 ### Frontend Build Process
 
@@ -175,6 +176,56 @@ The `appsscript.json` configures:
 - **Sheet Integration**: Expense data is saved to management spreadsheet and individual expense report spreadsheets
 - **Frontend State**: Custom hooks (`useExpenseEntries`, `useCommuteEntries`) manage form state
 - **File Uploads**: Base64-encoded files are passed from frontend to backend for Drive upload
+
+## Expense Management Architecture
+
+### Monthly Management Sheet Structure
+
+The system maintains monthly expense management sheets in a hierarchical folder structure:
+```
+Root Folder (FORM_MANAGEMENT_FOLDER_ID)/
+  └── {Year}/
+      └── {Month}/
+          └── 経費精算フォーム提出データ管理_{Year}_{Month}.xlsx
+```
+
+**Sheet Initialization Flow:**
+
+1. **Automatic Creation**: When a user submits an expense for a new month, the system automatically creates the folder hierarchy and management spreadsheet
+2. **Employee Pre-population**: On creation, the sheet is pre-populated with all active employees from the Employee Master Table
+3. **Update on Submit**: When an employee submits, their existing row is updated (not appended)
+
+### Employee Master Table Integration
+
+**Required Setup:**
+- Script property `EMPLOYEE_MST_SHEET_ID` must contain the spreadsheet ID of the employee master table
+- The employee master table must have a sheet named `従業員管理テーブル`
+
+**Expected Columns:**
+- 従業員ID (optional, not used)
+- 氏名 (required)
+- メールアドレス (required, unique key)
+- 有効フラグ (required, TRUE/FALSE)
+
+**Key Functions:**
+
+- `getActiveEmployees()` in `backend/src/expenseManagement/employeeManagement.ts`: Retrieves active employees (有効フラグ = TRUE)
+- `initializeEmployeeRows()` in `backend/src/expenseManagement/expenseManagementSheetFormat.ts`: Populates sheet with employee rows
+- `saveToManagementSS()` in `backend/src/expenseManagement/saveManagementSheet.ts`: Updates existing employee row or adds new (fallback)
+
+**Data Flow:**
+
+1. **Sheet Creation**: `getOrCreateMonthlyManagementSpreadsheet()` creates new sheet → automatically calls `initializeEmployeeRows()`
+2. **Form Submission**: `saveToManagementSS()` searches for employee by email → updates existing row or appends new row
+3. **Scheduled Initialization**: `initializeMonthlyExpenseSheet(year, month)` can be called from a time-driven trigger to pre-create monthly sheets
+
+### Management Sheet Headers
+
+The management sheet uses the following headers (defined in `EXPENSE_SHEET_HEADERS`):
+- **メールアドレス**: Primary key for identifying employees (changed from 提出者)
+- 氏名, 提出月, 勤務表, 経費精算書, 開始時間, 終了時間, 出社頻度, 定期券購入, 定期区間, 定期券金額, 備考
+
+**Important Note**: The header "提出者" was renamed to "メールアドレス" to clarify its role as the employee identifier.
 
 # Documentation Rules for TypeScript Codebase (Japanese Commenting Required)
 
