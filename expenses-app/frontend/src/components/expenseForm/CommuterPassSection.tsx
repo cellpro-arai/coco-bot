@@ -1,7 +1,10 @@
 import { ChangeEvent } from 'react';
 import { FormSection } from '../ui';
-import { fieldLabelClass, inputFieldClass } from '../../constants/formClasses';
-import { COMMUTER_PASS_OPTIONS } from '../../constants/formOptions';
+import {
+  fieldLabelClass,
+  inputFieldClass,
+  YES_NO_OPTIONS,
+} from '../../types/constants';
 
 interface CommuterPassSectionProps {
   /** 定期券購入 */
@@ -27,10 +30,10 @@ export default function CommuterPassSection({
   onChange,
 }: CommuterPassSectionProps) {
   return (
-    <>
-      <FormSection title="定期券購入" required>
+    <FormSection title="定期券購入" required>
+      <div className="space-y-4">
         <div className="flex flex-wrap gap-4">
-          {COMMUTER_PASS_OPTIONS.map(option => (
+          {YES_NO_OPTIONS.map(option => (
             <label
               key={option.value}
               className="flex items-center gap-2 text-sm font-medium text-slate-700"
@@ -47,65 +50,65 @@ export default function CommuterPassSection({
             </label>
           ))}
         </div>
-      </FormSection>
 
-      {hasCommuterPass === 'yes' && (
-        <FormSection title="定期券詳細" required>
-          <div className="grid gap-4 md:grid-cols-2">
+        {hasCommuterPass === 'yes' && (
+          <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <label
+                htmlFor="nearestStation"
+                className={`flex flex-col gap-2 ${fieldLabelClass}`}
+              >
+                最寄り駅
+                <input
+                  type="text"
+                  id="nearestStation"
+                  name="nearestStation"
+                  value={nearestStation}
+                  onChange={onChange}
+                  required
+                  placeholder="例: 渋谷駅"
+                  className={inputFieldClass}
+                />
+              </label>
+
+              <label
+                htmlFor="workStation"
+                className={`flex flex-col gap-2 ${fieldLabelClass}`}
+              >
+                勤務先の駅
+                <input
+                  type="text"
+                  id="workStation"
+                  name="workStation"
+                  value={workStation}
+                  onChange={onChange}
+                  required
+                  placeholder="例: 新宿駅"
+                  className={inputFieldClass}
+                />
+              </label>
+            </div>
+
             <label
-              htmlFor="nearestStation"
+              htmlFor="monthlyFee"
               className={`flex flex-col gap-2 ${fieldLabelClass}`}
             >
-              最寄り駅
+              月額（円）
               <input
-                type="text"
-                id="nearestStation"
-                name="nearestStation"
-                value={nearestStation}
+                type="number"
+                id="monthlyFee"
+                name="monthlyFee"
+                value={monthlyFee}
                 onChange={onChange}
                 required
-                placeholder="例: 渋谷駅"
-                className={inputFieldClass}
-              />
-            </label>
-
-            <label
-              htmlFor="workStation"
-              className={`flex flex-col gap-2 ${fieldLabelClass}`}
-            >
-              勤務先の駅
-              <input
-                type="text"
-                id="workStation"
-                name="workStation"
-                value={workStation}
-                onChange={onChange}
-                required
-                placeholder="例: 新宿駅"
+                min="0"
+                placeholder="例: 15000"
                 className={inputFieldClass}
               />
             </label>
           </div>
-
-          <label
-            htmlFor="monthlyFee"
-            className={`flex flex-col gap-2 ${fieldLabelClass}`}
-          >
-            月額（円）
-            <input
-              type="number"
-              id="monthlyFee"
-              name="monthlyFee"
-              value={monthlyFee}
-              onChange={onChange}
-              required
-              min="0"
-              placeholder="例: 15000"
-              className={inputFieldClass}
-            />
-          </label>
-        </FormSection>
-      )}
-    </>
+        )}
+      </div>
+    </FormSection>
   );
 }

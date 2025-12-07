@@ -3,7 +3,7 @@ import { submitExpense } from '../services/apiService';
 import { encodeFileToBase64 } from '../utils/fileUtils';
 import { getDefaultSubmissionMonth } from '../utils/dateUtils';
 import { FORM_ERROR_MESSAGES } from '../types/constants';
-import { DEFAULT_WORK_HOURS } from '../constants/formOptions';
+import { DEFAULT_WORK_HOURS } from '../types/constants';
 import { useCommuteEntries } from './useCommuteEntries';
 import { useExpenseEntries } from './useExpenseEntries';
 import { useUserInfo } from './useUserInfo';
@@ -35,6 +35,11 @@ export function useExpenseFormState(onSubmitSuccess: () => void) {
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
+  // セクション表示制御の状態
+  const [hasWorkHours, setHasWorkHours] = useState<'yes' | 'no'>('no');
+  const [hasCommute, setHasCommute] = useState<'yes' | 'no'>('no');
+  const [hasExpense, setHasExpense] = useState<'yes' | 'no'>('no');
+
   const commuteEntries = useCommuteEntries();
   const expenseEntries = useExpenseEntries();
   const { userName, isNameEditable, isLoadingUserInfo } = useUserInfo();
@@ -47,6 +52,20 @@ export function useExpenseFormState(onSubmitSuccess: () => void) {
       );
     }
   }, [userName]);
+
+  // 交通費セクションで「あり」を選択したときに1行追加
+  useEffect(() => {
+    if (hasCommute === 'yes' && commuteEntries.entries.length === 0) {
+      commuteEntries.add();
+    }
+  }, [hasCommute, commuteEntries]);
+
+  // 経費セクションで「あり」を選択したときに1行追加
+  useEffect(() => {
+    if (hasExpense === 'yes' && expenseEntries.entries.length === 0) {
+      expenseEntries.add();
+    }
+  }, [hasExpense, expenseEntries]);
 
   /**
    * フォームフィールドを更新
@@ -192,6 +211,14 @@ export function useExpenseFormState(onSubmitSuccess: () => void) {
     userName,
     isNameEditable,
     isLoadingUserInfo,
+
+    // セクション表示制御
+    hasWorkHours,
+    setHasWorkHours,
+    hasCommute,
+    setHasCommute,
+    hasExpense,
+    setHasExpense,
 
     // エントリー管理
     commuteEntries,

@@ -5,7 +5,7 @@ import {
   dateFieldClass,
   destructiveButtonClass,
   inputFieldClass,
-} from '../../constants/formClasses';
+} from '../../types/constants';
 
 interface ExpenseEntryCardProps {
   entry: ExpenseEntry;

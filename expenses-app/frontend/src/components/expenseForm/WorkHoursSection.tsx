@@ -4,8 +4,8 @@ import {
   fieldLabelClass,
   inputFieldClass,
   timeFieldClass,
-} from '../../constants/formClasses';
-import { OFFICE_FREQUENCY_OPTIONS } from '../../constants/formOptions';
+  OFFICE_FREQUENCY_OPTIONS,
+} from '../../types/constants';
 
 interface WorkHoursSectionProps {
   /** 始業時間 */

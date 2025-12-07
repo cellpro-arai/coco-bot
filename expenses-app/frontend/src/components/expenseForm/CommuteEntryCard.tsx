@@ -5,7 +5,7 @@ import {
   destructiveButtonClass,
   inputFieldCompactClass,
   secondaryButtonClass,
-} from '../../constants/formClasses';
+} from '../../types/constants';
 
 interface CommuteEntryCardProps {
   entry: CommuteEntry;

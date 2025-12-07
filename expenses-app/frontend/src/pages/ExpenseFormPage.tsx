@@ -10,9 +10,14 @@ import {
   SubmitButton,
 } from '../components/expenseForm';
 import { Layout, Header } from '../components/layouts';
-import { Card, SubmissionErrorModal, FileUploadField } from '../components/ui';
+import {
+  Card,
+  SubmissionErrorModal,
+  FileUploadField,
+  FormSection,
+} from '../components/ui';
 import { getSubmissionMonthDateRange } from '../utils/dateUtils';
-import { WORK_SCHEDULE_FILE_ACCEPT } from '../constants/formOptions';
+import { WORK_SCHEDULE_FILE_ACCEPT } from '../types/constants';
 import { useExpenseFormState } from '../hooks/useExpenseFormState';
 
 interface ExpenseFormPageProps {
@@ -36,6 +41,12 @@ export default function ExpenseFormPage({
     formRef,
     isNameEditable,
     isLoadingUserInfo,
+    hasWorkHours,
+    setHasWorkHours,
+    hasCommute,
+    setHasCommute,
+    hasExpense,
+    setHasExpense,
     commuteEntries,
     expenseEntries,
     handleInputChange,
@@ -75,14 +86,18 @@ export default function ExpenseFormPage({
           </div>
 
           {/* 勤務表 */}
-          <FileUploadField
-            label="勤務表"
-            files={formData.workScheduleFiles}
-            onFilesChange={handleWorkScheduleFilesChange}
-            onRemoveFile={removeWorkScheduleFile}
-            accept={WORK_SCHEDULE_FILE_ACCEPT}
-            multiple
-          />
+          <FormSection title="勤務表">
+            <FileUploadField
+              label="勤務表"
+              files={formData.workScheduleFiles}
+              onFilesChange={handleWorkScheduleFilesChange}
+              onRemoveFile={removeWorkScheduleFile}
+              accept={WORK_SCHEDULE_FILE_ACCEPT}
+              multiple
+              hasUpload={hasWorkHours}
+              onHasUploadChange={setHasWorkHours}
+            />
+          </FormSection>
 
           {/* 交通費 */}
           <CommuteSection
@@ -92,6 +107,8 @@ export default function ExpenseFormPage({
             onRemove={commuteEntries.remove}
             onDuplicate={commuteEntries.duplicate}
             dateRange={submissionMonthDateRange}
+            hasCommute={hasCommute}
+            onHasCommuteChange={setHasCommute}
           />
 
           {/* 経費 */}
@@ -103,6 +120,8 @@ export default function ExpenseFormPage({
             onAdd={expenseEntries.add}
             onRemove={expenseEntries.remove}
             dateRange={submissionMonthDateRange}
+            hasExpense={hasExpense}
+            onHasExpenseChange={setHasExpense}
           />
 
           {/* 現場勤務状況 */}

@@ -1,5 +1,5 @@
 import { ChangeEvent } from 'react';
-import { fieldLabelClass, inputFieldClass } from '../../constants/formClasses';
+import { fieldLabelClass, inputFieldClass } from '../../types/constants';
 
 interface RemarksFieldProps {
   /** 備考の値 */
