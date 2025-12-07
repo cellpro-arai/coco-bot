@@ -16,6 +16,7 @@ export interface MessageResponse {
 
 export interface SlackPresenter {
   postMessage(channel: string, message: string): void;
+  postMessageInThread(channel: string, message: string, threadTs: string): void;
   postDMWithButton(
     userId: string,
     text: string,
@@ -44,6 +45,31 @@ export class SlackAPIPresenter implements SlackPresenter {
       }
     } catch (err) {
       console.error('postMessage error:', err);
+    }
+  }
+
+  postMessageInThread(channelId: string, text: string, threadTs: string): void {
+    try {
+      const resp: GoogleAppsScript.URL_Fetch.HTTPResponse = UrlFetchApp.fetch(
+        'https://slack.com/api/chat.postMessage',
+        {
+          method: 'post',
+          headers: { Authorization: 'Bearer ' + getSlackBotToken() },
+          payload: JSON.stringify({
+            channel: channelId,
+            text,
+            thread_ts: threadTs,
+          }),
+          contentType: 'application/json',
+          muteHttpExceptions: true,
+        }
+      );
+      const data = JSON.parse(resp.getContentText());
+      if (!data.ok) {
+        console.error('chat.postMessage in thread failed:', data);
+      }
+    } catch (err) {
+      console.error('postMessageInThread error:', err);
     }
   }
 
@@ -137,56 +163,39 @@ export class SlackAPIPresenter implements SlackPresenter {
   }
 
   updateMessage(channel: string, ts: string, text: string): boolean {
-    try {
-      const token = getSlackBotToken();
+    const token = getSlackBotToken();
 
-      const payload = {
-        channel: channel,
-        ts: ts,
-        text: text,
-      };
+    const payload = {
+      channel: channel,
+      ts: ts,
+      text: text,
+    };
 
-      logToSheet('[updateMessage] Calling Slack API', {
-        channel,
-        ts,
-        text,
-      });
+    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      method: 'post',
+      contentType: 'application/json',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true,
+    };
 
-      const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-        method: 'post',
-        contentType: 'application/json',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        payload: JSON.stringify(payload),
-        muteHttpExceptions: true,
-      };
+    const response = UrlFetchApp.fetch(
+      'https://slack.com/api/chat.update',
+      options
+    );
 
-      const response = UrlFetchApp.fetch(
-        'https://slack.com/api/chat.update',
-        options
-      );
+    const result = JSON.parse(response.getContentText());
 
-      const result = JSON.parse(response.getContentText());
-
-      logToSheet('[updateMessage] Response', {
-        ok: result.ok,
+    if (!result.ok) {
+      logToSheet('[updateMessage] ERROR', {
         error: result.error,
-        ts: result.ts,
+        response_metadata: result.response_metadata,
       });
-
-      if (!result.ok) {
-        logToSheet('[updateMessage] ERROR', {
-          error: result.error,
-          response_metadata: result.response_metadata,
-        });
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      logToSheet('[updateMessage] Exception', { error: String(error) });
       return false;
     }
+
+    return true;
   }
 }

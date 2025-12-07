@@ -47,16 +47,14 @@ export class InteractionController {
 
       // DMのメッセージタイムスタンプを取得
       const dmMessageTs = payload.container?.message_ts || payload.message?.ts;
-      logToSheet('[handleBlockAction] dmMessageTs: ' + dmMessageTs);
-
       const dmChannelId = payload.container?.channel_id;
-      logToSheet('[handleBlockAction] dmChannelId: ' + dmChannelId);
 
       this.handleCompletionButton(
         payload.user.name,
         buttonData.targetChannelId,
         dmChannelId || '',
-        dmMessageTs
+        dmMessageTs,
+        buttonData.targetMessageTs
       );
     }
 
@@ -69,7 +67,8 @@ export class InteractionController {
     userName: string,
     targetChannelId: string,
     dmUserId: string,
-    dmMessageTs?: string
+    dmMessageTs?: string,
+    targetMessageTs?: string
   ): void {
     if (!dmMessageTs) {
       logToSheet(
@@ -95,18 +94,22 @@ export class InteractionController {
       dmMessageTs,
       completionText
     );
-    logToSheet('[handleCompletionButton] Updated: ' + updated);
 
     if (updated) {
       // スプレッドシートのステータスを「完了」に更新
       this.spreadSheetRepo.updateMessageStatus(dmMessageTs, 'completed');
 
-      // 元のチャンネルに完了通知を投稿
-      this.slackPresenter.postMessage(
-        targetChannelId,
-        `<@${dmUserId}> が <@${userName}> のアラートを完了しました`
-      );
-      logToSheet('[handleCompletionButton] Completed successfully');
+      // 元のチャンネルのスレッドに完了通知を投稿
+      const threadReplyText = `<@${dmUserId}> が完了しました`;
+      if (targetMessageTs) {
+        this.slackPresenter.postMessageInThread(
+          targetChannelId,
+          threadReplyText,
+          targetMessageTs
+        );
+      } else {
+        this.slackPresenter.postMessage(targetChannelId, threadReplyText);
+      }
     } else {
       logToSheet('[handleCompletionButton] ERROR: Failed to update message');
     }

@@ -10,19 +10,6 @@ export class RequestController {
   doPost(
     e: GoogleAppsScript.Events.DoPost
   ): GoogleAppsScript.Content.TextOutput {
-    console.log('[RequestController.doPost] Started');
-    console.log(
-      '[RequestController.doPost] e.postData:',
-      JSON.stringify(e.postData)
-    );
-    console.log(
-      '[RequestController.doPost] e.parameter:',
-      JSON.stringify((e as any).parameter)
-    );
-    console.log(
-      '[RequestController.doPost] e.parameters:',
-      JSON.stringify(e.parameters)
-    );
     let payload: any;
 
     // Slack からのペイロード解析

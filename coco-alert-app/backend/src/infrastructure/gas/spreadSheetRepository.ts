@@ -1,5 +1,4 @@
 import { getSpreadSheetId } from '../../properties';
-import { logToSheet } from '../../utils/logger';
 
 const SHEET_STRICT_MESSAGES = 'strict_messages';
 const SHEET_USER_COUNT = 'user_count';
@@ -78,20 +77,6 @@ export class SpreadSheetRepositoryImpl implements SpreadSheetRepository {
     const data: (string | number | boolean | Date)[][] = this.messagesSheet
       .getDataRange()
       .getValues();
-
-    logToSheet(
-      '[getMessageByTs] rows: ' + data.length + ', searching: ' + messageTs
-    );
-
-    // 全行のデータを出力
-    for (let i = 0; i < data.length; i++) {
-      logToSheet('[Row ' + i + ']', {
-        col0: String(data[i][0]),
-        col1: String(data[i][1]),
-        col2: String(data[i][2]),
-        col3: String(data[i][3]),
-      });
-    }
 
     for (let i = 1; i < data.length; i++) {
       if (String(data[i][1]) === messageTs) {
