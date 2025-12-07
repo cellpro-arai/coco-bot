@@ -5,7 +5,7 @@ import {
   ExpenseEntryRecord,
 } from './types/type';
 import { parseSubmissionMonth } from './utils';
-import { uploadWorkScheduleFiles } from './drive';
+import { uploadWorkScheduleFiles, getUserFolderUrl } from './drive';
 import { createExpenseReport } from './expenseReport/createExpenseReport';
 import { uploadExpenseReceipts } from './expenseReport/expenseReportSheet';
 import { saveToManagementSS } from './expenseManagement/saveManagementSheet';
@@ -26,31 +26,50 @@ function submitExpense(expenseData: ExpenseData): ExpenseResult {
     const submittedAt = new Date();
     const submittedMonth = parseSubmissionMonth(expenseData.submissionMonth);
 
+    // 勤務表ファイルをアップロード
     const workScheduleFiles = expenseData.workScheduleFiles || [];
-    const workScheduleUrls = uploadWorkScheduleFiles(
-      workScheduleFiles,
-      userEmail,
-      submittedMonth
-    );
+    uploadWorkScheduleFiles(workScheduleFiles, userEmail, submittedMonth);
 
+    // 勤務表フォルダのURLを取得（ファイルがある場合のみ）
+    const workScheduleFolderUrl =
+      workScheduleFiles.length > 0
+        ? getUserFolderUrl('WORK_SCHEDULE_FOLDER_ID', userEmail, submittedMonth)
+        : '';
+
+    // 経費データを準備
     const commuteEntries: CommuteEntry[] = expenseData.commuteEntries || [];
     const expenseEntries = expenseData.expenseEntries || [];
     const expenseEntryRecords: ExpenseEntryRecord[] =
       uploadExpenseReceipts(expenseEntries, userEmail, submittedMonth);
 
-    const expenseReportSSUrl = createExpenseReport(
-      expenseData,
-      userEmail,
-      submittedMonth,
-      commuteEntries,
-      expenseEntryRecords
-    );
+    // 経費精算書を作成
+    const hasExpenseData =
+      commuteEntries.length > 0 || expenseEntryRecords.length > 0;
+    if (hasExpenseData) {
+      createExpenseReport(
+        expenseData,
+        userEmail,
+        submittedMonth,
+        commuteEntries,
+        expenseEntryRecords
+      );
+    }
+
+    // 経費精算書フォルダのURLを取得（データがある場合のみ）
+    const expenseReportFolderUrl = hasExpenseData
+      ? getUserFolderUrl(
+          'EXPENSE_REPORT_FOLDER_ID',
+          userEmail,
+          submittedMonth
+        )
+      : '';
 
     saveToManagementSS(
       expenseData,
       userEmail,
-      workScheduleUrls,
-      expenseReportSSUrl,
+      submittedMonth,
+      workScheduleFolderUrl,
+      expenseReportFolderUrl,
       commuteEntries,
       expenseEntryRecords
     );

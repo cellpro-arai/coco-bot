@@ -2,7 +2,107 @@ import {
   EXPENSE_MANAGEMENT_SHEET_NAME,
   EXPENSE_SHEET_HEADERS,
 } from './expenseManagementTypes';
+import { getScriptProperty } from '../utils';
+import { getOrCreateChildFolder } from '../drive';
 
+/**
+ * 月別管理スプレッドシートを取得または作成する
+ *
+ * rootFolder/{yyyy}/{mm}/管理シート の階層でスプレッドシートを自動生成します。
+ * - 年フォルダ、月フォルダが存在しなければ自動作成
+ * - 管理スプレッドシートが存在しなければ自動作成
+ * - 既に存在すれば既存のスプレッドシートを使用
+ *
+ * @param {Date} submissionMonth - 提出月（expenseData.submissionMonthから変換されたDate）
+ * @returns {GoogleAppsScript.Spreadsheet.Spreadsheet} 月別管理スプレッドシート
+ */
+export function getOrCreateMonthlyManagementSpreadsheet(
+  submissionMonth: Date
+): GoogleAppsScript.Spreadsheet.Spreadsheet {
+  // フォルダIDを取得
+  const rootFolderId = getScriptProperty(
+    'FORM_MANAGEMENT_FOLDER_ID',
+    '管理フォルダIDが設定されていません。'
+  );
+  const rootFolder = DriveApp.getFolderById(rootFolderId);
+
+  // 提出月から年フォルダを取得または作成
+  const year = submissionMonth.getFullYear();
+  const yearFolder = getOrCreateChildFolder(rootFolder, String(year));
+
+  // 提出月から月フォルダを取得または作成
+  const month = submissionMonth.getMonth() + 1;
+  const monthFolder = getOrCreateChildFolder(
+    yearFolder,
+    String(month).padStart(2, '0')
+  );
+
+  // 管理スプレッドシート名
+  const spreadsheetName = `${EXPENSE_MANAGEMENT_SHEET_NAME}_${year}_${String(month).padStart(2, '0')}`;
+
+  // 月フォルダ内で既存のスプレッドシートを検索
+  try {
+    const files = monthFolder.getFilesByName(spreadsheetName);
+    if (files.hasNext()) {
+      const file = files.next();
+      return SpreadsheetApp.openById(file.getId());
+    }
+  } catch (error) {
+    console.warn(
+      `既存の管理スプレッドシート検索中にエラーが発生しました: ${(error as Error).message}`
+    );
+  }
+
+  // 既存のスプレッドシートが見つからない場合、新規作成
+  const newSpreadsheet = SpreadsheetApp.create(spreadsheetName);
+
+  // 最初のシートを管理シートとして初期化
+  const firstSheet = newSpreadsheet.getSheets()[0];
+  firstSheet.setName(EXPENSE_MANAGEMENT_SHEET_NAME);
+  ensureExpenseSheetHeader(firstSheet);
+
+  // スプレッドシートの変更を確実にコミット
+  SpreadsheetApp.flush();
+
+  // Google Driveがファイルを認識するまで少し待機
+  Utilities.sleep(2000);
+
+  // 月フォルダに移動
+  try {
+    const fileId = newSpreadsheet.getId();
+    const file = DriveApp.getFileById(fileId);
+
+    // ルートフォルダからファイルを削除
+    const parents = file.getParents();
+    while (parents.hasNext()) {
+      const parent = parents.next();
+      parent.removeFile(file);
+    }
+
+    // 月フォルダに追加
+    monthFolder.addFile(file);
+
+    Logger.log(
+      `✔ 管理スプレッドシートを月フォルダに移動: ${spreadsheetName}`
+    );
+  } catch (error) {
+    const message = `月フォルダへの移動に失敗しました: ${(error as Error).message}`;
+    Logger.log(message);
+    throw new Error(message);
+  }
+
+  return newSpreadsheet;
+}
+
+/**
+ * シートのヘッダー行から各ヘッダーの列位置を取得する
+ *
+ * シートの1行目からヘッダーを読み取り、EXPENSE_SHEET_HEADERSに定義された
+ * 各ヘッダー名に対応する列番号（1始まり）のMapを返します。
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - 対象シート
+ * @returns {Map<string, number>} ヘッダー名をキー、列番号（1始まり）を値とするMap
+ */
 export function getHeaderColumnPositions(
   sheet: GoogleAppsScript.Spreadsheet.Sheet
 ): Map<string, number> {
@@ -24,6 +124,16 @@ export function getHeaderColumnPositions(
   return positions;
 }
 
+/**
+ * 不足しているヘッダーをシートに追加する
+ *
+ * EXPENSE_SHEET_HEADERSに定義されているが、現在のシートに存在しない
+ * ヘッダーを末尾に追加します。追加されたヘッダーの列位置もMapに反映されます。
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - 対象シート
+ * @param {Map<string, number>} positions - 既存のヘッダー位置Map（この関数内で更新される）
+ * @returns {Map<string, number>} 更新されたヘッダー位置Map
+ */
 export function addMissingHeaders(
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
   positions: Map<string, number>
@@ -41,6 +151,15 @@ export function addMissingHeaders(
   return positions;
 }
 
+/**
+ * 経費精算シートのヘッダーが存在することを保証する
+ *
+ * シートが空の場合はヘッダー行を新規作成し、既存シートの場合は
+ * 不足しているヘッダーを追加します。
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - 対象シート
+ * @returns {void}
+ */
 export function ensureExpenseSheetHeader(
   sheet: GoogleAppsScript.Spreadsheet.Sheet
 ): void {
@@ -58,6 +177,15 @@ export function ensureExpenseSheetHeader(
   }
 }
 
+/**
+ * 経費精算管理シートを取得または作成する
+ *
+ * 指定されたスプレッドシートから経費精算管理シートを取得します。
+ * シートが存在しない場合は新規作成し、ヘッダー行を設定します。
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Spreadsheet} ss - 対象のスプレッドシート
+ * @returns {GoogleAppsScript.Spreadsheet.Sheet} 経費精算管理シート
+ */
 export function getOrCreateExpenseManagementSheet(
   ss: GoogleAppsScript.Spreadsheet.Spreadsheet
 ): GoogleAppsScript.Spreadsheet.Sheet {

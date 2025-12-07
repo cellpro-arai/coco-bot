@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Overview
 
 This is a Google Apps Script expense management web application built with:
+
 - **Backend**: TypeScript compiled to Google Apps Script (GAS)
 - **Frontend**: React (aliased to Preact) with TypeScript, bundled with Vite
 - **Deployment**: Uses `@google/clasp` to deploy to Google Apps Script
@@ -103,6 +104,7 @@ npm run format --workspace frontend
 4. Global functions are exposed via `window.doGet` and `window.submitExpense` for GAS
 
 **Key Backend Functions:**
+
 - `doGet()`: Serves the HTML interface
 - `submitExpense(expenseData)`: Processes expense submission, uploads files to Drive, creates expense reports
 
@@ -114,6 +116,7 @@ npm run format --workspace frontend
 4. All assets (CSS, JS) are inlined into the HTML file
 
 **Frontend-Backend Communication:**
+
 - Uses `google.script.run` API to call GAS backend functions
 - `apiService.ts` provides Promise-based wrapper
 - Includes development mode mock for local testing (when `google` object is undefined)
@@ -121,12 +124,14 @@ npm run format --workspace frontend
 ### TypeScript Configuration
 
 **Backend** (`backend/tsconfig.json`):
+
 - Target: ES2019
 - Strict mode enabled
 - Outputs to `../dist/`
 - Preserves comments for debugging
 
 **Frontend** (`frontend/tsconfig.json`):
+
 - Target: ESNext
 - JSX: react-jsx
 - Module resolution: bundler
@@ -135,6 +140,7 @@ npm run format --workspace frontend
 ## Google Apps Script Configuration
 
 The `appsscript.json` configures:
+
 - **Time zone**: Asia/Tokyo
 - **Runtime**: V8
 - **Web app access**: MYSELF (deploy with USER_DEPLOYING)
@@ -144,11 +150,13 @@ The `appsscript.json` configures:
 ## Deployment Setup
 
 1. **Initial clasp authentication** (one-time):
+
    ```bash
    npx clasp login
    ```
 
 2. **Configure `.clasp.json`** with your script ID:
+
    ```json
    {
      "scriptId": "YOUR_SCRIPT_ID_HERE",
@@ -167,3 +175,42 @@ The `appsscript.json` configures:
 - **Sheet Integration**: Expense data is saved to management spreadsheet and individual expense report spreadsheets
 - **Frontend State**: Custom hooks (`useExpenseEntries`, `useCommuteEntries`) manage form state
 - **File Uploads**: Base64-encoded files are passed from frontend to backend for Drive upload
+
+# Documentation Rules for TypeScript Codebase (Japanese Commenting Required)
+
+To maintain clarity and consistency across this TypeScript project, all developers must follow the documentation rules below.
+
+## 1. Comment Language
+
+All comments **must be written in Japanese**, including:
+
+- JSDoc blocks
+- Constant descriptions
+- Type/interface explanations
+- Inline comments
+
+This rule ensures that all team members can quickly understand the intent and logic behind the code.
+
+---
+
+## 2. Function Documentation (JSDoc in Japanese)
+
+Every exported function must include a Japanese JSDoc block describing:
+
+- The purpose of the function
+- Meaning of each parameter
+- Description of the return value
+- Any important notes or side effects
+
+### Example
+
+```ts
+/**
+ * ユーザの通勤データから合計交通費を算出する関数。
+ * @param entries - ユーザが入力した通勤データ一覧。
+ * @returns 合計金額（数値）。
+ */
+export function calculateTotal(entries: CommuteEntry[]): number {
+  ...
+}
+```

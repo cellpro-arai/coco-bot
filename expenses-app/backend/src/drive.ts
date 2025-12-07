@@ -46,6 +46,26 @@ export function getTargetFolder(
   return getOrCreateChildFolder(monthFolder, getEmailLocalPart(userEmail));
 }
 
+/**
+ * ユーザフォルダのURLを取得する
+ *
+ * 指定されたルートフォルダ配下のyyyy/mm/emailフォルダのURLを返します。
+ * フォルダが存在しない場合は作成されます。
+ *
+ * @param {FolderPropertyKey} folderPropertyKey - ルートフォルダのプロパティキー
+ * @param {string} userEmail - ユーザーのメールアドレス
+ * @param {Date} date - 対象の年月を含む日付
+ * @returns {string} ユーザフォルダのURL
+ */
+export function getUserFolderUrl(
+  folderPropertyKey: FolderPropertyKey,
+  userEmail: string,
+  date: Date
+): string {
+  const targetFolder = getTargetFolder(folderPropertyKey, userEmail, date);
+  return targetFolder.getUrl();
+}
+
 // 作業表ファイルを階層フォルダにアップロード
 export function uploadWorkScheduleFiles(
   files: FileData[],
