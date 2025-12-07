@@ -96,8 +96,8 @@ export class InteractionController {
     );
 
     if (updated) {
-      // スプレッドシートのステータスを「完了」に更新
-      this.spreadSheetRepo.updateMessageStatus(dmMessageTs, 'completed');
+      // スプレッドシートから行を削除
+      this.spreadSheetRepo.deleteMessageRow(dmMessageTs);
 
       // 元のチャンネルのスレッドに完了通知を投稿
       const threadReplyText = `<@${dmUserId}> が完了しました`;

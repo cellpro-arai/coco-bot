@@ -14,7 +14,7 @@ export interface SpreadSheetRepository {
     status: string;
     timestamp: string;
   } | null;
-  updateMessageStatus(messageTs: string, status: string): void;
+  deleteMessageRow(messageTs: string): void;
 }
 
 export class SpreadSheetRepositoryImpl implements SpreadSheetRepository {
@@ -92,14 +92,14 @@ export class SpreadSheetRepositoryImpl implements SpreadSheetRepository {
     return null;
   }
 
-  updateMessageStatus(messageTs: string, status: string): void {
+  deleteMessageRow(messageTs: string): void {
     const data: (string | number | boolean | Date)[][] = this.messagesSheet
       .getDataRange()
       .getValues();
 
     for (let i = 1; i < data.length; i++) {
       if (String(data[i][1]).trim() === messageTs) {
-        this.messagesSheet.getRange(i + 1, 3).setValue(status);
+        this.messagesSheet.deleteRow(i + 1);
         break;
       }
     }
