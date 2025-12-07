@@ -4,6 +4,7 @@ import {
 } from './expenseManagementTypes';
 import { getScriptProperty } from '../utils';
 import { getOrCreateChildFolder } from '../drive';
+import { getActiveEmployees } from './employeeManagement';
 
 /**
  * 月別管理スプレッドシートを取得または作成する
@@ -60,6 +61,18 @@ export function getOrCreateMonthlyManagementSpreadsheet(
   const firstSheet = newSpreadsheet.getSheets()[0];
   firstSheet.setName(EXPENSE_MANAGEMENT_SHEET_NAME);
   ensureExpenseSheetHeader(firstSheet);
+
+  // 従業員管理テーブルから有効な従業員の初期行を投入
+  const headerPositions = getHeaderColumnPositions(firstSheet);
+  try {
+    initializeEmployeeRows(firstSheet, headerPositions);
+    Logger.log('✔ 従業員の初期行を投入しました。');
+  } catch (error) {
+    Logger.log(
+      `従業員初期行の投入に失敗しました: ${(error as Error).message}`
+    );
+    // エラーがあっても処理を続行（従業員マスタが未設定の場合など）
+  }
 
   // スプレッドシートの変更を確実にコミット
   SpreadsheetApp.flush();
@@ -197,4 +210,94 @@ export function getOrCreateExpenseManagementSheet(
 
   ensureExpenseSheetHeader(sheet);
   return sheet;
+}
+
+/**
+ * シートから既存のメールアドレス一覧を取得する
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - 対象シート
+ * @param {Map<string, number>} headerPositions - ヘッダー位置のマップ
+ * @returns {Set<string>} 既存のメールアドレスのセット
+ */
+function getExistingEmails(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+  headerPositions: Map<string, number>
+): Set<string> {
+  const emailColumn = headerPositions.get('メールアドレス');
+  if (!emailColumn) {
+    return new Set();
+  }
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    // ヘッダー行のみ、またはデータなし
+    return new Set();
+  }
+
+  // メールアドレス列のデータを取得（ヘッダー行を除く）
+  const emailValues = sheet
+    .getRange(2, emailColumn, lastRow - 1, 1)
+    .getValues();
+
+  const emails = new Set<string>();
+  emailValues.forEach(row => {
+    const email = String(row[0] || '').trim();
+    if (email) {
+      emails.add(email);
+    }
+  });
+
+  return emails;
+}
+
+/**
+ * 月別管理シートに従業員の初期行を投入する
+ *
+ * 従業員管理テーブルから有効な従業員を取得し、管理シートに初期行を追加します。
+ * 既に存在する従業員（メールアドレスで判定）はスキップされます。
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - 対象の管理シート
+ * @param {Map<string, number>} headerPositions - ヘッダー位置のマップ
+ * @returns {void}
+ */
+export function initializeEmployeeRows(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+  headerPositions: Map<string, number>
+): void {
+  // 従業員管理テーブルから有効な従業員を取得
+  const employees = getActiveEmployees();
+
+  if (employees.length === 0) {
+    Logger.log('有効な従業員が見つかりません。初期行を投入しません。');
+    return;
+  }
+
+  // 既存のメールアドレスを取得
+  const existingEmails = getExistingEmails(sheet, headerPositions);
+
+  // メールアドレス列と氏名列の位置を取得
+  const emailColumn = headerPositions.get('メールアドレス');
+  const nameColumn = headerPositions.get('氏名');
+
+  if (!emailColumn || !nameColumn) {
+    Logger.log('メールアドレス列または氏名列が見つかりません。');
+    return;
+  }
+
+  let addedCount = 0;
+
+  // 各従業員について、既存行がない場合のみ初期行を追加
+  employees.forEach(employee => {
+    if (!existingEmails.has(employee.email)) {
+      const newRow = sheet.getLastRow() + 1;
+
+      // メールアドレスと氏名のみをセット（他の列は空のまま）
+      sheet.getRange(newRow, emailColumn).setValue(employee.email);
+      sheet.getRange(newRow, nameColumn).setValue(employee.name);
+
+      addedCount++;
+    }
+  });
+
+  Logger.log(`${addedCount} 件の従業員初期行を追加しました。`);
 }

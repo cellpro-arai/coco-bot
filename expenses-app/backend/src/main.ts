@@ -9,6 +9,7 @@ import { uploadWorkScheduleFiles, getUserFolderUrl } from './drive';
 import { createExpenseReport } from './expenseReport/createExpenseReport';
 import { uploadExpenseReceipts } from './expenseReport/expenseReportSheet';
 import { saveToManagementSS } from './expenseManagement/saveManagementSheet';
+import { initializeMonthlyExpenseSheet } from './expenseManagement/initializeMonthlySheet';
 
 // WebアプリのGETリクエスト処理
 function doGet(): GoogleAppsScript.HTML.HtmlOutput {
@@ -93,4 +94,5 @@ declare const window: any;
 if (typeof window !== 'undefined') {
   window.doGet = doGet;
   window.submitExpense = submitExpense;
+  window.initializeMonthlyExpenseSheet = initializeMonthlyExpenseSheet;
 }

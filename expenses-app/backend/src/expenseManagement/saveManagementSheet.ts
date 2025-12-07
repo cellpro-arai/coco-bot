@@ -15,7 +15,9 @@ import {
  * 月別マネジメントシートに経費精算情報を登録する
  *
  * rootFolder/{yyyy}/{mm}/管理シート の階層で自動生成された月別スプレッドシートに、
- * 勤務表、経費精算書フォルダへのリンクを含む経費データを追加します。
+ * 勤務表、経費精算書フォルダへのリンクを含む経費データを保存します。
+ * メールアドレスをキーとして既存行を検索し、見つかった場合は上書き更新、
+ * 見つからない場合は新規行を追加します。
  * 提出がない項目には「提出なし」と記録され、ハイパーリンクは設定されません。
  *
  * @param {ExpenseData} expenseData - 経費精算の基本データ（氏名、提出月、勤務時間など）
@@ -61,15 +63,22 @@ export function saveToManagementSS(
     commuterRoute
   );
 
-  // 新規行を追加
-  const lastRow = appendRowWithHeaderPositions(
-    expenseSheet,
-    headerPositions,
-    dataMap
-  );
+  // メールアドレス列で既存行を検索
+  const targetRow = findRowByEmail(expenseSheet, headerPositions, userEmail);
 
-  // 提出日時列に日時形式を設定
-  // 提出日時列のフォーマットはTableビューが管理するため何もしない
+  let lastRow: number;
+  if (targetRow > 0) {
+    // 既存行を更新
+    Logger.log(
+      `メールアドレス ${userEmail} の既存行（${targetRow}行目）を更新します。`
+    );
+    updateRowWithHeaderPositions(expenseSheet, headerPositions, dataMap, targetRow);
+    lastRow = targetRow;
+  } else {
+    // 新規行を追加
+    Logger.log(`メールアドレス ${userEmail} の新規行を追加します。`);
+    lastRow = appendRowWithHeaderPositions(expenseSheet, headerPositions, dataMap);
+  }
 
   // 勤務表列にフォルダリンクを設定（提出がある場合のみ）
   if (hasWorkSchedule) {
@@ -123,7 +132,7 @@ function buildManagementDataMap(
 ): Map<string, string | number | Date> {
   const dataMap = new Map<string, string | number | Date>();
   dataMap.set('提出日時', new Date());
-  dataMap.set('提出者', userEmail);
+  dataMap.set('メールアドレス', userEmail);
   dataMap.set('氏名', expenseData.name);
   dataMap.set('提出月', expenseData.submissionMonth);
   dataMap.set('勤務表', hasWorkSchedule ? '勤務表' : '提出なし');
@@ -139,4 +148,70 @@ function buildManagementDataMap(
   dataMap.set('定期券金額', expenseData.monthlyFee);
   dataMap.set('備考', expenseData.remarks);
   return dataMap;
+}
+
+/**
+ * メールアドレスで既存行を検索する
+ *
+ * 管理シートのメールアドレス列を検索し、一致する行番号を返します。
+ * 見つからない場合は0を返します。
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - 検索対象のシート
+ * @param {Map<string, number>} headerPositions - ヘッダー位置のマップ
+ * @param {string} email - 検索するメールアドレス
+ * @returns {number} 一致した行番号（見つからない場合は0）
+ */
+function findRowByEmail(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+  headerPositions: Map<string, number>,
+  email: string
+): number {
+  const emailColumn = headerPositions.get('メールアドレス');
+  if (!emailColumn) {
+    Logger.log('メールアドレス列が見つかりません。');
+    return 0;
+  }
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    // ヘッダー行のみ、またはデータなし
+    return 0;
+  }
+
+  // メールアドレス列のデータを取得（ヘッダー行を除く）
+  const emailValues = sheet
+    .getRange(2, emailColumn, lastRow - 1, 1)
+    .getValues();
+
+  // メールアドレスが一致する行を検索
+  for (let i = 0; i < emailValues.length; i++) {
+    if (emailValues[i][0] === email) {
+      return i + 2; // 2行目から開始するため、+2
+    }
+  }
+
+  return 0; // 見つからない場合
+}
+
+/**
+ * ヘッダー位置マップに基づいて既存行のデータを更新する
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - 対象シート
+ * @param {Map<string, number>} headerPositions - ヘッダー位置のマップ
+ * @param {Map<string, string | number | Date>} dataMap - 更新するデータのマップ
+ * @param {number} row - 更新対象の行番号
+ * @returns {void}
+ */
+function updateRowWithHeaderPositions(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+  headerPositions: Map<string, number>,
+  dataMap: Map<string, string | number | Date>,
+  row: number
+): void {
+  dataMap.forEach((value, header) => {
+    const column = headerPositions.get(header);
+    if (column !== undefined) {
+      sheet.getRange(row, column).setValue(value);
+    }
+  });
 }
