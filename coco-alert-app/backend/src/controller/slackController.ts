@@ -1,6 +1,6 @@
 import { AppMentionEvent } from '@slack/types';
 import { AppMentionUseCase } from '../usecase/appMentionUseCase';
-import { LogRepository } from '../domain/repository/logRepository';
+import { CheckDuplicateRepository } from '../infrastructure/gas/cacheRepository';
 
 // Slackからのイベントペイロードの型定義
 // URL検証リクエスト、またはイベントコールバックのいずれかを表す
@@ -11,7 +11,7 @@ type SlackEventPayload =
 export class SlackController {
   constructor(
     private useCase: AppMentionUseCase,
-    private logRepo: LogRepository
+    private logRepo: CheckDuplicateRepository
   ) {}
 
   doPost(
@@ -43,9 +43,6 @@ export class SlackController {
           ContentService.MimeType.TEXT
         );
       }
-
-      // 新規メッセージなので記録
-      this.logRepo.save([new Date(), 'RECEIVE', user, event.text, clientMsgId]);
 
       // メイン処理実行
       this.useCase.execute({

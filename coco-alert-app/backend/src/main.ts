@@ -1,26 +1,22 @@
-import { RequestController } from './adapter/requestController';
-import { SlackController } from './adapter/slackController';
-import { InteractionController } from './adapter/interactionController';
+import { RequestController } from './controller/requestController';
+import { SlackController } from './controller/slackController';
+import { InteractionController } from './controller/interactionController';
 import { AppMentionUseCase } from './usecase/appMentionUseCase';
-import { SpreadSheetLogRepository } from './infrastructure/gas/spreadSheetLogRepository';
-import { SpreadSheetUserCountRepository } from './infrastructure/gas/spreadSheetUserCountRepository';
-import { SpreadSheetStrictMessageRepository } from './infrastructure/gas/spreadSheetStrictMessageRepository';
+import { CacheRepositoryImpl } from './infrastructure/gas/cacheRepository';
+import { SpreadSheetRepositoryImpl } from './infrastructure/gas/spreadSheetRepository';
 import { SlackAPIPresenter } from './infrastructure/slack/presenter';
 
 // DIコンテナの役割
-const logRepository = new SpreadSheetLogRepository();
-const userCountRepository = new SpreadSheetUserCountRepository();
-const strictMessageRepository = new SpreadSheetStrictMessageRepository();
+const ccdRepository = new CacheRepositoryImpl();
+const spreadSheetRepository = new SpreadSheetRepositoryImpl();
 const slackPresenter = new SlackAPIPresenter();
 
 const appMentionUseCase = new AppMentionUseCase(
-  logRepository,
-  userCountRepository,
-  strictMessageRepository,
+  spreadSheetRepository,
   slackPresenter
 );
 
-const slackController = new SlackController(appMentionUseCase, logRepository);
+const slackController = new SlackController(appMentionUseCase, ccdRepository);
 const interactionController = new InteractionController();
 const requestController = new RequestController(
   slackController,

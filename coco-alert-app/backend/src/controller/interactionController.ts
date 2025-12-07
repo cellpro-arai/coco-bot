@@ -14,6 +14,7 @@ interface BlockActionPayload {
   }>;
 }
 
+// slack botのインタラクションイベント（完了ボタン）を処理するコントローラ
 export class InteractionController {
   doPost(
     e: GoogleAppsScript.Events.DoPost

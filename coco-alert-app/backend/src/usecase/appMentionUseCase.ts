@@ -1,7 +1,5 @@
-import { LogRepository } from '../domain/repository/logRepository';
-import { StrictMessageRepository } from '../domain/repository/strictMessageRepository';
-import { UserCountRepository } from '../domain/repository/userCountRepository';
-import { SlackPresenter } from '../adapter/slackPresenter';
+import { SpreadSheetRepository } from '../infrastructure/gas/spreadSheetRepository';
+import { SlackPresenter } from '../infrastructure/slack/presenter';
 import { getBotUserId } from '../properties';
 
 interface AppMentionEvent {
@@ -14,9 +12,7 @@ interface AppMentionEvent {
 
 export class AppMentionUseCase {
   constructor(
-    private logRepo: LogRepository,
-    private userCountRepo: UserCountRepository,
-    private strictMessageRepo: StrictMessageRepository,
+    private spreadSheetRepo: SpreadSheetRepository,
     private slackPresenter: SlackPresenter
   ) {}
 
@@ -38,8 +34,9 @@ export class AppMentionUseCase {
       .trim();
 
     mentions.forEach((userId: string) => {
-      const userCount: number = this.userCountRepo.increment(userId);
-      const strictMessage: string = this.strictMessageRepo.get(userCount);
+      const userCount: number = this.spreadSheetRepo.incrementUserCount(userId);
+      const strictMessage: string =
+        this.spreadSheetRepo.getStrictMessage(userCount);
       const message: string = `アラート:\n${text}\n\n:warning: cocoの一言: ${strictMessage}\n(${userCount}回目)`;
 
       // DM with button to the mentioned user
@@ -49,15 +46,6 @@ export class AppMentionUseCase {
         event.channel,
         event.ts
       );
-
-      // スプレッドシートに送信ログ（client_msg_idも残す）
-      this.logRepo.save([
-        new Date(),
-        'SEND',
-        userId,
-        message,
-        event.client_msg_id,
-      ]);
     });
   }
 }

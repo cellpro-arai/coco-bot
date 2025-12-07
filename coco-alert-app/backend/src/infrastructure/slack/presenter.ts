@@ -1,5 +1,14 @@
 import { getSlackBotToken } from '../../properties';
-import { SlackPresenter } from '../../adapter/slackPresenter';
+
+export interface SlackPresenter {
+  postMessage(channel: string, message: string): void;
+  postDMWithButton(
+    userId: string,
+    text: string,
+    targetChannelId: string,
+    targetMessageTs: string
+  ): void;
+}
 
 export class SlackAPIPresenter implements SlackPresenter {
   postMessage(channelId: string, text: string): void {
