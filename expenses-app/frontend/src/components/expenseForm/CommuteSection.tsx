@@ -35,7 +35,7 @@ export default function CommuteSection({
   const hasEntries = entries.length > 0;
 
   return (
-    <FormSection title="交通費">
+    <FormSection title="交通費" required>
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {onHasCommuteChange && (
