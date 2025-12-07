@@ -2,12 +2,14 @@ import { LogRepository } from '../domain/repository/logRepository';
 import { StrictMessageRepository } from '../domain/repository/strictMessageRepository';
 import { UserCountRepository } from '../domain/repository/userCountRepository';
 import { SlackPresenter } from '../adapter/slackPresenter';
-import { getBotUserId, getTargetChannel } from '../properties';
+import { getBotUserId } from '../properties';
 
 interface AppMentionEvent {
   user: string;
   text: string;
   client_msg_id: string;
+  channel: string;
+  ts: string;
 }
 
 export class AppMentionUseCase {
@@ -22,7 +24,6 @@ export class AppMentionUseCase {
     // メンション抽出とテキストからの除去
     let text: string = event.text;
     const botUserId = getBotUserId();
-    const targetChannel = getTargetChannel();
 
     const mentions: string[] = Array.from(
       new Set(
@@ -39,9 +40,15 @@ export class AppMentionUseCase {
     mentions.forEach((userId: string) => {
       const userCount: number = this.userCountRepo.increment(userId);
       const strictMessage: string = this.strictMessageRepo.get(userCount);
-      const message: string = `<@${userId}> ${text}\n:warning: cocoの一言: ${strictMessage}\n現在${userCount}回目`;
+      const message: string = `アラート:\n${text}\n\n:warning: cocoの一言: ${strictMessage}\n(${userCount}回目)`;
 
-      this.slackPresenter.postMessage(targetChannel, message);
+      // DM with button to the mentioned user
+      this.slackPresenter.postDMWithButton(
+        userId,
+        message,
+        event.channel,
+        event.ts
+      );
 
       // スプレッドシートに送信ログ（client_msg_idも残す）
       this.logRepo.save([

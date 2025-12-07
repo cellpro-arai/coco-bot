@@ -59,6 +59,8 @@ export class SlackController {
         user,
         text: event.text,
         client_msg_id: clientMsgId,
+        channel: event.channel,
+        ts: event.ts,
       });
 
       return ContentService.createTextOutput('OK').setMimeType(
