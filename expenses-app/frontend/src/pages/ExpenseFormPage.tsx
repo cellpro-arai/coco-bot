@@ -14,7 +14,7 @@ import {
   FormSection,
 } from '../components';
 import { Layout, Header } from '../components/layouts';
-import { Card } from '../components/ui';
+import { Card, SubmissionErrorModal } from '../components/ui';
 import {
   fieldLabelClass,
   inputFieldClass,
@@ -47,6 +47,8 @@ export default function ExpenseFormPage({
 }: ExpenseFormPageProps) {
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [submitted, setSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   const commuteEntries = useCommuteEntries();
@@ -119,11 +121,13 @@ export default function ExpenseFormPage({
         await submitExpense(expenseData);
         onSubmitSuccess();
       } catch (error: any) {
-        alert(FORM_ERROR_MESSAGES.SUBMISSION_FAILED + error.message);
+        setErrorMessage(error.message || FORM_ERROR_MESSAGES.SUBMISSION_FAILED);
+        setIsErrorModalOpen(true);
         setSubmitted(false);
       }
     } catch (error: any) {
-      alert(FORM_ERROR_MESSAGES.SUBMISSION_FAILED + error.message);
+      setErrorMessage(error.message || FORM_ERROR_MESSAGES.SUBMISSION_FAILED);
+      setIsErrorModalOpen(true);
       setSubmitted(false);
     }
   };
@@ -384,6 +388,13 @@ export default function ExpenseFormPage({
           </button>
         </form>
       </Card>
+
+      {/* エラーモーダル */}
+      <SubmissionErrorModal
+        isOpen={isErrorModalOpen}
+        message={errorMessage}
+        onClose={() => setIsErrorModalOpen(false)}
+      />
     </Layout>
   );
 }

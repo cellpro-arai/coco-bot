@@ -29,14 +29,16 @@ export function initializeMonthlyExpenseSheet(
   const submissionMonth = new Date(targetYear, targetMonth - 1, 1);
 
   // 月別管理スプレッドシートを取得または作成
-  const managementSS = getOrCreateMonthlyManagementSpreadsheet(submissionMonth);
-  const expenseSheet = getOrCreateExpenseManagementSheet(managementSS);
+  const { spreadsheet: managementSS, isNewlyCreated } =
+    getOrCreateMonthlyManagementSpreadsheet(submissionMonth);
 
-  // ヘッダー位置を取得
-  const headerPositions = getHeaderColumnPositions(expenseSheet);
-
-  // 従業員の初期行を投入
-  initializeEmployeeRows(expenseSheet, headerPositions);
+  // 従業員の初期行を投入（既存シートのみ）
+  if (!isNewlyCreated) {
+    // 既存の管理シートのみ、従業員初期行を再投入（新規作成時は完了済み）
+    const expenseSheet = getOrCreateExpenseManagementSheet(managementSS);
+    const headerPositions = getHeaderColumnPositions(expenseSheet);
+    initializeEmployeeRows(expenseSheet, headerPositions);
+  }
 
   Logger.log(`${targetYear}年${targetMonth}月の管理シート初期化が完了しました。`);
 }

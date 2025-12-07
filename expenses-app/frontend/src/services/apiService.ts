@@ -27,7 +27,7 @@ export function submitExpense(data: ExpenseSubmitData): Promise<ExpenseResult> {
       google.script.run
         .withSuccessHandler((result: ExpenseResult) => resolve(result))
         .withFailureHandler((error: Error) =>
-          reject(new Error(`送信に失敗しました: ${error.message}`))
+          reject(new Error(error.message))
         )
         .submitExpense(data);
     }

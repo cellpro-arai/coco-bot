@@ -1,6 +1,8 @@
 import {
   EXPENSE_MANAGEMENT_SHEET_NAME,
   EXPENSE_SHEET_HEADERS,
+  EXPENSE_STATUS_OPTIONS,
+  BACKUP_SHEET_NAME,
 } from './expenseManagementTypes';
 import { getScriptProperty } from '../utils';
 import { getOrCreateChildFolder } from '../drive';
@@ -19,7 +21,10 @@ import { getActiveEmployees } from './employeeManagement';
  */
 export function getOrCreateMonthlyManagementSpreadsheet(
   submissionMonth: Date
-): GoogleAppsScript.Spreadsheet.Spreadsheet {
+): {
+  spreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet;
+  isNewlyCreated: boolean;
+} {
   // フォルダIDを取得
   const rootFolderId = getScriptProperty(
     'FORM_MANAGEMENT_FOLDER_ID',
@@ -46,7 +51,10 @@ export function getOrCreateMonthlyManagementSpreadsheet(
     const files = monthFolder.getFilesByName(spreadsheetName);
     if (files.hasNext()) {
       const file = files.next();
-      return SpreadsheetApp.openById(file.getId());
+      return {
+        spreadsheet: SpreadsheetApp.openById(file.getId()),
+        isNewlyCreated: false,
+      };
     }
   } catch (error) {
     console.warn(
@@ -61,6 +69,9 @@ export function getOrCreateMonthlyManagementSpreadsheet(
   const firstSheet = newSpreadsheet.getSheets()[0];
   firstSheet.setName(EXPENSE_MANAGEMENT_SHEET_NAME);
   ensureExpenseSheetHeader(firstSheet);
+
+  // 新規作成時のみ、提出ステータス列にデータバリデーションを設定
+  setStatusValidation(firstSheet);
 
   // 従業員管理テーブルから有効な従業員の初期行を投入
   const headerPositions = getHeaderColumnPositions(firstSheet);
@@ -104,7 +115,10 @@ export function getOrCreateMonthlyManagementSpreadsheet(
     throw new Error(message);
   }
 
-  return newSpreadsheet;
+  return {
+    spreadsheet: newSpreadsheet,
+    isNewlyCreated: true,
+  };
 }
 
 /**
@@ -169,6 +183,7 @@ export function addMissingHeaders(
  *
  * シートが空の場合はヘッダー行を新規作成し、既存シートの場合は
  * 不足しているヘッダーを追加します。
+ * データバリデーションは設定しません（新規作成時に別途設定されます）。
  *
  * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - 対象シート
  * @returns {void}
@@ -275,9 +290,10 @@ export function initializeEmployeeRows(
   // 既存のメールアドレスを取得
   const existingEmails = getExistingEmails(sheet, headerPositions);
 
-  // メールアドレス列と氏名列の位置を取得
+  // メールアドレス列、氏名列、提出ステータス列の位置を取得
   const emailColumn = headerPositions.get('メールアドレス');
   const nameColumn = headerPositions.get('氏名');
+  const statusColumn = headerPositions.get('提出ステータス');
 
   if (!emailColumn || !nameColumn) {
     Logger.log('メールアドレス列または氏名列が見つかりません。');
@@ -291,13 +307,133 @@ export function initializeEmployeeRows(
     if (!existingEmails.has(employee.email)) {
       const newRow = sheet.getLastRow() + 1;
 
-      // メールアドレスと氏名のみをセット（他の列は空のまま）
+      // メールアドレス、氏名、提出ステータス（未提出）をセット
       sheet.getRange(newRow, emailColumn).setValue(employee.email);
       sheet.getRange(newRow, nameColumn).setValue(employee.name);
+      if (statusColumn) {
+        sheet.getRange(newRow, statusColumn).setValue('未提出');
+      }
 
       addedCount++;
     }
   });
 
   Logger.log(`${addedCount} 件の従業員初期行を追加しました。`);
+}
+
+/**
+ * 提出ステータス列にデータバリデーションを設定する
+ *
+ * 提出ステータス列に対して、EXPENSE_STATUS_OPTIONS の値のみを許可する
+ * ドロップダウンリストのデータバリデーションを設定します。
+ * ヘッダー行（1行目）は除外され、2行目以降に適用されます。
+ * テーブルビューが設定されている場合はエラーをログに記録して続行します。
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - 対象シート
+ * @returns {void}
+ */
+export function setStatusValidation(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet
+): void {
+  const headerPositions = getHeaderColumnPositions(sheet);
+  const statusColumn = headerPositions.get('提出ステータス');
+
+  if (!statusColumn) {
+    Logger.log('提出ステータス列が見つかりません。バリデーションをスキップします。');
+    return;
+  }
+
+  try {
+    // データバリデーションを作成
+    const rule = SpreadsheetApp.newDataValidation()
+      .requireValueInList(EXPENSE_STATUS_OPTIONS as unknown as string[], true)
+      .setAllowInvalid(false)
+      .build();
+
+    // 2行目以降の十分な行数（1000行）に適用
+    const maxRows = Math.max(sheet.getLastRow(), 1000);
+    if (maxRows > 1) {
+      sheet.getRange(2, statusColumn, maxRows - 1, 1).setDataValidation(rule);
+      Logger.log(`提出ステータス列（${statusColumn}列目）にデータバリデーションを設定しました。`);
+    }
+  } catch (error) {
+    // テーブルビューが設定されている場合などに発生するエラーをキャッチ
+    Logger.log(
+      `提出ステータス列のデータバリデーション設定をスキップしました: ${(error as Error).message}`
+    );
+    Logger.log(
+      'ヒント: スプレッドシートにテーブルビューが設定されている場合、データバリデーションを自動設定できません。手動で設定してください。'
+    );
+  }
+}
+
+/**
+ * バックアップシートを取得または作成する
+ *
+ * 月次管理スプレッドシート内にバックアップシートが存在しない場合は新規作成し、
+ * ヘッダー行を設定します。
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Spreadsheet} ss - 対象のスプレッドシート
+ * @returns {GoogleAppsScript.Spreadsheet.Sheet} バックアップシート
+ */
+export function getOrCreateBackupSheet(
+  ss: GoogleAppsScript.Spreadsheet.Spreadsheet
+): GoogleAppsScript.Spreadsheet.Sheet {
+  let sheet = ss.getSheetByName(BACKUP_SHEET_NAME);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(BACKUP_SHEET_NAME);
+    // バックアップシートのヘッダーを設定
+    const backupHeaders = [
+      'バックアップ日時',
+      '対象メールアドレス',
+      '旧提出ステータス',
+      ...EXPENSE_SHEET_HEADERS,
+    ];
+    sheet.appendRow(backupHeaders);
+    Logger.log(`バックアップシート「${BACKUP_SHEET_NAME}」を作成しました。`);
+  }
+
+  return sheet;
+}
+
+/**
+ * 既存の提出データをバックアップシートに保存する
+ *
+ * 管理シートの既存行データをバックアップシートに1行追加します。
+ * バックアップ日時、対象メールアドレス、旧提出ステータス、既存行の全データを記録します。
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Spreadsheet} ss - 対象のスプレッドシート
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} managementSheet - 管理シート
+ * @param {Map<string, number>} headerPositions - ヘッダー位置のマップ
+ * @param {number} targetRow - バックアップ対象の行番号
+ * @param {string} email - 対象メールアドレス
+ * @param {string} oldStatus - 旧提出ステータス
+ * @returns {void}
+ */
+export function backupExistingRow(
+  ss: GoogleAppsScript.Spreadsheet.Spreadsheet,
+  managementSheet: GoogleAppsScript.Spreadsheet.Sheet,
+  headerPositions: Map<string, number>,
+  targetRow: number,
+  email: string,
+  oldStatus: string
+): void {
+  const backupSheet = getOrCreateBackupSheet(ss);
+
+  // 既存行のデータを取得
+  const lastColumn = managementSheet.getLastColumn();
+  const rowData = managementSheet.getRange(targetRow, 1, 1, lastColumn).getValues()[0];
+
+  // バックアップ行を構築
+  const backupRow = [
+    new Date(), // バックアップ日時
+    email, // 対象メールアドレス
+    oldStatus, // 旧提出ステータス
+    ...rowData, // 既存行の全データ
+  ];
+
+  // バックアップシートに追加
+  backupSheet.appendRow(backupRow);
+  Logger.log(`メールアドレス ${email} のデータをバックアップしました。`);
 }

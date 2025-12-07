@@ -9,7 +9,9 @@ import {
   getHeaderColumnPositions,
   getOrCreateExpenseManagementSheet,
   getOrCreateMonthlyManagementSpreadsheet,
+  backupExistingRow,
 } from './expenseManagementSheetFormat';
+import { getActiveEmployees } from './employeeManagement';
 
 /**
  * 月別マネジメントシートに経費精算情報を登録する
@@ -38,8 +40,17 @@ export function saveToManagementSS(
   commuteEntries: CommuteEntry[],
   expenseEntryRecords: ExpenseEntryRecord[]
 ): void {
+  // 無効従業員チェック：有効な従業員のみ更新を許可
+  const activeEmployees = getActiveEmployees();
+  const activeEmailSet = new Set(activeEmployees.map(emp => emp.email));
+  if (!activeEmailSet.has(userEmail)) {
+    Logger.log(`無効な従業員 ${userEmail} からの提出をスキップします。`);
+    return;
+  }
+
   // 提出月に基づいて月別管理スプレッドシートを取得または作成
-  const managementSS = getOrCreateMonthlyManagementSpreadsheet(submissionMonth);
+  const { spreadsheet: managementSS } =
+    getOrCreateMonthlyManagementSpreadsheet(submissionMonth);
   const expenseSheet = getOrCreateExpenseManagementSheet(managementSS);
 
   const commuterRoute = formatCommuterRoute(
@@ -67,17 +78,60 @@ export function saveToManagementSS(
   const targetRow = findRowByEmail(expenseSheet, headerPositions, userEmail);
 
   let lastRow: number;
+  let newStatus: string;
+
   if (targetRow > 0) {
     // 既存行を更新
     Logger.log(
       `メールアドレス ${userEmail} の既存行（${targetRow}行目）を更新します。`
     );
+
+    // 既存の提出ステータスを取得
+    const statusColumn = headerPositions.get('提出ステータス');
+    const oldStatus = statusColumn
+      ? String(expenseSheet.getRange(targetRow, statusColumn).getValue() || '')
+      : '';
+
+    // 承認済みの場合は更新禁止
+    if (oldStatus === '承認済み') {
+      throw new Error('承認済みの申請は更新できません。管理者に連絡してください。');
+    }
+
+    // バックアップ処理（未提出以外の場合）
+    if (oldStatus && oldStatus !== '未提出') {
+      backupExistingRow(
+        managementSS,
+        expenseSheet,
+        headerPositions,
+        targetRow,
+        userEmail,
+        oldStatus
+      );
+    }
+
+    // データを更新
     updateRowWithHeaderPositions(expenseSheet, headerPositions, dataMap, targetRow);
+
+    // ステータス遷移ロジック
+    if (oldStatus === '差戻し') {
+      newStatus = '再提出済み';
+    } else {
+      newStatus = '提出済み';
+    }
+
     lastRow = targetRow;
   } else {
     // 新規行を追加
     Logger.log(`メールアドレス ${userEmail} の新規行を追加します。`);
     lastRow = appendRowWithHeaderPositions(expenseSheet, headerPositions, dataMap);
+    newStatus = '提出済み';
+  }
+
+  // 提出ステータスを更新
+  const statusColumn = headerPositions.get('提出ステータス');
+  if (statusColumn) {
+    expenseSheet.getRange(lastRow, statusColumn).setValue(newStatus);
+    Logger.log(`提出ステータスを「${newStatus}」に更新しました。`);
   }
 
   // 勤務表列にフォルダリンクを設定（提出がある場合のみ）
