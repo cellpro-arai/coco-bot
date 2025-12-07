@@ -1,4 +1,5 @@
 import { getSpreadSheetId } from '../../properties';
+import { logToSheet } from '../../utils/logger';
 
 const SHEET_STRICT_MESSAGES = 'strict_messages';
 const SHEET_USER_COUNT = 'user_count';
@@ -8,9 +9,7 @@ export interface SpreadSheetRepository {
   getStrictMessage(count: number): string;
   incrementUserCount(userName: string): number;
   saveMessage(clientMsgId: string, messageTs: string, status: string): void;
-  getMessageByTs(
-    messageTs: string
-  ): {
+  getMessageByTs(messageTs: string): {
     clientMsgId: string;
     messageTs: string;
     status: string;
@@ -65,12 +64,12 @@ export class SpreadSheetRepositoryImpl implements SpreadSheetRepository {
 
   saveMessage(clientMsgId: string, messageTs: string, status: string): void {
     const timestamp = new Date().toISOString();
-    this.messagesSheet.appendRow([clientMsgId, messageTs, status, timestamp]);
+    // messageTs を文字列として明示的に保存（数値に変換されないように）
+    const row = [clientMsgId, "'" + messageTs, status, timestamp];
+    this.messagesSheet.appendRow(row);
   }
 
-  getMessageByTs(
-    messageTs: string
-  ): {
+  getMessageByTs(messageTs: string): {
     clientMsgId: string;
     messageTs: string;
     status: string;
@@ -80,9 +79,22 @@ export class SpreadSheetRepositoryImpl implements SpreadSheetRepository {
       .getDataRange()
       .getValues();
 
+    logToSheet(
+      '[getMessageByTs] rows: ' + data.length + ', searching: ' + messageTs
+    );
+
+    // 全行のデータを出力
+    for (let i = 0; i < data.length; i++) {
+      logToSheet('[Row ' + i + ']', {
+        col0: String(data[i][0]),
+        col1: String(data[i][1]),
+        col2: String(data[i][2]),
+        col3: String(data[i][3]),
+      });
+    }
+
     for (let i = 1; i < data.length; i++) {
-      // 1行目はヘッダ、2列目がmessageTs
-      if (data[i][1] === messageTs) {
+      if (String(data[i][1]) === messageTs) {
         return {
           clientMsgId: data[i][0] as string,
           messageTs: data[i][1] as string,
@@ -101,7 +113,7 @@ export class SpreadSheetRepositoryImpl implements SpreadSheetRepository {
       .getValues();
 
     for (let i = 1; i < data.length; i++) {
-      if (data[i][1] === messageTs) {
+      if (String(data[i][1]).trim() === messageTs) {
         this.messagesSheet.getRange(i + 1, 3).setValue(status);
         break;
       }

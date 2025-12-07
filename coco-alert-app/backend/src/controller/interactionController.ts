@@ -1,5 +1,6 @@
 import { SpreadSheetRepositoryImpl } from '../infrastructure/gas/spreadSheetRepository';
 import { SlackAPIPresenter } from '../infrastructure/slack/slackPresenter';
+import { logToSheet } from '../utils/logger';
 
 interface BlockActionPayload {
   type: string;
@@ -9,6 +10,16 @@ interface BlockActionPayload {
     name: string;
   };
   trigger_id: string;
+  container?: {
+    type: string;
+    message_ts: string;
+    channel_id: string;
+    is_ephemeral: boolean;
+  };
+  message?: {
+    ts: string;
+    [key: string]: any;
+  };
   actions: Array<{
     action_id: string;
     value: string;
@@ -34,11 +45,18 @@ export class InteractionController {
     if (action.action_id === 'completion_button') {
       const buttonData = JSON.parse(action.value);
 
+      // DMのメッセージタイムスタンプを取得
+      const dmMessageTs = payload.container?.message_ts || payload.message?.ts;
+      logToSheet('[handleBlockAction] dmMessageTs: ' + dmMessageTs);
+
+      const dmChannelId = payload.container?.channel_id;
+      logToSheet('[handleBlockAction] dmChannelId: ' + dmChannelId);
+
       this.handleCompletionButton(
         payload.user.name,
         buttonData.targetChannelId,
-        buttonData.targetMessageTs,
-        buttonData.userId
+        dmChannelId || '',
+        dmMessageTs
       );
     }
 
@@ -50,40 +68,47 @@ export class InteractionController {
   private handleCompletionButton(
     userName: string,
     targetChannelId: string,
-    targetMessageTs: string,
-    dmUserId: string
+    dmUserId: string,
+    dmMessageTs?: string
   ): void {
-    const messageInfo = this.spreadSheetRepo.getMessageByTs(targetMessageTs);
+    if (!dmMessageTs) {
+      logToSheet(
+        '[handleCompletionButton] ERROR: DM message timestamp is missing'
+      );
+      return;
+    }
+
+    // スプレッドシートから メッセージ情報を取得（DM タイムスタンプで検索）
+    const messageInfo = this.spreadSheetRepo.getMessageByTs(dmMessageTs);
 
     if (!messageInfo) {
-      console.error(
-        '[handleCompletionButton] Message not found in spreadsheet:',
-        targetMessageTs
+      logToSheet(
+        '[handleCompletionButton] ERROR: Message not found: ' + dmMessageTs
       );
       return;
     }
 
     // DM を完了メッセージで修正
     const completionText = `✅ ${userName}さんが完了しました`;
-
     const updated = this.slackPresenter.updateMessage(
       dmUserId,
-      messageInfo.messageTs,
+      dmMessageTs,
       completionText
     );
+    logToSheet('[handleCompletionButton] Updated: ' + updated);
 
     if (updated) {
       // スプレッドシートのステータスを「完了」に更新
-      this.spreadSheetRepo.updateMessageStatus(
-        messageInfo.messageTs,
-        'completed'
-      );
+      this.spreadSheetRepo.updateMessageStatus(dmMessageTs, 'completed');
 
       // 元のチャンネルに完了通知を投稿
       this.slackPresenter.postMessage(
         targetChannelId,
         `<@${dmUserId}> が <@${userName}> のアラートを完了しました`
       );
+      logToSheet('[handleCompletionButton] Completed successfully');
+    } else {
+      logToSheet('[handleCompletionButton] ERROR: Failed to update message');
     }
   }
 }

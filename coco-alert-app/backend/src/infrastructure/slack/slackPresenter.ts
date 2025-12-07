@@ -1,4 +1,5 @@
 import { getSlackBotToken } from '../../properties';
+import { logToSheet } from '../../utils/logger';
 import type { ChatPostMessageResponse } from '@slack/web-api/dist/types/response/ChatPostMessageResponse';
 
 export interface MessageResponse {
@@ -145,6 +146,12 @@ export class SlackAPIPresenter implements SlackPresenter {
         text: text,
       };
 
+      logToSheet('[updateMessage] Calling Slack API', {
+        channel,
+        ts,
+        text,
+      });
+
       const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
         method: 'post',
         contentType: 'application/json',
@@ -162,18 +169,23 @@ export class SlackAPIPresenter implements SlackPresenter {
 
       const result = JSON.parse(response.getContentText());
 
+      logToSheet('[updateMessage] Response', {
+        ok: result.ok,
+        error: result.error,
+        ts: result.ts,
+      });
+
       if (!result.ok) {
-        console.error(
-          'updateMessage failed:',
-          result.error,
-          result.response_metadata
-        );
+        logToSheet('[updateMessage] ERROR', {
+          error: result.error,
+          response_metadata: result.response_metadata,
+        });
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('updateMessage error:', error);
+      logToSheet('[updateMessage] Exception', { error: String(error) });
       return false;
     }
   }
