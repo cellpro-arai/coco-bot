@@ -23,6 +23,3 @@ export const getSlackBotToken = () =>
 
 export const getBotUserId = () =>
   getScriptProperty('BOT_USER_ID', 'BOT_USER_IDが設定されていません。');
-
-export const getTargetChannel = () =>
-  getScriptProperty('TARGET_CHANNEL', 'TARGET_CHANNELが設定されていません。');

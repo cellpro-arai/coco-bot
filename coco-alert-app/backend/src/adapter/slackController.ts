@@ -27,13 +27,6 @@ export class SlackController {
         );
       }
 
-      // app_mentionイベントでなければ無視
-      if (data.type !== 'event_callback' || data.event.type !== 'app_mention') {
-        return ContentService.createTextOutput('OK').setMimeType(
-          ContentService.MimeType.TEXT
-        );
-      }
-
       const event = data.event;
       const clientMsgId = event.client_msg_id;
       const user = event.user;

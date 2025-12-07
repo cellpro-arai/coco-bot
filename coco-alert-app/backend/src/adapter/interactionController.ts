@@ -19,21 +19,7 @@ export class InteractionController {
     e: GoogleAppsScript.Events.DoPost
   ): GoogleAppsScript.Content.TextOutput {
     try {
-      let payload: BlockActionPayload;
-
-      // Slack Interactions API は form-encoded で、payload キーにJSONが入っている
-      if (e.postData.type === 'application/x-www-form-urlencoded') {
-        const params = new URLSearchParams(e.postData.contents);
-        const payloadString = params.get('payload');
-        if (!payloadString) {
-          return ContentService.createTextOutput('Missing payload').setMimeType(
-            ContentService.MimeType.TEXT
-          );
-        }
-        payload = JSON.parse(payloadString);
-      } else {
-        payload = JSON.parse(e.postData.contents);
-      }
+      const payload: BlockActionPayload = JSON.parse(e.postData.contents);
 
       // Handle block actions (button clicks)
       if (payload.type === 'block_actions') {
