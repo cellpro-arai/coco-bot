@@ -38,7 +38,6 @@ export class SlackController {
       }
 
       if (this.logRepo.isDuplicate(clientMsgId)) {
-        console.log(`Duplicate message detected: ${clientMsgId}, skipping.`);
         return ContentService.createTextOutput('SKIPPED').setMimeType(
           ContentService.MimeType.TEXT
         );
@@ -57,8 +56,6 @@ export class SlackController {
         ContentService.MimeType.TEXT
       );
     } catch (err) {
-      const error = err as Error;
-      console.error(error);
       return ContentService.createTextOutput('ERROR').setMimeType(
         ContentService.MimeType.TEXT
       );

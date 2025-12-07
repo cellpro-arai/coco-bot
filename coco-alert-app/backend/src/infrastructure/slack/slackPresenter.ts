@@ -40,7 +40,7 @@ export class SlackAPIPresenter implements SlackPresenter {
     );
     const data = JSON.parse(resp.getContentText());
     if (!data.ok) {
-      console.error('chat.postMessage failed:', data);
+      logToSheet('[postMessage] ERROR', data);
     }
   }
 
@@ -61,7 +61,7 @@ export class SlackAPIPresenter implements SlackPresenter {
     );
     const data = JSON.parse(resp.getContentText());
     if (!data.ok) {
-      console.error('chat.postMessage in thread failed:', data);
+      logToSheet('[postMessageInThread] ERROR', data);
     }
   }
 
@@ -126,11 +126,10 @@ export class SlackAPIPresenter implements SlackPresenter {
     );
 
     if (!result.ok) {
-      console.error(
-        'postDMWithButton failed:',
-        result.error,
-        result.response_metadata
-      );
+      logToSheet('[postDMWithButton] ERROR', {
+        error: result.error,
+        response_metadata: result.response_metadata,
+      });
       return null;
     }
 
