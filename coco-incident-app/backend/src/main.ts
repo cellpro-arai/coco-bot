@@ -1,4 +1,5 @@
 import { submitIncident as _submitIncident } from './incident/submitIncident';
+import { updateIncidentStatus as _updateIncidentStatus } from './incident/updateIncidentStatus';
 import { getInitialData as _getInitialData } from './incident/getInitialData';
 import { addUser as _addUser } from './user/addUser';
 import { removeUser as _removeUser } from './user/removeUser';
@@ -21,6 +22,7 @@ if (typeof window !== 'undefined') {
   window.doGet = doGet;
   window.getInitialData = _getInitialData;
   window.submitIncident = _submitIncident;
+  window.updateIncidentStatus = _updateIncidentStatus;
   window.addUser = _addUser;
   window.removeUser = _removeUser;
 }
