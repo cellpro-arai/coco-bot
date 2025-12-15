@@ -5,7 +5,9 @@ import { createEmptyExpenseEntry } from '../utils/formUtils';
 import { encodeFileToBase64 } from '../utils/fileUtils';
 
 // 経費入力カードの状態管理と検証をまとめたカスタムフック
-export function useExpenseEntries() {
+export function useExpenseEntries(
+  clearError?: (index: number, field?: keyof ExpenseEntry) => void
+) {
   const [entries, setEntries] = useState<ExpenseEntry[]>([]);
 
   // 入力値の更新と付随処理 (添付ファイルのリセットなど) をまとめて制御
@@ -28,6 +30,10 @@ export function useExpenseEntries() {
         return nextEntry;
       })
     );
+    // 値が入力されたらエラーをクリア
+    if (value.trim() && clearError) {
+      clearError(index, field);
+    }
   };
 
   const handleReceiptChange = (index: number, file: File | null) => {
@@ -36,6 +42,10 @@ export function useExpenseEntries() {
         idx === index ? { ...entry, receiptFile: file } : entry
       )
     );
+    // ファイルが選択されたらエラーをクリア
+    if (file && clearError) {
+      clearError(index, 'receiptFile');
+    }
   };
 
   const handleCertificateChange = (index: number, file: File | null) => {
@@ -44,6 +54,10 @@ export function useExpenseEntries() {
         idx === index ? { ...entry, certificateFile: file } : entry
       )
     );
+    // ファイルが選択されたらエラーをクリア
+    if (file && clearError) {
+      clearError(index, 'certificateFile');
+    }
   };
 
   const add = () => {

@@ -1,12 +1,15 @@
 import { ChangeEvent } from 'react';
 import { fieldLabelClass, inputFieldClass } from '../../types/constants';
 import { getSubmissionMonthOptions } from '../../utils/dateUtils';
+import { FieldErrorTooltip } from '../ui';
 
 interface SubmissionMonthFieldProps {
   /** 提出月の値 */
   value: string;
   /** 変更時のハンドラ */
   onChange: (e: ChangeEvent<HTMLSelectElement>) => void;
+  /** バリデーションエラーメッセージ */
+  error?: string;
 }
 
 /**
@@ -15,6 +18,7 @@ interface SubmissionMonthFieldProps {
 export default function SubmissionMonthField({
   value,
   onChange,
+  error,
 }: SubmissionMonthFieldProps) {
   return (
     <label
@@ -29,8 +33,7 @@ export default function SubmissionMonthField({
         name="submissionMonth"
         value={value}
         onChange={onChange}
-        required
-        className={inputFieldClass}
+        className={`${inputFieldClass} ${error ? 'border-rose-300' : ''}`}
       >
         {getSubmissionMonthOptions().map(option => (
           <option key={option.value} value={option.value}>
@@ -38,6 +41,7 @@ export default function SubmissionMonthField({
           </option>
         ))}
       </select>
+      <FieldErrorTooltip message={error} />
     </label>
   );
 }

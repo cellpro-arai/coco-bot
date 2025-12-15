@@ -1,5 +1,6 @@
 import { ChangeEvent } from 'react';
 import { fieldLabelClass, inputFieldClass } from '../../types/constants';
+import { FieldErrorTooltip } from '../ui';
 
 interface NameFieldProps {
   /** 氏名の値 */
@@ -10,6 +11,8 @@ interface NameFieldProps {
   isEditable: boolean;
   /** ローディング中かどうか */
   isLoading: boolean;
+  /** バリデーションエラーメッセージ */
+  error?: string;
 }
 
 /**
@@ -23,6 +26,7 @@ export default function NameField({
   onChange,
   isEditable,
   isLoading,
+  error,
 }: NameFieldProps) {
   return (
     <label htmlFor="name" className={`flex flex-col gap-2 ${fieldLabelClass}`}>
@@ -38,11 +42,11 @@ export default function NameField({
         name="name"
         value={name}
         onChange={onChange}
-        required
         disabled={!isEditable || isLoading}
         placeholder={isLoading ? '読み込み中...' : '山田 太郎'}
-        className={`${inputFieldClass} ${!isEditable ? 'bg-slate-100 cursor-not-allowed' : ''}`}
+        className={`${inputFieldClass} ${!isEditable ? 'bg-slate-100 cursor-not-allowed' : ''} ${error ? 'border-rose-300' : ''}`}
       />
+      <FieldErrorTooltip message={error} />
     </label>
   );
 }

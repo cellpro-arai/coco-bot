@@ -39,6 +39,7 @@ export default function ExpenseFormPage({
     errorMessage,
     isErrorModalOpen,
     formRef,
+    validationErrors,
     isNameEditable,
     isLoadingUserInfo,
     hasWorkHours,
@@ -61,6 +62,9 @@ export default function ExpenseFormPage({
     [formData.submissionMonth]
   );
 
+  // デバッグ用：validationErrorsの内容を確認
+  console.log('validationErrors:', validationErrors);
+
   return (
     <Layout>
       <Header
@@ -77,11 +81,13 @@ export default function ExpenseFormPage({
               onChange={handleInputChange}
               isEditable={isNameEditable}
               isLoading={isLoadingUserInfo}
+              error={validationErrors.name}
             />
 
             <SubmissionMonthField
               value={formData.submissionMonth}
               onChange={handleInputChange}
+              error={validationErrors.submissionMonth}
             />
           </div>
 
@@ -91,6 +97,11 @@ export default function ExpenseFormPage({
             workEndTime={formData.workEndTime}
             officeFrequency={formData.officeFrequency}
             onChange={handleInputChange}
+            errors={{
+              workStartTime: validationErrors.workStartTime,
+              workEndTime: validationErrors.workEndTime,
+              officeFrequency: validationErrors.officeFrequency,
+            }}
           />
 
           {/* 勤務表 */}
@@ -104,17 +115,9 @@ export default function ExpenseFormPage({
               multiple
               hasUpload={hasWorkHours}
               onHasUploadChange={setHasWorkHours}
+              error={validationErrors.workScheduleFiles}
             />
           </FormSection>
-
-          {/* 定期券購入 */}
-          <CommuterPassSection
-            hasCommuterPass={formData.hasCommuterPass}
-            nearestStation={formData.nearestStation}
-            workStation={formData.workStation}
-            monthlyFee={formData.monthlyFee}
-            onChange={handleInputChange}
-          />
 
           {/* 交通費 */}
           <CommuteSection
@@ -126,6 +129,7 @@ export default function ExpenseFormPage({
             dateRange={submissionMonthDateRange}
             hasCommute={hasCommute}
             onHasCommuteChange={setHasCommute}
+            errors={validationErrors.commuteEntries}
           />
 
           {/* 経費 */}
@@ -139,6 +143,21 @@ export default function ExpenseFormPage({
             dateRange={submissionMonthDateRange}
             hasExpense={hasExpense}
             onHasExpenseChange={setHasExpense}
+            errors={validationErrors.expenseEntries}
+          />
+
+          {/* 定期券購入 */}
+          <CommuterPassSection
+            hasCommuterPass={formData.hasCommuterPass}
+            nearestStation={formData.nearestStation}
+            workStation={formData.workStation}
+            monthlyFee={formData.monthlyFee}
+            onChange={handleInputChange}
+            errors={{
+              nearestStation: validationErrors.nearestStation,
+              workStation: validationErrors.workStation,
+              monthlyFee: validationErrors.monthlyFee,
+            }}
           />
 
           {/* 備考 */}

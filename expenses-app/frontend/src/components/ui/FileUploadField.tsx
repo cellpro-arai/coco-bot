@@ -4,6 +4,7 @@ import {
   secondaryButtonClass,
   YES_NO_OPTIONS,
 } from '../../types/constants';
+import FieldErrorTooltip from './FieldErrorTooltip';
 
 interface FileUploadFieldProps {
   label: string;
@@ -16,6 +17,8 @@ interface FileUploadFieldProps {
   hasUpload?: 'yes' | 'no';
   /** ファイルアップロード有無の変更ハンドラ */
   onHasUploadChange?: (value: 'yes' | 'no') => void;
+  /** バリデーションエラーメッセージ */
+  error?: string;
 }
 
 export default function FileUploadField({
@@ -27,6 +30,7 @@ export default function FileUploadField({
   multiple = true,
   hasUpload = 'no',
   onHasUploadChange,
+  error,
 }: FileUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -81,7 +85,7 @@ export default function FileUploadField({
             />
             <button
               type="button"
-              className={secondaryButtonClass}
+              className={`${secondaryButtonClass} ${error ? 'ring-2 ring-rose-300' : ''}`}
               onClick={handleButtonClick}
             >
               {label}を選択
@@ -92,6 +96,7 @@ export default function FileUploadField({
               </span>
             )}
           </div>
+          <FieldErrorTooltip message={error} />
           {files.length > 0 && (
             <div className="space-y-2">
               {files.map((file, index) => (

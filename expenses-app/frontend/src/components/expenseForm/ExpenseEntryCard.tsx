@@ -6,6 +6,7 @@ import {
   destructiveButtonClass,
   inputFieldClass,
 } from '../../types/constants';
+import { FieldErrorTooltip } from '../ui';
 
 interface ExpenseEntryCardProps {
   entry: ExpenseEntry;
@@ -15,6 +16,15 @@ interface ExpenseEntryCardProps {
   onCertificateChange: (index: number, file: File | null) => void;
   onRemove: (index: number) => void;
   dateRange?: SubmissionMonthDateRange | null;
+  /** バリデーションエラー */
+  errors?: {
+    category?: string;
+    date?: string;
+    amount?: string;
+    description?: string;
+    receiptFile?: string;
+    certificateFile?: string;
+  };
 }
 
 export default function ExpenseEntryCard({
@@ -25,6 +35,7 @@ export default function ExpenseEntryCard({
   onCertificateChange,
   onRemove,
   dateRange,
+  errors,
 }: ExpenseEntryCardProps) {
   const category = entry.category || 'other';
   const isCertification = category === 'certification';
@@ -44,13 +55,14 @@ export default function ExpenseEntryCard({
             id={`expense-category-${index}`}
             value={entry.category}
             onChange={e => onChange(index, 'category', e.target.value)}
-            className={inputFieldClass}
+            className={`${inputFieldClass} ${errors?.category ? 'border-rose-300' : ''}`}
           >
             <option value="ebook">電子書籍</option>
-            <option value="book">書籍</option>
+            <option value="book">Udemy講座</option>
             <option value="certification">資格受験</option>
             <option value="other">その他</option>
           </select>
+          <FieldErrorTooltip message={errors?.category} />
         </div>
 
         <div className="flex flex-col gap-1">
@@ -63,8 +75,9 @@ export default function ExpenseEntryCard({
             value={entry.date}
             onChange={e => onChange(index, 'date', e.target.value)}
             max={dateRange?.max}
-            className={dateFieldClass}
+            className={`${dateFieldClass} ${errors?.date ? 'border-rose-300' : ''}`}
           />
+          <FieldErrorTooltip message={errors?.date} />
         </div>
       </div>
 
@@ -80,8 +93,9 @@ export default function ExpenseEntryCard({
             onChange={e => onChange(index, 'amount', e.target.value)}
             placeholder="例: 3000"
             min="0"
-            className={inputFieldClass}
+            className={`${inputFieldClass} ${errors?.amount ? 'border-rose-300' : ''}`}
           />
+          <FieldErrorTooltip message={errors?.amount} />
         </div>
 
         <div className="flex flex-col gap-1">
@@ -97,8 +111,9 @@ export default function ExpenseEntryCard({
             value={entry.description}
             onChange={e => onChange(index, 'description', e.target.value)}
             placeholder="例: TypeScript入門書"
-            className={inputFieldClass}
+            className={`${inputFieldClass} ${errors?.description ? 'border-rose-300' : ''}`}
           />
+          <FieldErrorTooltip message={errors?.description} />
         </div>
       </div>
 
@@ -117,7 +132,7 @@ export default function ExpenseEntryCard({
             />
             <label
               htmlFor={`expense-receipt-${index}`}
-              className={`${inputFieldClass} cursor-pointer inline-block text-center`}
+              className={`${inputFieldClass} cursor-pointer inline-block text-center ${errors?.receiptFile ? 'border-rose-300 ring-2 ring-rose-300' : ''}`}
             >
               ファイルを選択
             </label>
@@ -127,6 +142,7 @@ export default function ExpenseEntryCard({
               </div>
             )}
           </div>
+          <FieldErrorTooltip message={errors?.receiptFile} />
         </div>
 
         {isCertification && (
@@ -145,7 +161,7 @@ export default function ExpenseEntryCard({
               />
               <label
                 htmlFor={`expense-certificate-${index}`}
-                className={`${inputFieldClass} cursor-pointer inline-block text-center`}
+                className={`${inputFieldClass} cursor-pointer inline-block text-center ${errors?.certificateFile ? 'border-rose-300 ring-2 ring-rose-300' : ''}`}
               >
                 ファイルを選択
               </label>
@@ -155,6 +171,7 @@ export default function ExpenseEntryCard({
                 </div>
               )}
             </div>
+            <FieldErrorTooltip message={errors?.certificateFile} />
           </div>
         )}
       </div>

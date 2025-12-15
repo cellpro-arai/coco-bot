@@ -19,6 +19,15 @@ interface CommuteSectionProps {
   hasCommute?: 'yes' | 'no';
   /** 交通費有無の変更ハンドラ */
   onHasCommuteChange?: (value: 'yes' | 'no') => void;
+  /** バリデーションエラー（エントリーごと） */
+  errors?: {
+    [index: number]: {
+      date?: string;
+      origin?: string;
+      destination?: string;
+      amount?: string;
+    };
+  };
 }
 
 export default function CommuteSection({
@@ -30,6 +39,7 @@ export default function CommuteSection({
   dateRange,
   hasCommute = 'no',
   onHasCommuteChange,
+  errors,
 }: CommuteSectionProps) {
   // 入力行が存在するかどうかでガイダンスとカード一覧を出し分ける
   const hasEntries = entries.length > 0;
@@ -95,6 +105,7 @@ export default function CommuteSection({
                         onDuplicate={onDuplicate}
                         onRemove={onRemove}
                         dateRange={dateRange}
+                        errors={errors?.[index]}
                       />
                     ))}
                   </tbody>

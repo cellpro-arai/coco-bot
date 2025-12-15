@@ -20,6 +20,17 @@ interface ExpenseSectionProps {
   hasExpense?: 'yes' | 'no';
   /** 経費有無の変更ハンドラ */
   onHasExpenseChange?: (value: 'yes' | 'no') => void;
+  /** バリデーションエラー（エントリーごと） */
+  errors?: {
+    [index: number]: {
+      category?: string;
+      date?: string;
+      amount?: string;
+      description?: string;
+      receiptFile?: string;
+      certificateFile?: string;
+    };
+  };
 }
 
 export default function ExpenseSection({
@@ -32,6 +43,7 @@ export default function ExpenseSection({
   dateRange,
   hasExpense = 'no',
   onHasExpenseChange,
+  errors,
 }: ExpenseSectionProps) {
   // 既存の経費入力有無で説明文とグリッドの表示を切り替える
   const hasEntries = entries.length > 0;
@@ -86,6 +98,7 @@ export default function ExpenseSection({
                     onCertificateChange={onCertificateChange}
                     onRemove={onRemove}
                     dateRange={dateRange}
+                    errors={errors?.[index]}
                   />
                 ))}
               </div>

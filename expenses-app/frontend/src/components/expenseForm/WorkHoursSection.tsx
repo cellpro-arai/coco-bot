@@ -1,5 +1,5 @@
 import { ChangeEvent } from 'react';
-import { FormSection } from '../ui';
+import { FormSection, FieldErrorTooltip } from '../ui';
 import {
   fieldLabelClass,
   inputFieldClass,
@@ -16,6 +16,12 @@ interface WorkHoursSectionProps {
   officeFrequency: string;
   /** 変更時のハンドラ */
   onChange: (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  /** バリデーションエラー */
+  errors?: {
+    workStartTime?: string;
+    workEndTime?: string;
+    officeFrequency?: string;
+  };
 }
 
 /**
@@ -26,6 +32,7 @@ export default function WorkHoursSection({
   workEndTime,
   officeFrequency,
   onChange,
+  errors,
 }: WorkHoursSectionProps) {
   return (
     <FormSection title="現場勤務状況" required>
@@ -41,9 +48,9 @@ export default function WorkHoursSection({
             name="workStartTime"
             value={workStartTime}
             onChange={onChange}
-            required
-            className={timeFieldClass}
+            className={`${timeFieldClass} ${errors?.workStartTime ? 'border-rose-300' : ''}`}
           />
+          <FieldErrorTooltip message={errors?.workStartTime} />
         </label>
 
         <label
@@ -57,9 +64,9 @@ export default function WorkHoursSection({
             name="workEndTime"
             value={workEndTime}
             onChange={onChange}
-            required
-            className={timeFieldClass}
+            className={`${timeFieldClass} ${errors?.workEndTime ? 'border-rose-300' : ''}`}
           />
+          <FieldErrorTooltip message={errors?.workEndTime} />
         </label>
       </div>
 
@@ -73,8 +80,7 @@ export default function WorkHoursSection({
           name="officeFrequency"
           value={officeFrequency}
           onChange={onChange}
-          required
-          className={inputFieldClass}
+          className={`${inputFieldClass} ${errors?.officeFrequency ? 'border-rose-300' : ''}`}
         >
           {OFFICE_FREQUENCY_OPTIONS.map(option => (
             <option key={option.value} value={option.value}>
@@ -82,6 +88,7 @@ export default function WorkHoursSection({
             </option>
           ))}
         </select>
+        <FieldErrorTooltip message={errors?.officeFrequency} />
       </label>
     </FormSection>
   );

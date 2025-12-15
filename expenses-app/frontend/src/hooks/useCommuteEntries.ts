@@ -3,7 +3,9 @@ import { CommuteEntry } from '../types';
 import { COMMUTE_ERROR_MESSAGES } from '../types/constants';
 import { createEmptyCommuteEntry } from '../utils/formUtils';
 
-export function useCommuteEntries() {
+export function useCommuteEntries(
+  clearError?: (index: number, field?: keyof CommuteEntry) => void
+) {
   const [entries, setEntries] = useState<CommuteEntry[]>([]);
 
   const handleChange = (
@@ -16,6 +18,10 @@ export function useCommuteEntries() {
         idx === index ? { ...entry, [field]: value } : entry
       )
     );
+    // 値が入力されたらエラーをクリア
+    if (value.trim() && clearError) {
+      clearError(index, field);
+    }
   };
 
   const add = () => {

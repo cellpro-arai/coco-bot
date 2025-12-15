@@ -6,6 +6,7 @@ import {
   inputFieldCompactClass,
   secondaryButtonClass,
 } from '../../types/constants';
+import { FieldErrorTooltip } from '../ui';
 
 interface CommuteEntryCardProps {
   entry: CommuteEntry;
@@ -14,6 +15,13 @@ interface CommuteEntryCardProps {
   onDuplicate: (index: number) => void;
   onRemove: (index: number) => void;
   dateRange?: SubmissionMonthDateRange | null;
+  /** バリデーションエラー */
+  errors?: {
+    date?: string;
+    origin?: string;
+    destination?: string;
+    amount?: string;
+  };
 }
 
 export default function CommuteEntryCard({
@@ -23,6 +31,7 @@ export default function CommuteEntryCard({
   onDuplicate,
   onRemove,
   dateRange,
+  errors,
 }: CommuteEntryCardProps) {
   return (
     <tr className="border-b border-slate-100 bg-white text-sm last:border-b-0">
@@ -34,9 +43,10 @@ export default function CommuteEntryCard({
           onChange={e => onChange(index, 'date', e.target.value)}
           min={dateRange?.min}
           max={dateRange?.max}
-          className={`${dateFieldCompactClass} min-w-24`}
+          className={`${dateFieldCompactClass} min-w-24 ${errors?.date ? 'border-rose-300' : ''}`}
           aria-label="日付"
         />
+        <FieldErrorTooltip message={errors?.date} />
       </td>
       <td className="px-1 py-1 align-top">
         <input
@@ -45,9 +55,10 @@ export default function CommuteEntryCard({
           value={entry.origin}
           onChange={e => onChange(index, 'origin', e.target.value)}
           placeholder="例: 渋谷駅"
-          className={`${inputFieldCompactClass}`}
+          className={`${inputFieldCompactClass} ${errors?.origin ? 'border-rose-300' : ''}`}
           aria-label="最寄り駅"
         />
+        <FieldErrorTooltip message={errors?.origin} />
       </td>
       <td className="px-1 py-1 align-top">
         <input
@@ -56,9 +67,10 @@ export default function CommuteEntryCard({
           value={entry.destination}
           onChange={e => onChange(index, 'destination', e.target.value)}
           placeholder="例: 新宿駅"
-          className={`${inputFieldCompactClass}`}
+          className={`${inputFieldCompactClass} ${errors?.destination ? 'border-rose-300' : ''}`}
           aria-label="訪問先駅"
         />
+        <FieldErrorTooltip message={errors?.destination} />
       </td>
       <td className="px-1 py-1 align-top">
         <div className="min-w-16">
@@ -83,10 +95,11 @@ export default function CommuteEntryCard({
             onChange={e => onChange(index, 'amount', e.target.value)}
             placeholder="例: 200"
             min="0"
-            className={`${inputFieldCompactClass}`}
+            className={`${inputFieldCompactClass} ${errors?.amount ? 'border-rose-300' : ''}`}
             aria-label="片道の金額"
           />
         </div>
+        <FieldErrorTooltip message={errors?.amount} />
       </td>
       <td className="px-1 py-1 align-top whitespace-nowrap">
         {/* 頻出経路は複製ボタンで再入力を省略できる */}

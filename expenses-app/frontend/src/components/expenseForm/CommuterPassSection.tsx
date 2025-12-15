@@ -1,5 +1,5 @@
 import { ChangeEvent } from 'react';
-import { FormSection } from '../ui';
+import { FormSection, FieldErrorTooltip } from '../ui';
 import {
   fieldLabelClass,
   inputFieldClass,
@@ -17,6 +17,12 @@ interface CommuterPassSectionProps {
   monthlyFee: string;
   /** 変更時のハンドラ */
   onChange: (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  /** バリデーションエラー */
+  errors?: {
+    nearestStation?: string;
+    workStation?: string;
+    monthlyFee?: string;
+  };
 }
 
 /**
@@ -28,6 +34,7 @@ export default function CommuterPassSection({
   workStation,
   monthlyFee,
   onChange,
+  errors,
 }: CommuterPassSectionProps) {
   return (
     <FormSection title="定期券購入" required>
@@ -65,10 +72,10 @@ export default function CommuterPassSection({
                   name="nearestStation"
                   value={nearestStation}
                   onChange={onChange}
-                  required
                   placeholder="例: 渋谷駅"
-                  className={inputFieldClass}
+                  className={`${inputFieldClass} ${errors?.nearestStation ? 'border-rose-300' : ''}`}
                 />
+                <FieldErrorTooltip message={errors?.nearestStation} />
               </label>
 
               <label
@@ -82,10 +89,10 @@ export default function CommuterPassSection({
                   name="workStation"
                   value={workStation}
                   onChange={onChange}
-                  required
                   placeholder="例: 新宿駅"
-                  className={inputFieldClass}
+                  className={`${inputFieldClass} ${errors?.workStation ? 'border-rose-300' : ''}`}
                 />
+                <FieldErrorTooltip message={errors?.workStation} />
               </label>
             </div>
 
@@ -100,11 +107,11 @@ export default function CommuterPassSection({
                 name="monthlyFee"
                 value={monthlyFee}
                 onChange={onChange}
-                required
                 min="0"
                 placeholder="例: 15000"
-                className={inputFieldClass}
+                className={`${inputFieldClass} ${errors?.monthlyFee ? 'border-rose-300' : ''}`}
               />
+              <FieldErrorTooltip message={errors?.monthlyFee} />
             </label>
           </div>
         )}
